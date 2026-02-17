@@ -3,7 +3,7 @@ from typing import List
 
 router = APIRouter()
 
-@router.post("/upload/image")
+@router.post("/image")
 async def upload_image(file: UploadFile = File(...)):
     """
     Subir una imagen del perro.
@@ -18,7 +18,7 @@ async def upload_image(file: UploadFile = File(...)):
     # Logic here
     return {"filename": file.filename, "content_type": file.content_type, "message": "Image uploaded successfully"}
 
-@router.post("/upload/video")
+@router.post("/video")
 async def upload_video(file: UploadFile = File(...)):
     """
     Subir un video del perro.
@@ -31,7 +31,7 @@ async def upload_video(file: UploadFile = File(...)):
     # Logic here
     return {"filename": file.filename, "message": "Video uploaded successfully"}
 
-@router.post("/upload/camera")
+@router.post("/camera")
 async def upload_camera_capture(file: UploadFile = File(...)):
     """
     Subir captura directa de la cámara.

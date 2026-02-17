@@ -3,7 +3,7 @@ from typing import List
 
 router = APIRouter()
 
-@router.post("/predict")
+@router.post("/")
 async def predict_breed(image_file: UploadFile = File(...)):
     """
     Detectar perro y predecir raza.
