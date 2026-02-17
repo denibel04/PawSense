@@ -1,6 +1,17 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
+from pydantic import BaseModel
+from typing import List, Optional
 
 router = APIRouter()
+
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+class ChatRequest(BaseModel):
+    question: str
+    context: str
+    history: Optional[List[ChatMessage]] = []
 
 @router.get("/info")
 async def get_dog_info(breed_name: str = Query(..., description="Nombre de la raza a consultar")):
@@ -17,16 +28,15 @@ async def get_dog_info(breed_name: str = Query(..., description="Nombre de la ra
     """
     return {"message": f"Info for {breed_name} not implemented"}
 
-from pydantic import BaseModel
-
-class ChatRequest(BaseModel):
-    question: str
-    context: str = ""
-
 @router.post("/ask")
 async def ask_chatbot(request: ChatRequest):
     """
     Endpoint para preguntas libres sobre el perro (Chatbot).
+    Recibe historial para mantener contexto (stateless).
+    
+    TODO: Enrique
+    1. Integrar con un LLM (OpenAI/Anthropic/Local).
+    2. Usar request.context y request.history para el prompt.
     """
-    # Simulación de respuesta
-    return {"answer": f"Simulated response to: {request.question}"}
+    # Mock response
+    return {"answer": f"Backend recibió tu pregunta: '{request.question}' y {len(request.history)} mensajes de contexto. (IA no conectada aún)"}

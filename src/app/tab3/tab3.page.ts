@@ -1,5 +1,4 @@
-import { Component, OnInit, ViewChild, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -26,65 +25,56 @@ import { send } from 'ionicons/icons';
 export class Tab3Page implements OnInit {
   messages: { role: string; content: string }[] = [];
   newMessage: string = '';
-
-  // Clave para localStorage
-  private STORAGE_KEY = 'pawsense_chat_history';
-  private http = inject(HttpClient);
-  private apiUrl = 'http://127.0.0.1:8000/api/v1/chat/ask';
-  isLoading = false;
+  isLoading: boolean = false;
 
   constructor() {
     addIcons({ send });
   }
 
   ngOnInit() {
-    this.loadChat();
+    // Mensaje de bienvenida inicial (sin cargar de localStorage)
+    this.messages = [
+      { role: 'assistant', content: '¡Hola! Soy tu asistente canino. ¿En qué puedo ayudarte hoy?' }
+    ];
   }
 
-  loadChat() {
-    const savedChat = localStorage.getItem(this.STORAGE_KEY);
-    if (savedChat) {
-      this.messages = JSON.parse(savedChat);
-    } else {
-      // Mensaje de bienvenida inicial
-      this.messages = [
-        { role: 'assistant', content: '¡Hola! Soy tu asistente canino. ¿En qué puedo ayudarte hoy?' }
-      ];
-    }
-  }
-
-  saveChat() {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(this.messages));
-  }
-
-  sendMessage() {
+  async sendMessage() {
     if (!this.newMessage.trim()) return;
 
     // 1. Añadir mensaje del usuario
     const userMsg = { role: 'user', content: this.newMessage };
     this.messages.push(userMsg);
 
-    // 2. Llamar al backend
+    const question = this.newMessage;
+    this.newMessage = ''; // Limpiar input
     this.isLoading = true;
-    this.http.post<any>(this.apiUrl, { question: this.newMessage, context: '' })
-      .subscribe({
-        next: (response) => {
-          const botMsg = { role: 'assistant', content: response.answer };
-          this.messages.push(botMsg);
-          this.saveChat();
-          this.isLoading = false;
+
+    // 2. Llamar al backend usando fetch
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/v1/chat/ask', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        error: (error) => {
-          console.error('Error calling chat API:', error);
-          const errorMsg = { role: 'assistant', content: 'Lo siento, hubo un error al conectar con el servidor.' };
-          this.messages.push(errorMsg);
-          this.saveChat();
-          this.isLoading = false;
-        }
+        body: JSON.stringify({
+          question: question,
+          context: 'Usuario desde App',
+          history: this.messages
+        })
       });
 
-    // 3. Limpiar y guardar (el mensaje del usuario)
-    this.newMessage = '';
-    this.saveChat();
+      if (!response.ok) throw new Error('Error en la petición');
+
+      const data = await response.json();
+      const botMsg = { role: 'assistant', content: data.answer || 'Sin respuesta' };
+      this.messages.push(botMsg);
+    } catch (error) {
+      console.error('Error:', error);
+      const errorMsg = { role: 'assistant', content: 'Error al conectar con el servidor (Verifica CORS y que el backend esté corriendo).' };
+      this.messages.push(errorMsg);
+    } finally {
+      this.isLoading = false;
+    }
   }
 }
