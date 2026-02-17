@@ -1,0 +1,9 @@
+fastapi>=0.110.0
+uvicorn>=0.29.0
+pydantic>=2.7.0
+pydantic-settings>=2.2.0
+python-multipart>=0.0.9  # Para subir archivos (Imágenes/Videos)
+pillow>=10.2.0           # Procesamiento de imágenes
+httpx>=0.27.0            # Cliente HTTP async (Para TheDogAPI y AI)
+reportlab>=4.1.0         # Generación de PDFs
+jinja2>=3.1.3            # Motores de plantillas (Útil para el reporte)
