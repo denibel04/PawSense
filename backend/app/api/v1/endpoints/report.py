@@ -3,7 +3,7 @@ from fastapi.responses import FileResponse
 
 router = APIRouter()
 
-@router.post("/report/generate")
+@router.post("/generate")
 async def generate_report(breed_prediction: dict, user_notes: str = None):
     """
     Generar un informe PDF completo.
@@ -20,7 +20,7 @@ async def generate_report(breed_prediction: dict, user_notes: str = None):
     """
     return {"download_url": "/api/v1/report/download/12345.pdf"}
 
-@router.get("/report/download/{report_id}")
+@router.get("/download/{report_id}")
 async def download_report(report_id: str):
     """
     Descargar el PDF generado.

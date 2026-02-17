@@ -1,17 +1,46 @@
 <ion-header [translucent]="true">
   <ion-toolbar>
     <ion-title>
-      Tab 3
+      Chat Asistente
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
+<ion-content [fullscreen]="true" class="ion-padding">
   <ion-header collapse="condense">
     <ion-toolbar>
-      <ion-title size="large">Tab 3</ion-title>
+      <ion-title size="large">Chat</ion-title>
     </ion-toolbar>
   </ion-header>
 
-  <app-explore-container name="Tab 3 page"></app-explore-container>
+  <ion-list lines="none">
+    <ion-item *ngFor="let msg of messages">
+      <div [class]="msg.role === 'user' ? 'chat-bubble user' : 'chat-bubble assistant'">
+        <ion-label class="ion-text-wrap">
+          {{ msg.content }}
+        </ion-label>
+      </div>
+    </ion-item>
+    <ion-item *ngIf="isLoading">
+      <div class="chat-bubble assistant">
+        <ion-label>
+          <ion-spinner name="dots"></ion-spinner>
+        </ion-label>
+      </div>
+    </ion-item>
+  </ion-list>
 </ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <ion-item lines="none">
+      <ion-textarea [(ngModel)]="newMessage" placeholder="Escribe tu pregunta..." autoGrow="true"
+        rows="1"></ion-textarea>
+      <ion-buttons slot="end">
+        <ion-button (click)="sendMessage()" [disabled]="!newMessage.trim() || isLoading">
+          <ion-icon slot="icon-only" name="send"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-toolbar>
+</ion-footer>
