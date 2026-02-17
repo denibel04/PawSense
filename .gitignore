@@ -69,7 +69,17 @@ testem.log
 .DS_Store
 Thumbs.db
 
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
 # Python
 backend/venv/
 venv/
+
 

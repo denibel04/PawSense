@@ -49,7 +49,7 @@ export class Tab3Page implements OnInit {
     this.newMessage = ''; // Limpiar input
     this.isLoading = true;
 
-    // 2. Llamar al backend usando fetch
+    // 2. Llamar al backend usando fetch (Streaming)
     try {
       const response = await fetch('http://127.0.0.1:8000/api/v1/chat/ask', {
         method: 'POST',
@@ -59,19 +59,33 @@ export class Tab3Page implements OnInit {
         },
         body: JSON.stringify({
           question: question,
-          context: 'Usuario desde App',
+          context: 'Usuario desde App', // TODO: Obtener del servicio de predicción
           history: this.messages
         })
       });
 
       if (!response.ok) throw new Error('Error en la petición');
+      if (!response.body) throw new Error('No body in response');
 
-      const data = await response.json();
-      const botMsg = { role: 'assistant', content: data.answer || 'Sin respuesta' };
+      // Crear mensaje vacío del bot para ir rellenando
+      const botMsg = { role: 'assistant', content: '' };
       this.messages.push(botMsg);
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        botMsg.content += chunk;
+        // Forzar detección de cambios si fuera necesario, aunque en Ionic suele ser auto
+      }
+
     } catch (error) {
       console.error('Error:', error);
-      const errorMsg = { role: 'assistant', content: 'Error al conectar con el servidor (Verifica CORS y que el backend esté corriendo).' };
+      const errorMsg = { role: 'assistant', content: 'Lo siento, hubo un error al conectar con el servidor.' };
       this.messages.push(errorMsg);
     } finally {
       this.isLoading = false;

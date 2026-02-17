@@ -1,8 +1,15 @@
 from fastapi import APIRouter, Query, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import List, Optional
+import google.generativeai as genai
+from app.core.config import settings
 
 router = APIRouter()
+
+# Configurar Gemini
+genai.configure(api_key=settings.GOOGLE_API_KEY)
+model = genai.GenerativeModel('gemini-2.5-flash')
 
 class ChatMessage(BaseModel):
     role: str
@@ -31,12 +38,33 @@ async def get_dog_info(breed_name: str = Query(..., description="Nombre de la ra
 @router.post("/ask")
 async def ask_chatbot(request: ChatRequest):
     """
-    Endpoint para preguntas libres sobre el perro (Chatbot).
-    Recibe historial para mantener contexto (stateless).
-    
-    TODO: Enrique
-    1. Integrar con un LLM (OpenAI/Anthropic/Local).
-    2. Usar request.context y request.history para el prompt.
+    Endpoint para preguntas sobre el perro usando Gemini (Streaming).
     """
-    # Mock response
-    return {"answer": f"Backend recibió tu pregunta: '{request.question}' y {len(request.history)} mensajes de contexto. (IA no conectada aún)"}
+    
+    # Construir historial para Gemini
+    chat_history = []
+    if request.context:
+        chat_history.append({
+            "role": "user",
+            "parts": [f"CONTEXTO SOBRE EL PERRO (Información de sistema, prioritaria): {request.context}"]
+        })
+        chat_history.append({
+            "role": "model",
+            "parts": ["Entendido. Usaré este contexto para responder preguntas sobre el perro."]
+        })
+    
+    for msg in request.history:
+        # Mapear roles: 'assistant' -> 'model'
+        role = "model" if msg.role == "assistant" else "user"
+        chat_history.append({"role": role, "parts": [msg.content]})
+
+    # Iniciar chat
+    chat = model.start_chat(history=chat_history)
+
+    async def generate():
+        response = await chat.send_message_async(request.question, stream=True)
+        async for chunk in response:
+            if chunk.text:
+                yield chunk.text
+
+    return StreamingResponse(generate(), media_type="text/plain")
