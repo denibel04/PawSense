@@ -4,9 +4,8 @@ import {
   IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
   IonGrid, IonRow, IonCol, IonProgressBar, IonBadge 
 } from '@ionic/angular/standalone';
-import { ExploreContainerComponent } from '../explore-container/explore-container.component';
-import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common'; 
+import { DogService } from '../core/services/dog.service';
 
 @Component({
   selector: 'app-tab1',
@@ -17,30 +16,25 @@ import { CommonModule } from '@angular/common';
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, 
     IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
     IonGrid, IonRow, IonCol, IonProgressBar, IonBadge,
-    ExploreContainerComponent, CommonModule
+    CommonModule
   ],
 })
 export class Tab1Page {
   selectedFile: File | null = null;
   resultado: any = null;
   cargando = false;
-  imagePreview: string | null = null; // Para mostrar la foto que vas a subir
+  imagePreview: string | null = null;
 
-  // IP de tu instancia EC2 de AWS
-  private readonly URL_API = 'http://51.20.108.18:8000/predict';
-
-  constructor(private http: HttpClient) {}
+  constructor(
+    private dogService: DogService
+  ) {} 
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
       this.selectedFile = file;
-      
-      // Crear una vista previa de la imagen
       const reader = new FileReader();
-      reader.onload = () => {
-        this.imagePreview = reader.result as string;
-      };
+      reader.onload = () => this.imagePreview = reader.result as string;
       reader.readAsDataURL(file);
     }
   }
@@ -49,22 +43,12 @@ export class Tab1Page {
     if (!this.selectedFile) return;
 
     this.cargando = true;
-    this.resultado = null; // Limpiar resultado anterior
-
-    const formData = new FormData();
-    formData.append('file', this.selectedFile);
-
-    this.http.post(this.URL_API, formData).subscribe({
-      next: (res: any) => {
+    this.dogService.predictBreed(this.selectedFile).subscribe({
+      next: (res) => {
         this.resultado = res;
         this.cargando = false;
-        console.log('Respuesta de AWS:', res);
       },
-      error: (err) => {
-        console.error('Error de conexión:', err);
-        alert('Error: No se pudo conectar con el servidor. Verifica que el backend esté corriendo y el puerto 8000 esté abierto en AWS.');
-        this.cargando = false;
-      }
+      error: () => this.cargando = false
     });
   }
 }
