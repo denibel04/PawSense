@@ -1,0 +1,95 @@
+<ion-content [fullscreen]="true">
+  <div class="landing-container">
+    <!-- Navbar / Header -->
+    <header class="landing-header">
+      <div class="logo">
+        <ion-icon name="paw" color="primary"></ion-icon>
+        <span>PawSense</span>
+      </div>
+      <nav class="desktop-nav">
+        <a href="#">Features</a>
+        <a href="#">About</a>
+        <a href="#">Contact</a>
+      </nav>
+      <ion-button fill="outline" shape="round" (click)="navigateToApp()">Login</ion-button>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <ion-grid>
+        <ion-row class="ion-align-items-center">
+          <!-- Text Content -->
+          <ion-col size="12" size-md="6" class="hero-text">
+            <h1>Caring for your pets, <span class="highlight">implified.</span></h1>
+            <p>
+              Track health, chat with AI vets, and keep your furry friends happy directly from your pocket.
+            </p>
+            <div class="hero-buttons">
+              <ion-button size="large" shape="round" (click)="navigateToApp()">
+                Get Started
+                <ion-icon slot="end" name="paw"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" size="large" color="dark">
+                Learn More
+              </ion-button>
+            </div>
+          </ion-col>
+
+          <!-- Image Content -->
+          <ion-col size="12" size-md="6" class="hero-image-col">
+            <div class="hero-image-wrapper">
+              <!-- Placeholder for the generated image, using a specialized class to handle it -->
+              <img src="assets/images/hero_pawsense.png" alt="Happy pets" class="hero-img"
+                onError="this.src='https://ionicframework.com/docs/img/demos/thumbnail.svg'" />
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+      <div class="section-title">
+        <h2>Why PawSense?</h2>
+        <p>Everything you need for your pet's well-being.</p>
+      </div>
+
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="4">
+            <div class="feature-card">
+              <div class="icon-box">
+                <ion-icon name="heart" color="danger"></ion-icon>
+              </div>
+              <h3>Health Tracking</h3>
+              <p>Monitor vaccinations, weight, and vet visits in one place.</p>
+            </div>
+          </ion-col>
+          <ion-col size="12" size-md="4">
+            <div class="feature-card">
+              <div class="icon-box">
+                <ion-icon name="chatbubble-ellipses" color="tertiary"></ion-icon>
+              </div>
+              <h3>AI Vet Chat</h3>
+              <p>Instant answers to your pet questions, powered by advanced AI.</p>
+            </div>
+          </ion-col>
+          <ion-col size="12" size-md="4">
+            <div class="feature-card">
+              <div class="icon-box">
+                <ion-icon name="shield-checkmark" color="success"></ion-icon>
+              </div>
+              <h3>Secure Data</h3>
+              <p>Your pet's information is safe and accessible only to you.</p>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <p>&copy; 2024 PawSense. All rights reserved.</p>
+    </footer>
+  </div>
+</ion-content>

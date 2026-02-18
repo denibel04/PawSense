@@ -1,0 +1,196 @@
+/* Custom Font */
+@font-face {
+  font-family: 'Tondo';
+  src: url('/assets/fonts/Tondo W01 Bold - Modified.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* Landing Page Styles */
+.landing-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Header */
+.landing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: var(--ion-background-color);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    font-family: 'Tondo', sans-serif; /* Custom Font */
+
+    ion-icon {
+      font-size: 1.8rem;
+    }
+  }
+
+  .desktop-nav {
+    display: none; /* Hidden on mobile */
+    gap: 2rem;
+
+    a {
+      text-decoration: none;
+      color: var(--ion-text-color);
+      font-weight: 500;
+      transition: color 0.3s;
+
+      &:hover {
+        color: var(--ion-color-primary);
+      }
+    }
+  }
+
+  @media (min-width: 768px) {
+    .desktop-nav {
+      display: flex;
+    }
+  }
+}
+
+/* Hero Section */
+.hero-section {
+  padding: 3rem 1.5rem;
+  background: linear-gradient(135deg, var(--ion-color-light) 0%, #ffffff 100%);
+  flex-grow: 1;
+  display: flex;
+  align-items: center;
+
+  .hero-text {
+    text-align: center;
+    margin-bottom: 2rem;
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+      font-family: 'Tondo', sans-serif; /* Custom Font */
+      
+      .highlight {
+        color: var(--ion-color-primary);
+      }
+    }
+
+    p {
+      font-size: 1.1rem;
+      color: var(--ion-color-medium);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .hero-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      justify-content: center;
+    }
+  }
+
+  .hero-image-wrapper {
+    display: flex;
+    justify-content: center;
+    
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    }
+  }
+
+  @media (min-width: 768px) {
+    padding: 5rem 3rem;
+    text-align: left;
+
+    .hero-text {
+      text-align: left;
+      margin-bottom: 0;
+
+      h1 {
+        font-size: 3.5rem;
+      }
+
+      .hero-buttons {
+        flex-direction: row;
+        justify-content: flex-start;
+      }
+    }
+  }
+}
+
+/* Features Section */
+.features-section {
+  padding: 4rem 1.5rem;
+  background: var(--ion-background-color);
+  text-align: center;
+
+  .section-title {
+    margin-bottom: 3rem;
+    
+    h2 {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--ion-text-color);
+      font-family: 'Tondo', sans-serif; /* Custom Font */
+    }
+    
+    p {
+      color: var(--ion-color-medium);
+    }
+  }
+
+  .feature-card {
+    padding: 2rem;
+    border-radius: 16px;
+    background: var(--ion-card-background, #f9f9f9);
+    transition: transform 0.3s ease;
+    height: 100%;
+    margin-bottom: 1rem;
+
+    &:hover {
+      transform: translateY(-5px);
+    }
+
+    .icon-box {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(var(--ion-color-primary-rgb), 0.1); /* Fallback */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1.5rem;
+
+      ion-icon {
+        font-size: 2rem;
+      }
+    }
+
+    h3 {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      font-family: 'Tondo', sans-serif;
+    }
+  }
+}
+
+/* Footer */
+footer {
+  padding: 2rem;
+  text-align: center;
+  background: var(--ion-background-color);
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}

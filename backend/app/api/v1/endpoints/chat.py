@@ -9,7 +9,7 @@ router = APIRouter()
 
 # Configurar Gemini
 genai.configure(api_key=settings.GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+model = genai.GenerativeModel('gemini-2.5-pro')
 
 class ChatMessage(BaseModel):
     role: str

@@ -13,22 +13,25 @@
     </ion-toolbar>
   </ion-header>
 
-  <ion-list lines="none">
-    <ion-item *ngFor="let msg of messages">
-      <div [class]="msg.role === 'user' ? 'chat-bubble user' : 'chat-bubble assistant'">
-        <ion-label class="ion-text-wrap">
-          {{ msg.content }}
-        </ion-label>
+  <div class="chat-container">
+    <ng-container *ngFor="let msg of messages">
+      <!-- Only show if content exists (prevent phantom bubble) -->
+      <div *ngIf="msg.content" [class]="'message-wrapper ' + (msg.role === 'user' ? 'user' : 'assistant')">
+        <div class="chat-bubble">
+          <ion-label class="ion-text-wrap">
+            {{ msg.content }}
+          </ion-label>
+        </div>
       </div>
-    </ion-item>
-    <ion-item *ngIf="isLoading">
-      <div class="chat-bubble assistant">
-        <ion-label>
-          <ion-spinner name="dots"></ion-spinner>
-        </ion-label>
+    </ng-container>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="isLoading" class="message-wrapper assistant">
+      <div class="chat-bubble">
+        <ion-spinner name="dots"></ion-spinner>
       </div>
-    </ion-item>
-  </ion-list>
+    </div>
+  </div>
 </ion-content>
 
 <ion-footer>

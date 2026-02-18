@@ -1,31 +1,46 @@
-.chat-bubble {
-    padding: 10px 15px;
-    border-radius: 20px;
-    margin-bottom: 10px;
-    max-width: 80%;
-    display: inline-block;
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-bottom: 20px;
+}
+
+.message-wrapper {
+    display: flex;
+    width: 100%;
 
     &.user {
-        background-color: var(--ion-color-primary);
-        color: var(--ion-color-primary-contrast);
-        float: right;
-        border-bottom-right-radius: 2px;
+        justify-content: flex-end; // Align user messages to the right
     }
 
     &.assistant {
-        background-color: var(--ion-color-light);
-        color: var(--ion-text-color);
-        float: left;
-        border-bottom-left-radius: 2px;
+        justify-content: flex-start; // Align assistant messages to the left
     }
 }
 
-ion-list {
-    display: flex;
-    flex-direction: column;
-}
+.chat-bubble {
+    padding: 10px 15px;
+    border-radius: 18px;
+    max-width: 80%;
+    position: relative;
+    word-wrap: break-word;
 
-ion-item {
-    --inner-padding-end: 0;
-    --padding-start: 0;
+    // Assistant Bubble Style
+    .assistant & {
+        background-color: var(--ion-color-light);
+        color: var(--ion-text-color);
+        border-bottom-left-radius: 4px; // Slight styling accent
+    }
+
+    // User Bubble Style
+    .user & {
+        background-color: var(--ion-color-primary);
+        color: var(--ion-color-primary-contrast);
+        border-bottom-right-radius: 4px; // Slight styling accent
+    }
+
+    ion-spinner {
+        width: 24px;
+        height: 24px;
+    }
 }

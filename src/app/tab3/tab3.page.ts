@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
-  IonList, IonItem, IonLabel, IonFooter, IonButton,
+  IonItem, IonLabel, IonFooter, IonButton,
   IonTextarea, IonIcon, IonButtons, IonSpinner
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
@@ -18,7 +18,7 @@ import { send } from 'ionicons/icons';
     CommonModule,
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
-    IonList, IonItem, IonLabel, IonFooter, IonButton,
+    IonItem, IonLabel, IonFooter, IonButton,
     IonTextarea, IonIcon, IonButtons, IonSpinner
   ],
 })
@@ -71,6 +71,9 @@ export class Tab3Page implements OnInit {
       const botMsg = { role: 'assistant', content: '' };
       this.messages.push(botMsg);
 
+      // NO ocultar spinner todavía. Esperar al primer chunk.
+      // this.isLoading = false; 
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
 
@@ -80,14 +83,23 @@ export class Tab3Page implements OnInit {
 
         const chunk = decoder.decode(value, { stream: true });
         botMsg.content += chunk;
-        // Forzar detección de cambios si fuera necesario, aunque en Ionic suele ser auto
+
+        // Ocultar spinner apenas llegue el primer contenido real
+        if (this.isLoading && botMsg.content.length > 0) {
+          this.isLoading = false;
+        }
       }
 
     } catch (error) {
       console.error('Error:', error);
+
+      // Eliminar el mensaje vacío si existía (limpiar phantom bubble en error)
+      if (this.messages.length > 0 && this.messages[this.messages.length - 1].role === 'assistant' && !this.messages[this.messages.length - 1].content) {
+        this.messages.pop();
+      }
+
       const errorMsg = { role: 'assistant', content: 'Lo siento, hubo un error al conectar con el servidor.' };
       this.messages.push(errorMsg);
-    } finally {
       this.isLoading = false;
     }
   }
