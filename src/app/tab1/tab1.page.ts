@@ -21,16 +21,16 @@ import { DogService } from '../core/services/dog.service';
 })
 export class Tab1Page {
   selectedFile: File | null = null;
-  resultado: any = null;
-  cargando = false;
+  predictionResult: any = null;
+  isLoading = false;
   imagePreview: string | null = null;
 
-  constructor(
-    private dogService: DogService
-  ) {} 
+  constructor(private dogService: DogService) {} 
 
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
+  onFileSelected(event: Event) {
+    const element = event.currentTarget as HTMLInputElement;
+    const file = element.files?.[0];
+
     if (file) {
       this.selectedFile = file;
       const reader = new FileReader();
@@ -39,16 +39,19 @@ export class Tab1Page {
     }
   }
 
-  subirYPredecir() {
+  uploadAndPredict() {
     if (!this.selectedFile) return;
 
-    this.cargando = true;
+    this.isLoading = true;
     this.dogService.predictBreed(this.selectedFile).subscribe({
-      next: (res) => {
-        this.resultado = res;
-        this.cargando = false;
+      next: (response) => {
+        this.predictionResult = response;
+        this.isLoading = false;
       },
-      error: () => this.cargando = false
+      error: (err) => {
+        console.error('Prediction failed:', err);
+        this.isLoading = false;
+      }
     });
   }
 }

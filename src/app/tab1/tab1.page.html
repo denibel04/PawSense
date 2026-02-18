@@ -1,6 +1,6 @@
 <ion-header [translucent]="true">
-  <ion-toolbar color="primary">
-    <ion-title>PawSense Predictor</ion-title>
+  <ion-toolbar>
+    <ion-title>PawSense</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -18,21 +18,21 @@
           <img [src]="imagePreview" class="preview-img">
         </div>
 
-        <ion-button expand="block" (click)="subirYPredecir()" [disabled]="!selectedFile || cargando" class="ion-margin-top">
-          <ion-loading *ngIf="cargando" slot="start"></ion-loading>
-          {{ cargando ? 'Analizando con IA...' : 'Analizar Perro' }}
+        <ion-button expand="block" (click)="uploadAndPredict()" [disabled]="!selectedFile || isLoading" class="ion-margin-top">
+          <ion-loading *ngIf="isLoading" slot="start"></ion-loading>
+          {{ isLoading ? 'Analizando con IA...' : 'Analizar Perro' }}
         </ion-button>
       </ion-card-content>
     </ion-card>
 
-    <div *ngIf="resultado">
+    <div *ngIf="predictionResult">
       
       <ion-card class="winner-card">
         <ion-card-content class="ion-text-center">
           <p class="label-winner">Resultado Final</p>
-          <h1 class="winner-title">🥇 {{ resultado.ganador.raza }}</h1>
-          <p class="winner-conf">Confianza: <strong>{{ resultado.ganador.conf }}</strong></p>
-          <ion-badge color="success">Modelo más preciso: {{ resultado.ganador.source }}</ion-badge>
+          <h1 class="winner-title">🥇 {{ predictionResult.winner.breed }}</h1>
+          <p class="winner-conf">Confianza: <strong>{{ predictionResult.winner.confidence }}</strong></p>
+          <ion-badge color="success">Modelo más preciso: {{ predictionResult.winner.source }}</ion-badge>
         </ion-card-content>
       </ion-card>
 
@@ -40,26 +40,26 @@
         <ion-row>
           <ion-col size="12" size-md="6">
             <h3 class="model-header">PyTorch</h3>
-            <ion-card *ngFor="let item of resultado.detalles.pytorch; let i = index" [class.is-first]="i === 0">
+            <ion-card *ngFor="let item of predictionResult.details.pytorch; let i = index" [class.is-first]="i === 0">
               <ion-card-content>
                 <div class="prediction-info">
-                  <span class="breed-name">{{ i + 1 }}. {{ item.raza }}</span>
-                  <span class="prob-val">{{ (item.prob * 100).toFixed(2) }}%</span>
+                  <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
+                  <span class="prob-val">{{ (item.probability * 100).toFixed(2) }}%</span>
                 </div>
-                <ion-progress-bar [value]="item.prob" [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
+                <ion-progress-bar [value]="item.probability" [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
               </ion-card-content>
             </ion-card>
           </ion-col>
 
           <ion-col size="12" size-md="6">
             <h3 class="model-header">TensorFlow</h3>
-            <ion-card *ngFor="let item of resultado.detalles.tensorflow; let i = index" [class.is-first]="i === 0">
+            <ion-card *ngFor="let item of predictionResult.details.tensorflow; let i = index" [class.is-first]="i === 0">
               <ion-card-content>
                 <div class="prediction-info">
-                  <span class="breed-name">{{ i + 1 }}. {{ item.raza }}</span>
-                  <span class="prob-val">{{ (item.prob * 100).toFixed(2) }}%</span>
+                  <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
+                  <span class="prob-val">{{ (item.probability * 100).toFixed(2) }}%</span>
                 </div>
-                <ion-progress-bar [value]="item.prob" [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
+                <ion-progress-bar [value]="item.probability" [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
               </ion-card-content>
             </ion-card>
           </ion-col>
