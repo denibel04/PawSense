@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from typing import List, Optional
 import google.generativeai as genai
 from app.core.config import settings
+from app.services.thedogapi import get_breed_info, TheDogAPIError
 
 router = APIRouter()
 
@@ -20,20 +21,82 @@ class ChatRequest(BaseModel):
     context: str
     history: Optional[List[ChatMessage]] = []
 
-@router.get("/info")
+class DogInfoResponse(BaseModel):
+    found: bool
+    breed: Optional[str] = None
+    temperament: Optional[str] = None
+    life_span: Optional[str] = None
+    height_metric: Optional[str] = None
+    weight_metric: Optional[str] = None
+    bred_for: Optional[str] = None
+    breed_group: Optional[str] = None
+    origin: Optional[str] = None
+    message: Optional[str] = None
+
+@router.get("/info", response_model=DogInfoResponse)
 async def get_dog_info(breed_name: str = Query(..., description="Nombre de la raza a consultar")):
     """
     Obtener información detallada de una raza desde TheDogAPI.
     
-    TODO: Enrique
-    1. Usar `httpx` para consultar TheDogAPI (https://api.thedogapi.com/v1/breeds/search?q={breed_name}).
-    2. Necesitarás una API KEY de TheDogAPI (configurar en `app/core/config.py`).
-    3. Filtrar y formatear la respuesta con datos relevantes:
-       - Temperamento
-       - Vida promedio
-       - Altura/Peso
+    Query Params:
+        - breed_name (str): Nombre de la raza a buscar (ej: golden, labrador, husky)
+    
+    Response:
+        {
+            "found": bool,
+            "breed": str,
+            "temperament": str|null,
+            "life_span": str|null,
+            "height_metric": str|null,
+            "weight_metric": str|null,
+            "bred_for": str|null,
+            "breed_group": str|null,
+            "origin": str|null,
+            "message": str|null
+        }
+    
+    HTTP Status Codes:
+        - 200: Raza encontrada o no encontrada (found=true/false)
+        - 500: API key de TheDogAPI no configurada
+        - 502: Error en TheDogAPI o conectividad
+    
+    Ejemplo de uso:
+        curl "http://127.0.0.1:8000/api/v1/chat/info?breed_name=golden"
+        curl "http://127.0.0.1:8000/api/v1/chat/info?breed_name=husky"
     """
-    return {"message": f"Info for {breed_name} not implemented"}
+    try:
+        # Consultar TheDogAPI
+        breed_info = await get_breed_info(breed_name)
+        
+        if breed_info is None:
+            # Raza no encontrada - retornar respuesta segura
+            return DogInfoResponse(
+                found=False,
+                message=f"No se encontró información para la raza '{breed_name}'. Intenta con otro nombre."
+            )
+        
+        # Retornar datos encontrados
+        return DogInfoResponse(**breed_info)
+        
+    except TheDogAPIError as e:
+        if "no está configurada" in str(e):
+            # API key no configurada -> HTTP 500
+            raise HTTPException(
+                status_code=500,
+                detail="API key de TheDogAPI no configurada en el servidor"
+            )
+        else:
+            # Error en TheDogAPI -> HTTP 502
+            raise HTTPException(
+                status_code=502,
+                detail=f"Error consultando TheDogAPI: {str(e)}"
+            )
+    except Exception as e:
+        # Error inesperado -> HTTP 502
+        raise HTTPException(
+            status_code=502,
+            detail=f"Error inesperado: {str(e)}"
+        )
 
 @router.post("/ask")
 async def ask_chatbot(request: ChatRequest):
