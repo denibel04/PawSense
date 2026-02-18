@@ -1,0 +1,64 @@
+.preview-img {
+  max-height: 250px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  border: 3px solid #f4f4f4;
+}
+
+.winner-card {
+  border: 2px solid #2dd36f;
+  background: #f0fff4;
+  margin: 20px 0;
+  
+  .label-winner {
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    color: #666;
+    margin-bottom: 5px;
+  }
+  
+  .winner-title {
+    font-weight: 800;
+    color: #1a1a1a;
+    margin: 5px 0;
+  }
+
+  .winner-conf {
+    font-size: 1.1rem;
+    margin-bottom: 10px;
+  }
+}
+
+.model-header {
+  font-weight: bold;
+  font-size: 1.2rem;
+  text-align: center;
+  margin-top: 20px;
+  color: #444;
+}
+
+.prediction-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  
+  .breed-name {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .prob-val {
+    font-family: monospace;
+    font-weight: bold;
+  }
+}
+
+.is-first {
+  border-left: 5px solid #2dd36f;
+}
+
+ion-progress-bar {
+  height: 10px;
+  border-radius: 5px;
+}
