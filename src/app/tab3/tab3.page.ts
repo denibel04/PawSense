@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -8,6 +8,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { send } from 'ionicons/icons';
+import { ChatService } from '../core/services/chat.service';
 
 @Component({
   selector: 'app-tab3',
@@ -26,53 +27,60 @@ export class Tab3Page implements OnInit {
   messages: { role: string; content: string }[] = [];
   newMessage: string = '';
   isLoading: boolean = false;
+  contextData: string = '';
 
-  constructor() {
+  constructor(private chatService: ChatService) {
     addIcons({ send });
   }
 
   ngOnInit() {
-    // Mensaje de bienvenida inicial (sin cargar de localStorage)
     this.messages = [
       { role: 'assistant', content: '¡Hola! Soy tu asistente canino. ¿En qué puedo ayudarte hoy?' }
     ];
+
+    // Obtener contexto inicial (Hardcoded por ahora, debería venir de la navegación)
+    this.getInitialContext('terrier');
+  }
+
+  getInitialContext(breed: string) {
+    this.chatService.getBreedInfo(breed).subscribe({
+      next: (data) => {
+        if (data.found) {
+          this.contextData = `
+            Raza: ${data.breed}
+            Temperamento: ${data.temperament}
+            Vida: ${data.life_span}
+            Origen: ${data.origin}
+            Uso: ${data.bred_for}
+          `.trim();
+        }
+      },
+      error: (err) => {
+        console.error('Error fetching breed context:', err);
+        // Fallback or silently fail - do not show error to user in chat
+        this.contextData = '';
+      }
+    });
   }
 
   async sendMessage() {
     if (!this.newMessage.trim()) return;
 
-    // 1. Añadir mensaje del usuario
     const userMsg = { role: 'user', content: this.newMessage };
     this.messages.push(userMsg);
 
     const question = this.newMessage;
-    this.newMessage = ''; // Limpiar input
+    this.newMessage = '';
     this.isLoading = true;
 
-    // 2. Llamar al backend usando fetch (Streaming)
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/v1/chat/ask', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          question: question,
-          context: 'Usuario desde App', // TODO: Obtener del servicio de predicción
-          history: this.messages
-        })
-      });
+      const response = await this.chatService.sendMessage(question, this.contextData, this.messages);
 
       if (!response.ok) throw new Error('Error en la petición');
       if (!response.body) throw new Error('No body in response');
 
-      // Crear mensaje vacío del bot para ir rellenando
       const botMsg = { role: 'assistant', content: '' };
       this.messages.push(botMsg);
-
-      // NO ocultar spinner todavía. Esperar al primer chunk.
-      // this.isLoading = false; 
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
@@ -84,16 +92,14 @@ export class Tab3Page implements OnInit {
         const chunk = decoder.decode(value, { stream: true });
         botMsg.content += chunk;
 
-        // Ocultar spinner apenas llegue el primer contenido real
         if (this.isLoading && botMsg.content.length > 0) {
           this.isLoading = false;
         }
       }
 
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error in chat:', error);
 
-      // Eliminar el mensaje vacío si existía (limpiar phantom bubble en error)
       if (this.messages.length > 0 && this.messages[this.messages.length - 1].role === 'assistant' && !this.messages[this.messages.length - 1].content) {
         this.messages.pop();
       }
@@ -104,3 +110,4 @@ export class Tab3Page implements OnInit {
     }
   }
 }
+
