@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
 from app.schemas.chat import ChatRequest, DogInfoResponse
-from app.services.thedogapi import get_breed_info, TheDogAPIError
+from app.services.dog_service import DogService, TheDogAPIError
 from app.services.chat_service import ChatService
 import logging
 
@@ -13,8 +13,14 @@ router = APIRouter()
 def get_chat_service():
     return ChatService()
 
+def get_dog_service():
+    return DogService()
+
 @router.get("/info", response_model=DogInfoResponse)
-async def get_dog_info(breed_name: str = Query(..., description="Nombre de la raza a consultar")):
+async def get_dog_info(
+    breed_name: str = Query(..., description="Nombre de la raza a consultar"),
+    dog_service: DogService = Depends(get_dog_service)
+):
     """
     Obtener información detallada de una raza desde TheDogAPI.
     
@@ -46,7 +52,7 @@ async def get_dog_info(breed_name: str = Query(..., description="Nombre de la ra
     """
     try:
         # Consultar TheDogAPI
-        breed_info = await get_breed_info(breed_name)
+        breed_info = await dog_service.get_breed_info(breed_name)
         
         if breed_info is None:
             # Raza no encontrada - retornar respuesta segura
