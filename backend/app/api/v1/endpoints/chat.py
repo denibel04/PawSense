@@ -12,6 +12,11 @@ from app.services.chat_utils import (
     get_out_of_domain_message,
     build_system_prompt,
     is_rate_limit_error,
+    detect_intent,
+    is_medical_emergency,
+    get_emergency_response,
+    build_whitelist_system_prompt,
+    get_whitelist_references,
 )
 import logging
 
@@ -118,10 +123,11 @@ async def get_dog_info(breed_name: str = Query(..., description="Nombre de la ra
 @router.post("/ask")
 async def ask_chatbot(request: ChatRequest):
     """
-    Endpoint para preguntas sobre el perro usando Gemini (Streaming) con el nuevo SDK google-genai.
+    Endpoint para preguntas sobre el perro usando Gemini (Streaming).
     
     Características:
     - Valida que la pregunta esté en el dominio de perros.
+    - Modo whitelist: respuestas médicas/adiestramiento solo con fuentes oficiales.
     - Maneja 429 (rate limit) con mensaje amable.
     - Responde sin markdown excesivo, con tono humano.
     """
@@ -153,32 +159,46 @@ async def ask_chatbot(request: ChatRequest):
             media_type="text/plain"
         )
 
+    # --- DETECTAR INTENCIÓN Y EMERGENCIAS MÉDICAS ---
+    intent = detect_intent(request.question, request.context)
+    logger.info(f"Intención detectada: {intent}")
+    
+    # Checar si es emergencia médica
+    if is_medical_emergency(request.question, request.context):
+        logger.warning(f"Emergencia médica detectada: {request.question[:50]}...")
+        emergency_msg = get_emergency_response()
+        whitelist_refs = get_whitelist_references("medical", num_refs=3)
+        response_body = f"{emergency_msg}\n\n{whitelist_refs}"
+        return StreamingResponse(iter([response_body]), media_type="text/plain")
+
     try:
-        # Construir historial para Gemini con sistema prompt mejorado
+        # Construir historial para Gemini con sistema prompt según intención
         chat_history = []
         
-        # Agregar el prompt del sistema como primer mensaje de contexto
-        system_prompt = build_system_prompt(request.context)
+        # Seleccionar system prompt según intención
+        if intent in ("medical", "training"):
+            system_prompt = build_whitelist_system_prompt(intent, request.context)
+        else:
+            system_prompt = build_system_prompt(request.context)
+        
         chat_history.append(types.Content(
             role="user",
             parts=[types.Part.from_text(text=system_prompt)]
         ))
         chat_history.append(types.Content(
             role="model",
-            parts=[types.Part.from_text(text="Entendido. Responderé tus preguntas sobre perros de forma clara, práctica y cercana.")]
+            parts=[types.Part.from_text(text="Entendido. Responderé basándome en fuentes confiables.")]
         ))
         
         # Agregar historial previo
         for msg in request.history:
-            # Mapear roles: 'assistant' -> 'model'
             role = "model" if msg.role == "assistant" else "user"
             chat_history.append(types.Content(
                 role=role,
                 parts=[types.Part.from_text(text=msg.content)]
             ))
 
-        # Crear sesión de chat
-        model_name = 'gemini-2.5-pro' 
+        model_name = 'gemini-2.5-pro'
         
         chat = client.chats.create(
             model=model_name,
@@ -187,25 +207,30 @@ async def ask_chatbot(request: ChatRequest):
 
         async def generate():
             try:
-                # Usar cliente asincrónico para streaming
                 async_client = genai.Client(api_key=settings.GOOGLE_API_KEY)
                 async_chat = async_client.aio.chats.create(
                     model=model_name,
                     history=chat_history
                 )
                 
-                # Enviar mensaje con streaming
                 response_stream = await async_chat.send_message_stream(
                     message=request.question,
                     config=types.GenerateContentConfig(response_mime_type="text/plain")
                 )
                 
+                response_text = ""
                 async for chunk in response_stream:
                     if chunk.text:
+                        response_text += chunk.text
                         yield chunk.text
+                
+                # Agregar referencias de whitelist al final para intenciones médica/adiestramiento
+                if intent in ("medical", "training"):
+                    whitelist_refs = get_whitelist_references(intent, num_refs=4)
+                    yield f"\n\n{whitelist_refs}"
                         
             except Exception as e:
-                # --- MANEJO DE 429 DURANTE STREAMING ---
+                # Manejo de 429 durante streaming
                 if is_rate_limit_error(e):
                     logger.warning(f"Rate limit (429) detectado durante streaming: {e}")
                     yield f"\n\n{get_rate_limit_message()}"
@@ -216,7 +241,7 @@ async def ask_chatbot(request: ChatRequest):
         return StreamingResponse(generate(), media_type="text/plain")
 
     except Exception as e:
-        # --- MANEJO DE 429 ANTES DEL STREAMING ---
+        # Manejo de 429 antes del streaming
         if is_rate_limit_error(e):
             logger.warning(f"Rate limit (429) detectado antes del streaming: {e}")
             raise HTTPException(
