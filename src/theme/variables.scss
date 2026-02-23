@@ -1,2 +1,14 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+:root {
+    --pawsense-orange: #F6A655FF;
+
+    /* Overriding the primary color (used for selected tabs) */
+    --ion-color-primary: var(--pawsense-orange);
+    --ion-color-primary-rgb: 246, 166, 85;
+    /* RGB version for overlays */
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255, 255, 255;
+    --ion-color-primary-shade: #d9924b;
+    --ion-color-primary-tint: #f7af66;
+}

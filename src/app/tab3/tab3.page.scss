@@ -34,7 +34,7 @@
 
     // User Bubble Style
     .user & {
-        background-color: var(--ion-color-primary);
+        background-color: var(--pawsense-orange);
         color: var(--ion-color-primary-contrast);
         border-bottom-right-radius: 4px; // Slight styling accent
     }
@@ -42,5 +42,73 @@
     ion-spinner {
         width: 24px;
         height: 24px;
+    }
+}
+
+// Circular Ripple Button Styles
+.ripple-parent {
+    position: relative;
+    overflow: hidden;
+}
+
+.circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 2px solid var(--pawsense-orange);
+    color: var(--pawsense-orange);
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    ion-icon {
+        font-size: 20px;
+        margin-left: 2px; // Slight adjustment to center the send icon visually
+    }
+
+    &:hover:not(.disabled) {
+        background-color: var(--pawsense-orange);
+        color: white;
+    }
+
+    &.disabled {
+        border-color: var(--ion-color-light-shade);
+        background-color: var(--ion-color-light-shade);
+        color: var(--ion-color-medium);
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+}
+
+
+ion-textarea.chatbox {
+    // Internal background and padding
+    --background: var(--ion-color-light);
+    --border-radius: 24px;
+    --padding-top: 14px;
+    --padding-bottom: 12px;
+    --padding-start: 16px;
+    --padding-end: 16px;
+
+    --color: var(--ion-color-dark);
+    --placeholder-color: #999;
+    --placeholder-opacity: 0.8;
+
+    // Custom CSS Border on the host element
+    border-radius: 24px;
+    border: 1px solid var(--ion-color-light-shade);
+    overflow: hidden;
+
+    margin: 10px;
+    margin-right: 0px;
+    transition: all 0.2s ease;
+
+    &.has-focus {
+        // Transparent background and orange border when focused
+        --background: transparent;
+        border-color: var(--pawsense-orange);
     }
 }
