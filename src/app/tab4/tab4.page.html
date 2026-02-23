@@ -1,42 +1,233 @@
-<ion-header [translucent]="true">
+<ion-header [translucent]="true" class="ion-no-border dashboard-header">
   <ion-toolbar>
+    <!-- Brand Title (simulated left align like image) -->
     <ion-title>
-      Reportes e Historial
+      <strong>PawSense</strong> | <span style="font-weight: 500; opacity: 0.8;">Informe</span>
     </ion-title>
+  </ion-toolbar>
+
+  <ion-toolbar class="segment-toolbar">
+    <div class="segment-container">
+      <ion-segment [(ngModel)]="selectedSegment" mode="ios">
+        <ion-segment-button value="veterinario">
+          <ion-label>Informe Veterinario</ion-label>
+        </ion-segment-button>
+        <ion-segment-button value="adiestramiento">
+          <ion-label>Informe Adiestramiento</ion-label>
+        </ion-segment-button>
+      </ion-segment>
+    </div>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Reportes</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<ion-content [fullscreen]="true" class="dashboard-content">
 
-  <div class="ion-padding">
-    <h2>Historial de Análisis</h2>
-    <p>Aquí podrás ver y descargar los reportes detallados de tus perros analizados.</p>
+  <ion-grid>
+    <ion-row>
+      <!-- LEFT COLUMN: AUDIO -->
+      <ion-col size-xs="12" size-md="3">
+        <ion-card class="dashboard-card action-card">
+          <ion-card-header>
+            <ion-card-title>Audio</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-button expand="block" color="primary" class="primary-action-btn">
+              <ion-icon slot="start" name="mic-outline"></ion-icon>
+              Grabar Consulta
+            </ion-button>
+            <ion-button expand="block" fill="outline" color="medium" class="secondary-btn">
+              <ion-icon slot="start" name="folder-outline"></ion-icon>
+              Subir Audio
+            </ion-button>
+            <p class="status-text muted">Analizando información...</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
 
-    <ion-list [inset]="true">
-      <ion-item *ngFor="let report of reports">
-        <ion-icon slot="start" name="document-text" color="primary"></ion-icon>
-        <ion-label>
-          <h3>{{ report.breed }}</h3>
-          <p>
-            <ion-icon name="time" size="small"></ion-icon>
-            {{ report.date }}
-          </p>
-        </ion-label>
-        <ion-badge slot="end" color="success">{{ report.status }}</ion-badge>
-        <ion-button slot="end" fill="clear" (click)="downloadReport(report.id)">
-          <ion-icon slot="icon-only" name="cloud-download"></ion-icon>
-        </ion-button>
-      </ion-item>
-    </ion-list>
+      <!-- CENTER COLUMN: DATOS EXTRAIDOS -->
+      <ion-col size-xs="12" size-md="5">
+        <ion-card class="dashboard-card extraction-card">
+          <ion-card-header>
+            <ion-card-title>Datos Extraídos</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="inner-report-box">
+              <div class="inner-header">
+                <h3>Informe {{ selectedSegment === 'veterinario' ? 'Veterinario' : 'de Adiestramiento'}}</h3>
+                <span class="brand-text"><strong>PawSense</strong></span>
+              </div>
 
-    <div *ngIf="reports.length === 0" class="empty-state">
-      <ion-icon name="document-text" size="large"></ion-icon>
-      <p>Aún no tienes reportes generados.</p>
-    </div>
-  </div>
+              <div class="skeleton-section">
+                <h4>
+                  <div class="square-bullet"></div> Identificación del Paciente
+                </h4>
+                <div class="skel-line wide"></div>
+                <div class="skel-line narrow"></div>
+              </div>
+              <div class="skeleton-section">
+                <h4>
+                  <div class="square-bullet"></div> Motivo de Consulta
+                </h4>
+                <div class="skel-line wide"></div>
+                <div class="skel-line narrow"></div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <!-- RIGHT COLUMN: PROGRESO -->
+      <ion-col size-xs="12" size-md="4">
+        <ion-card class="dashboard-card progress-card">
+          <ion-card-header>
+            <ion-card-title>Progreso</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-list lines="none">
+
+              <ion-item>
+                <ion-icon slot="start" name="checkmark-circle" color="success"></ion-icon>
+                <ion-label>Transcripción</ion-label>
+                <ion-icon slot="end" name="checkmark-outline" color="success" class="check-small"></ion-icon>
+              </ion-item>
+
+              <ion-item>
+                <ion-icon slot="start" name="checkmark-circle" color="success"></ion-icon>
+                <ion-label>Extracción Clínica</ion-label>
+                <ion-icon slot="end" name="checkmark-outline" color="success" class="check-small"></ion-icon>
+              </ion-item>
+
+              <ion-item class="pending">
+                <ion-icon slot="start" name="ellipse-outline" color="primary"></ion-icon>
+                <ion-label>Revisión - <span class="highlight">Pendiente</span></ion-label>
+              </ion-item>
+
+              <ion-item class="process">
+                <ion-icon slot="start" name="time-outline" color="medium"></ion-icon>
+                <ion-label class="muted">Informe Final - <span>En proceso</span></ion-label>
+              </ion-item>
+
+            </ion-list>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- BOTTOM ROW: VISTA PREVIA -->
+    <ion-row>
+      <ion-col size="12">
+        <ion-card class="dashboard-card preview-card">
+          <ion-card-header>
+            <ion-card-title>
+              Vista Previa del Informe -
+              <span class="clickable-span" (click)="toggleEditMode()">{{ isEditing ? 'Cerrar Edición' : 'Editar'
+                }}</span>
+            </ion-card-title>
+          </ion-card-header>
+
+          <ion-card-content>
+
+            <!-- READ ONLY MOCK PREVIEW -->
+            <div *ngIf="!isEditing" class="inner-preview-box">
+              <div class="inner-header">
+                <h3>Informe {{ selectedSegment === 'veterinario' ? 'Veterinario' : 'de Adiestramiento'}}</h3>
+                <span class="brand-text"><strong>PawSense</strong></span>
+              </div>
+
+              <!-- Dummy Data Columns (imitates reference) -->
+              <ion-grid class="preview-grid ion-no-padding">
+                <ion-row>
+                  <ion-col size-xs="12" size-md="4" class="text-data">
+                    <p><strong>Síntomas:</strong> Prurito, Enrojecimiento</p>
+                    <p><strong>Duración:</strong> 14 días</p>
+                    <p><strong>Apetito:</strong> Normal</p>
+                    <p><strong>Urgencia:</strong> <span class="muted">No Urgente</span></p>
+                    <p><strong>Red Flags:</strong> <span class="muted">Ninguno detectado</span></p>
+                  </ion-col>
+
+                  <ion-col size-xs="12" size-md="4">
+                    <div class="skeleton-section">
+                      <h4>
+                        <div class="dot-bullet"></div> Triage
+                      </h4>
+                      <div class="skel-line medium"></div>
+                      <div class="skel-line medium"></div>
+                    </div>
+                    <div class="skeleton-section">
+                      <h4>
+                        <div class="dot-bullet"></div> Diferenciales
+                      </h4>
+                      <div class="skel-line medium"></div>
+                      <div class="skel-line narrow"></div>
+                    </div>
+                  </ion-col>
+
+                  <ion-col size-xs="12" size-md="4">
+                    <div class="skeleton-section">
+                      <h4>
+                        <div class="dot-bullet"></div> Recomendaciones
+                      </h4>
+                      <div class="skel-line medium"></div>
+                      <div class="skel-line long"></div>
+                    </div>
+                    <div class="skeleton-section">
+                      <h4>
+                        <div class="dot-bullet"></div> Anexos
+                      </h4>
+                      <div class="skel-line medium"></div>
+                      <div class="skel-line medium"></div>
+                    </div>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+
+              <div class="preview-actions">
+                <ion-button color="primary" class="primary-action-btn" (click)="downloadReport()">
+                  <ion-icon slot="start" name="download-outline"></ion-icon>
+                  Descargar PDF
+                </ion-button>
+                <ion-button fill="outline" color="medium" class="secondary-btn" (click)="toggleEditMode()">
+                  <ion-icon slot="start" name="create-outline"></ion-icon>
+                  Editar Informe
+                </ion-button>
+              </div>
+
+            </div>
+
+            <!-- ACTUAL COMPONENTS FOR EDITING -->
+            <div *ngIf="isEditing">
+              <app-clinical-report *ngIf="selectedSegment === 'veterinario'"></app-clinical-report>
+              <app-training-report *ngIf="selectedSegment === 'adiestramiento'"></app-training-report>
+            </div>
+
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+
+    <!-- OLD HISTORIAL -->
+    <ion-row class="ion-margin-top">
+      <ion-col size="12">
+        <h2>Historial de Análisis Antiguos</h2>
+        <ion-list [inset]="true" style="background:#fff; border-radius: 8px; border: 1px solid #e0e0e0;">
+          <ion-item *ngFor="let report of reports">
+            <ion-icon slot="start" name="document-text" color="primary"></ion-icon>
+            <ion-label>
+              <h3>{{ report.breed }}</h3>
+              <p>
+                <ion-icon name="time" size="small"></ion-icon>
+                {{ report.date }}
+              </p>
+            </ion-label>
+            <ion-badge slot="end" color="success">{{ report.status }}</ion-badge>
+            <ion-button slot="end" fill="clear" (click)="downloadOldReport(report.id)">
+              <ion-icon slot="icon-only" name="cloud-download"></ion-icon>
+            </ion-button>
+          </ion-item>
+        </ion-list>
+      </ion-col>
+    </ion-row>
+
+  </ion-grid>
+
 </ion-content>
