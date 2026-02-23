@@ -104,59 +104,91 @@ class PredictionService:
 
     def load_model(self):
         """
-        🔴 DENISA: Carga el modelo TensorFlow/PyTorch aquí.
-        
-        Qué debería hacer:
-            1. Cargar modelo desde archivo (.h5, .pth, etc.)
-            2. Cargar pesos del modelo
-            3. Configurar preprocesador (normalización)
-            4. Cargar lista de razas (clases)
-            5. Establecer self.model_loaded = True
-            6. Cambiar self.use_mock = False
+        Carga los modelos YOLOv8 para detección y clasificación.
         """
-        # 🔴 DENISA: Reemplaza el 'pass' de abajo con tu código
-        pass
+        try:
+            from ultralytics import YOLO
+            import torch
+
+            # Intentamos usar GPU si está disponible, si no CPU
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            
+            # Detector (para encontrar al perro) - Usamos NANO para velocidad
+            self.detector = YOLO("yolov8n.pt").to(device)
+            # Clasificador (para la raza) - Usamos NANO para velocidad
+            self.classifier = YOLO("yolov8n-cls.pt").to(device)
+            
+            self.model_loaded = True
+            self.use_mock = False
+            print(f"✅ Modelos YOLOv8 cargados exitosamente en {device}")
+        except Exception as e:
+            print(f"❌ Error cargando modelos: {e}")
+            self.use_mock = True
 
     def _preprocess_image(self, image_path: str) -> np.ndarray:
         """
-        🔴 DENISA: Preprocesa la imagen para el modelo.
-        
-        Pasos:
-            1. Leer imagen desde archivo
-            2. Redimensionar a self.img_size (ej: 224x224)
-            3. Convertir a array de numpy
-            4. Normalizar píxeles (usar self.preprocessing_fn)
-            5. Agregar batch dimension
-            6. Retornar array preparado
-        
-        IMPORTANTE:
-            - El preprocesamiento DEBE coincidir con cómo entrenaste el modelo
-            - Si en entrenamiento normalizaste a [0,1], normaliza aquí igual
-            - Si el modelo espera [224, 224], redimensiona a eso
+        En el caso de YOLO, el preprocesamiento está integrado en el método predict.
+        Simplemente cargamos la imagen con OpenCV.
         """
-        # 🔴 DENISA: Implementa aquí
-        pass
+        import cv2
+        img = cv2.imread(image_path)
+        if img is None:
+            raise ValueError(f"No se pudo cargar la imagen en {image_path}")
+        return img
 
-    def _infer(self, preprocessed_image: np.ndarray) -> List[PredictionResult]:
+    def _infer(self, image: np.ndarray) -> List[PredictionResult]:
         """
-        🔴 DENISA: Ejecuta el modelo y obtiene predicciones.
-        
-        Pasos:
-            1. Pasar imagen al modelo
-            2. Obtener output (probabilidades o logits)
-            3. Convertir índices a nombres de raza (usando self.breed_labels)
-            4. Crear objetos PredictionResult
-            5. Ordenar por confianza (descendente)
-            6. Retornar lista ordenada
-        
-        IMPORTANTE:
-            - El output del modelo depende de tu arquitectura
-            - Algunos modelos devuelven [probabilidades] directamente
-            - Otros devuelven logits (necesitas aplicar softmax)
-            - Python: np.exp(logits) / np.sum(np.exp(logits))
+        Ejecuta la detección y luego la clasificación sobre el recorte cuadrado del perro.
         """
-        # 🔴 DENISA: Implementa aquí
-        pass
+        if not self.model_loaded:
+            return []
+
+        # 1. Detectar perro (clase 16 en COCO)
+        results_det = self.detector.predict(image, classes=[16], conf=0.3, verbose=False)
+        
+        predictions = []
+        
+        for res in results_det:
+            boxes = res.boxes.xyxy.cpu().numpy()
+            if len(boxes) > 0:
+                # Tomamos el primer perro detectado
+                x1, y1, x2, y2 = [int(v) for v in boxes[0]]
+                
+                # --- MEJORA: RECORTE CUADRADO ---
+                # YOLOv8-cls prefiere imágenes cuadradas sin distorsión.
+                h, w, _ = image.shape
+                
+                box_w = x2 - x1
+                box_h = y2 - y1
+                
+                # Centro del box
+                cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
+                # Tamaño del lado del cuadrado (con un pequeño padding del 10%)
+                side = int(max(box_w, box_h) * 1.1)
+                
+                # Nuevas coordenadas del cuadrado
+                nx1 = max(0, cx - side // 2)
+                ny1 = max(0, cy - side // 2)
+                nx2 = min(w, cx + side // 2)
+                ny2 = min(h, cy + side // 2)
+                
+                crop = image[ny1:ny2, nx1:nx2]
+                
+                if crop.size > 0:
+                    # 2. Clasificar raza
+                    results_cls = self.classifier.predict(crop, verbose=False, imgsz=224)
+                    probs = results_cls[0].probs
+                    
+                    # Obtener Top-3
+                    top5_indices = probs.top5
+                    top5_confs = probs.top5conf.cpu().numpy()
+                    names = results_cls[0].names
+                    
+                    for idx, conf in zip(top5_indices, top5_confs):
+                        breed_name = names[idx].replace("_", " ").title()
+                        predictions.append(PredictionResult(breed_name, float(conf)))
+                        
+        return predictions
 
     # ════════════════════════════════════════════════════════════════
     # ✅ ENRIQUE: MÉTODOS YA IMPLEMENTADOS (Funcionan con mock y real)
@@ -198,23 +230,27 @@ class PredictionService:
         
         # Si modelo está cargado, usa el REAL
         try:
-            # 1. Preprocesar imagen
             preprocessed = self._preprocess_image(image_path)
-            
-            # 2. Ejecutar modelo (Denisa implementó _infer)
             predictions = self._infer(preprocessed)
-            
-            # 3. Retornar predicciones ordenadas
-            return sorted(
-                predictions,
-                key=lambda x: x.confidence,
-                reverse=True
-            )
-        
+            return sorted(predictions, key=lambda x: x.confidence, reverse=True)
         except Exception as e:
             print(f"❌ Error en predicción: {e}")
-            print("⚠️  Fallback a MOCK")
             return self._mock_predict(image_path)
+
+    def predict_breed_from_image_array(self, image: np.ndarray) -> List[PredictionResult]:
+        """
+        ✅ NUEVO: Predice raza desde un array de imagen (NumPy/OpenCV).
+        Ideal para WebSockets y streaming.
+        """
+        if self.use_mock or not self.model_loaded:
+            return self._mock_predict()
+        
+        try:
+            predictions = self._infer(image)
+            return sorted(predictions, key=lambda x: x.confidence, reverse=True)
+        except Exception as e:
+            print(f"❌ Error en predicción array: {e}")
+            return self._mock_predict()
 
     def _mock_predict(self, image_path: str = None) -> List[PredictionResult]:
         """

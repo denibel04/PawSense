@@ -11,3 +11,7 @@ python-dotenv==1.2.1      # Carga de variables de entorno (.env)
 google-genai==1.64.0  # Cliente de Google GenAI (Replaces google-generativeai)
 opencv-python-headless==4.13.0.92    # Uso de la camara
 opencv-contrib-python==4.13.0.92
+ultralytics==8.3.70
+websockets==15.0
+torch==2.6.0
+torchvision==0.21.0

@@ -16,4 +16,12 @@ export class DogService {
     // Usamos el servicio base y el endpoint de la constante
     return this.api.post(API_CONFIG.endpoints.predict, formData);
   }
+
+  predictVideo(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Usamos el endpoint de video que acabamos de crear
+    return this.api.post(API_CONFIG.endpoints.predict + '/video', formData);
+  }
 }
