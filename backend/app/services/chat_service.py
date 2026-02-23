@@ -90,7 +90,7 @@ class ChatService:
                 parts=[types.Part.from_text(text=msg.content)]
             ))
 
-        model_name = 'gemini-2.5-pro'
+        model_name = 'gemini-2.5-flash'
         
         # Retry Logic with Exponential Backoff
         max_retries = 3
@@ -111,7 +111,7 @@ class ChatService:
                 )
                 
                 async for chunk in response_stream:
-                    if chunk.text:
+                    if chunk.text is not None:
                         yield chunk.text
                 
                 # Break the retry loop on success

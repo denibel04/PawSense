@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -29,7 +29,11 @@ export class Tab3Page implements OnInit {
   isLoading: boolean = false;
   contextData: string = '';
 
-  constructor(private chatService: ChatService) {
+  constructor(
+    private chatService: ChatService,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) {
     addIcons({ send });
   }
 
@@ -102,6 +106,11 @@ export class Tab3Page implements OnInit {
       if (remaining) {
         botMsg.content += remaining;
       }
+
+      // Force Angular to render the final state of botMsg.content.
+      // zone.js may fire its change detection cycle just before the last
+      // assignment, leaving the final character(s) un-rendered.
+      this.cdr.detectChanges();
 
     } catch (error) {
       console.error('Error in chat:', error);
