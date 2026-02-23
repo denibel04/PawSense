@@ -97,6 +97,12 @@ export class Tab3Page implements OnInit {
         }
       }
 
+      // Flush any remaining bytes held in the decoder's internal buffer
+      const remaining = decoder.decode();
+      if (remaining) {
+        botMsg.content += remaining;
+      }
+
     } catch (error) {
       console.error('Error in chat:', error);
 
