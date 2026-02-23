@@ -1,0 +1,42 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title>
+      Reportes e Historial
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Reportes</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <div class="ion-padding">
+    <h2>Historial de Análisis</h2>
+    <p>Aquí podrás ver y descargar los reportes detallados de tus perros analizados.</p>
+
+    <ion-list [inset]="true">
+      <ion-item *ngFor="let report of reports">
+        <ion-icon slot="start" name="document-text" color="primary"></ion-icon>
+        <ion-label>
+          <h3>{{ report.breed }}</h3>
+          <p>
+            <ion-icon name="time" size="small"></ion-icon>
+            {{ report.date }}
+          </p>
+        </ion-label>
+        <ion-badge slot="end" color="success">{{ report.status }}</ion-badge>
+        <ion-button slot="end" fill="clear" (click)="downloadReport(report.id)">
+          <ion-icon slot="icon-only" name="cloud-download"></ion-icon>
+        </ion-button>
+      </ion-item>
+    </ion-list>
+
+    <div *ngIf="reports.length === 0" class="empty-state">
+      <ion-icon name="document-text" size="large"></ion-icon>
+      <p>Aún no tienes reportes generados.</p>
+    </div>
+  </div>
+</ion-content>
