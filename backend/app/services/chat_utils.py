@@ -114,7 +114,7 @@ def build_system_prompt(context: str = "") -> str:
     """
     system_prompt = (
         "Eres un experto en perros amable y servicial. "
-        "Responde siempre en español con tono cercano, natural y práctico. "
+        "Responde siempre en español o ingles con tono cercano, natural y práctico. "
         "NO uses markdown: sin **, ###, listas con viñetas (a menos que sea imprescindible). "
         "Mantén respuestas cortas y directas. "
         "Si te falta información importante, haz una sola pregunta aclaratoria. "
@@ -414,23 +414,3 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
         )
     
     return base_prompt
-
-
-def get_whitelist_references(intent: str, num_refs: int = 4) -> str:
-    """
-    Retorna referencias de la whitelist según la intención.
-    
-    Args:
-        intent: "medical" | "training" | "general"
-        num_refs: Número de referencias a retornar (default 4).
-    
-    Returns:
-        String con URLs formateadas.
-    """
-    sources = OFFICIAL_SOURCES.get(intent, [])
-    selected = sources[:num_refs]
-    
-    if not selected:
-        return ""
-    
-    return "Fuentes (para contrastar):\n" + "\n".join(f"- {url}" for url in selected)

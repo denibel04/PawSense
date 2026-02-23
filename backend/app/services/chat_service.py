@@ -17,7 +17,6 @@ from app.services.chat_utils import (
     is_medical_emergency,
     get_emergency_response,
     build_whitelist_system_prompt,
-    get_whitelist_references,
 )
 
 logger = logging.getLogger(__name__)
@@ -64,7 +63,6 @@ class ChatService:
         if is_medical_emergency(request.question, request.context):
             logger.warning(f"Medical emergency detected: {request.question[:50]}...")
             emergency_msg = get_emergency_response()
-            whitelist_refs = get_whitelist_references("medical", num_refs=3)
             yield f"{emergency_msg}\n\n{whitelist_refs}"
             return
 
@@ -115,11 +113,6 @@ class ChatService:
                 async for chunk in response_stream:
                     if chunk.text:
                         yield chunk.text
-                
-                # If we finish the stream successfully, verify domain specific additions
-                if intent in ("medical", "training"):
-                    whitelist_refs = get_whitelist_references(intent, num_refs=4)
-                    yield f"\n\n{whitelist_refs}"
                 
                 # Break the retry loop on success
                 return
