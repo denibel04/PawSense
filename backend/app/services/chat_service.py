@@ -63,7 +63,7 @@ class ChatService:
         if is_medical_emergency(request.question, request.context):
             logger.warning(f"Medical emergency detected: {request.question[:50]}...")
             emergency_msg = get_emergency_response()
-            yield f"{emergency_msg}\n\n{whitelist_refs}"
+            yield emergency_msg
             return
 
         # Prepare Chat History
