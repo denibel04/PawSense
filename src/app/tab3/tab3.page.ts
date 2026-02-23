@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
   IonItem, IonLabel, IonFooter, IonButton,
-  IonTextarea, IonIcon, IonButtons, IonSpinner
+  IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { send } from 'ionicons/icons';
@@ -19,8 +19,8 @@ import { ChatService } from '../core/services/chat.service';
     CommonModule,
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
-    IonItem, IonLabel, IonFooter, IonButton,
-    IonTextarea, IonIcon, IonButtons, IonSpinner
+    IonItem, IonLabel, IonFooter, 
+    IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect
   ],
 })
 export class Tab3Page implements OnInit {

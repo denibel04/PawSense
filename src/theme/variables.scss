@@ -1,2 +1,46 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
+:root {
+    --pawsense-orange: #F6A655FF;
+
+    /* Overriding the primary color (used for selected tabs) */
+    --ion-color-primary: var(--pawsense-orange);
+    --ion-color-primary-rgb: 246, 166, 85;
+    /* RGB version for overlays */
+    --ion-color-primary-contrast: #ffffff;
+    --ion-color-primary-contrast-rgb: 255, 255, 255;
+    --ion-color-primary-shade: #d9924b;
+    --ion-color-primary-tint: #f7af66;
+    --header-border-color: #e6e9ec;
+}
+
+@font-face {
+    font-family: 'Tondo-Modified';
+    src: url('/assets/fonts/Tondo W01 Bold - Modified.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+}
+
+.brand-title {
+    font-size: 2rem;
+    font-weight: bold;
+    font-family: 'Tondo-Modified', sans-serif;
+}
+
+.title-text {
+    font-size: 2rem;
+    font-weight: 500;
+    border-left: 3px solid var(--ion-color-medium-shade);
+    margin-left: 1rem;
+    padding-left: 1rem;
+    font-family: 'Tondo', sans-serif;
+}
+
+.dashboard-header {
+    background: white;
+    border-bottom: 1px solid var(--header-border-color);
+
+    ion-toolbar {
+        --background: white;
+    }
+}

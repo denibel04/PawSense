@@ -1,0 +1,68 @@
+<div class="preview-container">
+    <div class="preview-header">
+        <h3 class="preview-title">Informe Veterinario</h3>
+        <span class="brand-watermark"><strong>PawSense</strong></span>
+    </div>
+
+    <ion-grid class="preview-grid ion-no-padding">
+        <ion-row>
+            <!-- LEFT COLUMN: Clinical Data -->
+            <ion-col size-xs="12" size-md="4" class="data-column">
+                <div class="data-section">
+                    <p><strong>Síntomas:</strong> <span class="data-value">{{ clinicalData.symptoms }}</span></p>
+                    <p><strong>Duración:</strong> <span class="data-value">{{ clinicalData.duration }}</span></p>
+                    <p><strong>Apetito:</strong> <span class="data-value">{{ clinicalData.appetite }}</span></p>
+                    <p><strong>Urgencia:</strong> <span class="data-value muted">{{ clinicalData.urgency }}</span></p>
+                    <p><strong>Red Flags:</strong> <span class="data-value muted">{{ clinicalData.redFlags }}</span></p>
+                </div>
+            </ion-col>
+
+            <!-- MIDDLE COLUMN: Triage & Diferenciales -->
+            <ion-col size-xs="12" size-md="4" class="section-column">
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Triage
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="70"></div>
+                </div>
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Diferenciales
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="60"></div>
+                </div>
+            </ion-col>
+
+            <!-- RIGHT COLUMN: Recomendaciones & Anexos -->
+            <ion-col size-xs="12" size-md="4" class="section-column">
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Recomendaciones
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="85"></div>
+                </div>
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Anexos
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="75"></div>
+                </div>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
+
+    <div class="preview-actions">
+        <ion-button expand="block" color="primary" class="download-btn" shape="round" (click)="onDownloadPdf()">
+            <ion-icon slot="start" name="download-outline"></ion-icon>
+            Descargar PDF
+        </ion-button>
+        <ion-button expand="block" fill="outline" color="medium" class="edit-btn" shape="round" (click)="onEditReport()">
+            <ion-icon slot="start" name="create-outline"></ion-icon>
+            Editar Informe
+        </ion-button>
+    </div>
+</div>
