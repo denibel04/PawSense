@@ -1,13 +1,10 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import {
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonItem, IonLabel, IonInput, IonTextarea, IonIcon, IonButton,
-    IonDatetime, IonDatetimeButton, IonModal, IonSelect, IonSelectOption
+    IonGrid, IonRow, IonCol, IonButton, IonIcon
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { mic } from 'ionicons/icons';
+import { downloadOutline, createOutline } from 'ionicons/icons';
 
 @Component({
     selector: 'app-clinical-report',
@@ -15,31 +12,46 @@ import { mic } from 'ionicons/icons';
     styleUrls: ['./clinical-report.component.scss'],
     standalone: true,
     imports: [
-        CommonModule, FormsModule,
-        IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-        IonItem, IonLabel, IonInput, IonTextarea, IonIcon, IonButton,
-        IonDatetime, IonDatetimeButton, IonModal
+        CommonModule,
+        IonGrid,
+        IonRow,
+        IonCol,
+        IonButton,
+        IonIcon
     ]
 })
 export class ClinicalReportComponent {
+    /**
+     * Mock clinical data for preview visualization
+     * In production, this would be populated from backend/parent component
+     */
     clinicalData = {
-        dogName: '',
-        visitDate: new Date().toISOString(),
-        weight: '',
-        symptoms: '',
-        diagnosis: '',
-        treatment: '',
-        notes: ''
+        symptoms: 'Prurito, Enrojecimiento',
+        duration: '14 días',
+        appetite: 'Normal',
+        urgency: 'No Urgente',
+        redFlags: 'Ninguno detectado'
     };
 
-    isDictating = false;
-
     constructor() {
-        addIcons({ mic });
+        addIcons({ downloadOutline, createOutline });
     }
 
-    toggleDictation(field: string) {
-        this.isDictating = !this.isDictating;
-        console.log(`Toggling dictation for ${field}: ${this.isDictating}`);
+    /**
+     * Handle download PDF action
+     * TODO: Integrate with ReportService for actual PDF generation
+     */
+    onDownloadPdf() {
+        console.log('Descargando PDF del informe...');
+        // this.reportService.exportPdf(this.clinicalData).subscribe(...)
+    }
+
+    /**
+     * Handle edit report action
+     * TODO: Emit event to parent component to switch to edit mode
+     */
+    onEditReport() {
+        console.log('Abriendo editor de informe...');
+        // This would typically emit an event to parent (Tab4Page)
     }
 }

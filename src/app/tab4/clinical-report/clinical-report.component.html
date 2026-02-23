@@ -1,80 +1,68 @@
-<ion-card>
-    <ion-card-header>
-        <ion-card-title>Información Clínica</ion-card-title>
-    </ion-card-header>
+<div class="preview-container">
+    <div class="preview-header">
+        <h3 class="preview-title">Informe Veterinario</h3>
+        <span class="brand-watermark"><strong>PawSense</strong></span>
+    </div>
 
-    <ion-card-content>
-        <ion-item lines="full">
-            <ion-label position="stacked">Nombre del Perro</ion-label>
-            <ion-input [(ngModel)]="clinicalData.dogName" placeholder="Ej. Max"></ion-input>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('dogName')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
+    <ion-grid class="preview-grid ion-no-padding">
+        <ion-row>
+            <!-- LEFT COLUMN: Clinical Data -->
+            <ion-col size-xs="12" size-md="4" class="data-column">
+                <div class="data-section">
+                    <p><strong>Síntomas:</strong> <span class="data-value">{{ clinicalData.symptoms }}</span></p>
+                    <p><strong>Duración:</strong> <span class="data-value">{{ clinicalData.duration }}</span></p>
+                    <p><strong>Apetito:</strong> <span class="data-value">{{ clinicalData.appetite }}</span></p>
+                    <p><strong>Urgencia:</strong> <span class="data-value muted">{{ clinicalData.urgency }}</span></p>
+                    <p><strong>Red Flags:</strong> <span class="data-value muted">{{ clinicalData.redFlags }}</span></p>
+                </div>
+            </ion-col>
 
-        <ion-item lines="full">
-            <ion-label position="stacked" class="ion-margin-bottom">Fecha de Visita</ion-label>
-            <ion-datetime-button datetime="visit-datetime"></ion-datetime-button>
-            <ion-modal [keepContentsMounted]="true">
-                <ng-template>
-                    <ion-datetime id="visit-datetime" presentation="date"
-                        [(ngModel)]="clinicalData.visitDate"></ion-datetime>
-                </ng-template>
-            </ion-modal>
-        </ion-item>
+            <!-- MIDDLE COLUMN: Triage & Diferenciales -->
+            <ion-col size-xs="12" size-md="4" class="section-column">
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Triage
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="70"></div>
+                </div>
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Diferenciales
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="60"></div>
+                </div>
+            </ion-col>
 
-        <ion-item lines="full">
-            <ion-label position="stacked">Peso (kg)</ion-label>
-            <ion-input type="number" [(ngModel)]="clinicalData.weight" placeholder="Ej. 15.5"></ion-input>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('weight')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
+            <!-- RIGHT COLUMN: Recomendaciones & Anexos -->
+            <ion-col size-xs="12" size-md="4" class="section-column">
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Recomendaciones
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="85"></div>
+                </div>
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Anexos
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="75"></div>
+                </div>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
 
-        <ion-item lines="full">
-            <ion-label position="stacked">Síntomas</ion-label>
-            <ion-textarea [(ngModel)]="clinicalData.symptoms" autoGrow="true" rows="2"
-                placeholder="Describa los síntomas..."></ion-textarea>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('symptoms')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <ion-item lines="full">
-            <ion-label position="stacked">Diagnóstico</ion-label>
-            <ion-textarea [(ngModel)]="clinicalData.diagnosis" autoGrow="true" rows="2"
-                placeholder="Diagnóstico..."></ion-textarea>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('diagnosis')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <ion-item lines="full">
-            <ion-label position="stacked">Tratamiento / Medicamentos</ion-label>
-            <ion-textarea [(ngModel)]="clinicalData.treatment" autoGrow="true" rows="3"
-                placeholder="Plan de tratamiento..."></ion-textarea>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('treatment')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <ion-item lines="full">
-            <ion-label position="stacked">Notas Adicionales</ion-label>
-            <ion-textarea [(ngModel)]="clinicalData.notes" autoGrow="true" rows="3"
-                placeholder="Notas adicionales..."></ion-textarea>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('notes')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <div class="ion-padding-top">
-            <ion-button expand="block" shape="round">Guardar Reporte</ion-button>
-        </div>
-    </ion-card-content>
-</ion-card>
+    <div class="preview-actions">
+        <ion-button expand="block" color="primary" class="download-btn" shape="round" (click)="onDownloadPdf()">
+            <ion-icon slot="start" name="download-outline"></ion-icon>
+            Descargar PDF
+        </ion-button>
+        <ion-button expand="block" fill="outline" color="medium" class="edit-btn" shape="round" (click)="onEditReport()">
+            <ion-icon slot="start" name="create-outline"></ion-icon>
+            Editar Informe
+        </ion-button>
+    </div>
+</div>
