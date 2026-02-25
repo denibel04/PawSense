@@ -1,17 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton,
   IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle
+  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonTextarea
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw } from 'ionicons/icons';
 import { TrainingReportComponent } from './training-report/training-report.component';
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
-
+import { VoiceRecorder } from 'capacitor-voice-recorder';
+import { ReportService } from '../core/services/report.service';
 @Component({
   selector: 'app-tab4',
   templateUrl: './tab4.page.html',
@@ -19,24 +19,38 @@ import { ClinicalReportComponent } from './clinical-report/clinical-report.compo
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     IonHeader, IonToolbar, IonContent,
     IonList, IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent,
+    IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonTextarea,
     TrainingReportComponent, ClinicalReportComponent
   ]
 })
 export class Tab4Page {
+  @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
+
   selectedSegment = 'veterinario';
   isEditing = false; // Toggles between read-only preview and edit mode
 
+  // Audio state
+  isRecording = false;
+  isSpeaking = false;
+  audioBase64: string | null = null;
+  audioMimeType: string | null = null;
+  audioProcessing = false;
+  transcriptText: string = '';
+  clinicalData: any = null;
+  trainingData: any = null;
+
+  recognition: any;
+  finalTranscript = '';
+
   // Mock progression states
   progress = {
-    transcription: 'done', // done, pending, process
-    clinicalExtraction: 'done',
+    transcription: 'pending', // done, pending, process
+    clinicalExtraction: 'pending',
     revision: 'pending',
-    finalReport: 'process'
+    finalReport: 'pending'
   };
 
   reports = [
@@ -45,20 +59,154 @@ export class Tab4Page {
     { id: 3, breed: 'Beagle', date: '2024-02-20', status: 'Completado' }
   ];
 
-  constructor() {
-    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw });
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private reportService: ReportService
+  ) {
+    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw, stopCircleOutline: 'stop-circle-outline' });
+    this.initSpeechRecognition();
+  }
+
+  initSpeechRecognition() {
+    const { webkitSpeechRecognition, SpeechRecognition }: any = window as any;
+    const SpeechRec = SpeechRecognition || webkitSpeechRecognition;
+    if (SpeechRec) {
+      this.recognition = new SpeechRec();
+      this.recognition.continuous = true;
+      this.recognition.interimResults = true;
+      this.recognition.lang = 'es-ES';
+
+      this.recognition.onresult = (event: any) => {
+        let interimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            this.finalTranscript += event.results[i][0].transcript + ' ';
+          } else {
+            interimTranscript += event.results[i][0].transcript;
+          }
+        }
+        this.transcriptText = this.finalTranscript + interimTranscript;
+        this.cdr.detectChanges();
+      };
+
+      this.recognition.onerror = (event: any) => {
+        console.error('[DEBUG] Speech recognition error', event.error);
+      };
+    } else {
+      console.warn('SpeechRecognition API no soportada en este navegador.');
+    }
   }
 
   toggleEditMode() {
     this.isEditing = !this.isEditing;
   }
 
+  async toggleRecording() {
+    if (this.isRecording) {
+      await this.stopRecording();
+    } else {
+      await this.startRecording();
+    }
+  }
+
+  async startRecording() {
+    try {
+      const permission = await VoiceRecorder.requestAudioRecordingPermission();
+      if (permission.value) {
+        this.isRecording = true;
+        this.isSpeaking = true;
+        await VoiceRecorder.startRecording();
+        if (this.recognition) {
+          this.finalTranscript = '';
+          this.transcriptText = '';
+          try { this.recognition.start(); } catch (e) { }
+        }
+        this.cdr.detectChanges();
+      }
+    } catch (error) {
+      console.error('Error starting recording', error);
+    }
+  }
+
+  async stopRecording() {
+    try {
+      this.isRecording = false;
+      this.isSpeaking = false;
+      if (this.recognition) {
+        try { this.recognition.stop(); } catch (e) { }
+      }
+      this.cdr.detectChanges();
+
+      const result = await VoiceRecorder.stopRecording();
+      if (result && result.value && result.value.recordDataBase64) {
+        this.audioBase64 = result.value.recordDataBase64;
+        this.audioMimeType = result.value.mimeType;
+        const byteCharacters = atob(this.audioBase64);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const audioBlob = new Blob([byteArray], { type: this.audioMimeType || 'audio/aac' });
+        const filename = `recording_${new Date().getTime()}.aac`;
+        this.processAudio(audioBlob, filename);
+      }
+    } catch (error) {
+      console.error('Error stopping recording', error);
+      this.isRecording = false;
+      this.isSpeaking = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  triggerFileInput() {
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.click();
+    }
+  }
+
+  onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (file) {
+      this.processAudio(file, file.name);
+    }
+  }
+
+  processAudio(file: Blob, filename: string) {
+    this.audioProcessing = true;
+    this.progress.transcription = 'process';
+    this.progress.clinicalExtraction = 'pending';
+
+    const reportType: 'veterinario' | 'adiestramiento' = this.selectedSegment === 'adiestramiento' ? 'adiestramiento' : 'veterinario';
+
+    this.reportService.generateReportFromAudio(file, filename, reportType).subscribe({
+      next: (response) => {
+        this.progress.transcription = 'done';
+        this.progress.clinicalExtraction = 'done';
+        this.progress.revision = 'pending';
+        this.audioProcessing = false;
+        this.transcriptText = response.transcript;
+        if (reportType === 'veterinario') {
+          this.clinicalData = response.data;
+        } else {
+          this.trainingData = response.data;
+        }
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        console.error('Error al generar reporte:', err);
+        this.progress.transcription = 'pending';
+        this.audioProcessing = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
   downloadReport() {
-    console.log('Descargando reporte actual...');
+    // TODO: Integrar con PDFReportService
   }
 
   downloadOldReport(id: number) {
-    console.log('Descargando reporte:', id);
     // TODO: Integrar con PDFReportService
   }
 }

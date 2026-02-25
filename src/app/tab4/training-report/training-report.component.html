@@ -3,20 +3,23 @@
         <h3 class="preview-title">Informe de Adiestramiento</h3>
     </div>
 
-    <ion-grid class="preview-grid ion-no-padding">
+    <!-- VISTA PREVIA LECTURA -->
+    <ion-grid *ngIf="!isEditing" class="preview-grid ion-no-padding">
         <ion-row>
             <!-- LEFT COLUMN: Training Data -->
             <ion-col size-xs="12" size-md="4" class="data-column">
                 <div class="data-section">
-                    <p><strong>Nombre:</strong> <span class="data-value">{{ trainingData.dogName || '—' }}</span></p>
-                    <p><strong>Fecha:</strong> <span class="data-value">{{ trainingData.sessionDate | date:'dd/MM/yyyy'
+                    <p><strong>Comportamiento Observado:</strong> <span class="data-value">{{
+                            data.behavior_observed || '—' }}</span></p>
+                    <p><strong>Correcciones:</strong> <span class="data-value">
+                            <ng-container *ngFor="let c of data.corrections; let last = last">
+                                {{c}}{{last ? '' : ', '}}
+                            </ng-container>
+                            <span *ngIf="!data.corrections || data.corrections.length === 0">—</span>
+                        </span></p>
+                    <p><strong>Tareas Asignadas:</strong> <span class="data-value">{{ data.homework || '—'
                             }}</span></p>
-                    <p><strong>Duración:</strong> <span class="data-value">{{ trainingData.duration || '—' }} min</span>
-                    </p>
-                    <p><strong>Comandos:</strong> <span class="data-value">{{ trainingData.commandsWorkingOn || '—'
-                            }}</span></p>
-                    <p><strong>Notas:</strong> <span class="data-value muted">{{ trainingData.behaviorNotes || 'Sin
-                            notas' }}</span></p>
+                    <p><strong>Notas:</strong> <span class="data-value muted">{{ data.notes || '—' }}</span></p>
                 </div>
             </ion-col>
 
@@ -29,24 +32,10 @@
                     <div class="skeleton-line"></div>
                     <div class="skeleton-line" [style.width.%]="70"></div>
                 </div>
-                <div class="report-section">
-                    <h4 class="section-title">
-                        <span class="orange-dot">●</span> Evaluación
-                    </h4>
-                    <div class="skeleton-line"></div>
-                    <div class="skeleton-line" [style.width.%]="60"></div>
-                </div>
             </ion-col>
 
             <!-- RIGHT COLUMN: Observaciones & Plan -->
             <ion-col size-xs="12" size-md="4" class="section-column">
-                <div class="report-section">
-                    <h4 class="section-title">
-                        <span class="orange-dot">●</span> Observaciones
-                    </h4>
-                    <div class="skeleton-line"></div>
-                    <div class="skeleton-line" [style.width.%]="85"></div>
-                </div>
                 <div class="report-section">
                     <h4 class="section-title">
                         <span class="orange-dot">●</span> Plan Siguiente
@@ -57,4 +46,53 @@
             </ion-col>
         </ion-row>
     </ion-grid>
+
+    <!-- FORMULARIO DE EDICIÓN -->
+    <div *ngIf="isEditing" class="edit-form-container" style="padding: 10px;">
+        <ion-list lines="none" style="background: transparent;">
+
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Comportamiento Observado</ion-label>
+                <ion-input name="behavior_observed" [value]="data.behavior_observed"
+                    (ionInput)="data.behavior_observed = ($event.detail.value ?? '')" fill="outline"
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-input>
+            </ion-item>
+
+            <h4 class="section-title" style="margin-left: 15px; margin-top: 15px;"><span class="orange-dot">●</span>
+                Correcciones</h4>
+            <div *ngFor="let c of data.corrections; let i = index; trackBy: trackByIndex"
+                style="display: flex; align-items: center; margin-bottom: 5px; padding-left: 15px;">
+                <ion-input [name]="'correction_' + i" [value]="data.corrections[i]"
+                    (ionInput)="data.corrections[i] = ($event.detail.value ?? '')" fill="outline"
+                    style="background: white; border-radius: 4px; --padding-start: 10px;">
+                </ion-input>
+                <ion-button fill="clear" color="danger" (click)="data.corrections.splice(i, 1)"
+                    style="margin-left: 5px;">
+                    <ion-icon name="close-outline"></ion-icon>
+                </ion-button>
+            </div>
+            <div style="padding-left: 15px;">
+                <ion-button fill="outline" size="small" (click)="data.corrections.push('')">+ Añadir
+                    Corrección</ion-button>
+            </div>
+
+            <ion-item style="--background: transparent; margin-top: 15px;">
+                <ion-label position="stacked">Tareas Asignadas</ion-label>
+                <ion-textarea name="homework" [value]="data.homework"
+                    (ionInput)="data.homework = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-textarea>
+            </ion-item>
+
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Notas</ion-label>
+                <ion-textarea name="notes" [value]="data.notes" (ionInput)="data.notes = ($event.detail.value ?? '')"
+                    [autoGrow]="true" fill="outline"
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-textarea>
+            </ion-item>
+
+        </ion-list>
+    </div>
 </div>

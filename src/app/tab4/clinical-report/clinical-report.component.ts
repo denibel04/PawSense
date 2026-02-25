@@ -1,7 +1,8 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
-    IonGrid, IonRow, IonCol
+    IonGrid, IonRow, IonCol, IonItem, IonLabel, IonInput, IonTextarea, IonList, IonButton, IonIcon
 } from '@ionic/angular/standalone';
 
 @Component({
@@ -11,21 +12,43 @@ import {
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         IonGrid,
         IonRow,
-        IonCol
+        IonCol,
+        IonItem,
+        IonLabel,
+        IonInput,
+        IonTextarea,
+        IonList,
+        IonButton,
+        IonIcon
     ]
 })
 export class ClinicalReportComponent {
-    /**
-     * Clinical data for preview visualization.
-     * Populated via @Input() — will be updated dynamically by Whisper + agent.
-     */
-    @Input() clinicalData = {
-        symptoms: 'Prurito, Enrojecimiento',
-        duration: '14 días',
-        appetite: 'Normal',
-        urgency: 'No Urgente',
-        redFlags: 'Ninguno detectado'
+    @Input() isEditing = false;
+
+    // Local mutable copy – updated via setter when parent pushes new data
+    data: any = {
+        symptoms: [],
+        diagnosis: '',
+        treatment: '',
+        notes: ''
     };
+
+    @Input() set clinicalData(value: any) {
+        if (value) {
+            // Deep-clone so edits don't mutate the parent directly
+            this.data = {
+                symptoms: Array.isArray(value.symptoms) ? [...value.symptoms] : [],
+                diagnosis: value.diagnosis ?? '',
+                treatment: value.treatment ?? '',
+                notes: value.notes ?? ''
+            };
+        }
+    }
+
+    trackByIndex(index: number): number {
+        return index;
+    }
 }

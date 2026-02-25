@@ -15,8 +15,8 @@ export class ApiService {
    * @param data  - Los datos que se desean enviar en la solicitud POST
    * @returns  Observable con la respuesta del servidor
    */
-  post(endpoint: string, data: any) {
-    return this.http.post(`${API_CONFIG.baseUrl}${endpoint}`, data);
+  post<T>(endpoint: string, data: any) {
+    return this.http.post<T>(`${API_CONFIG.localBaseUrl}${endpoint}`, data);
   }
 
   /** 
@@ -24,7 +24,7 @@ export class ApiService {
    * @param endpoint - El endpoint al que se desea hacer la solicitud
    * @returns Observable con la respuesta del servidor 
    **/
-  get(endpoint: string) {
-    return this.http.get(`${API_CONFIG.baseUrl}${endpoint}`);
+  get<T>(endpoint: string) {
+    return this.http.get<T>(`${API_CONFIG.localBaseUrl}${endpoint}`);
   }
 }

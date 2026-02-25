@@ -14,7 +14,8 @@
 
   <div class="segment-toolbar">
     <div class="segment-container">
-      <ion-segment [(ngModel)]="selectedSegment" mode="ios">
+      <ion-segment [value]="selectedSegment"
+        (ionChange)="selectedSegment = ($event.detail.value?.toString() ?? selectedSegment)" mode="ios">
         <ion-segment-button value="veterinario">
           <ion-label>Informe Veterinario</ion-label>
         </ion-segment-button>
@@ -33,15 +34,30 @@
             <ion-card-title>Audio</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <ion-button expand="block" color="primary" class="primary-action-btn">
-              <ion-icon slot="start" name="mic-outline"></ion-icon>
-              Grabar Consulta
-            </ion-button>
-            <ion-button expand="block" fill="outline" color="medium" class="secondary-btn">
+            <div class="record-button-container"
+              style="position: relative; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
+              <ion-button expand="block" [color]="isRecording ? 'danger' : 'primary'" class="primary-action-btn"
+                (click)="toggleRecording()" style="margin: 0;">
+                <ion-icon slot="start" [name]="isRecording ? 'stop-circle-outline' : 'mic-outline'"></ion-icon>
+                {{ isRecording ? 'Detener Grabación' : 'Grabar Consulta' }}
+              </ion-button>
+              <div *ngIf="isRecording && isSpeaking" class="audio-ripple-overlay"></div>
+            </div>
+
+            <ion-button expand="block" fill="outline" color="medium" class="secondary-btn" (click)="triggerFileInput()">
               <ion-icon slot="start" name="folder-outline"></ion-icon>
               Subir Audio
             </ion-button>
-            <p class="status-text muted">Analizando información...</p>
+            <input type="file" #fileInput accept="audio/*" style="display: none" (change)="onFileSelected($event)">
+            <p *ngIf="audioProcessing" class="status-text muted">Analizando sonido en el servidor...</p>
+
+            <!-- REALTIME TRANSCRIPT BUBBLE (while recording) -->
+            <div *ngIf="isRecording && transcriptText"
+              style="margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(var(--ion-color-medium-rgb), 0.1); font-size: 0.85rem; color: var(--ion-color-medium); font-style: italic;">
+              <ion-icon name="mic-outline" style="margin-right: 6px; vertical-align: middle;"></ion-icon>{{
+              transcriptText }}
+            </div>
+
           </ion-card-content>
         </ion-card>
       </ion-col>
@@ -55,16 +71,26 @@
           <ion-card-content>
             <ion-list lines="none">
 
-              <ion-item>
-                <ion-icon slot="start" name="checkmark-circle" color="success"></ion-icon>
-                <ion-label>Transcripción</ion-label>
-                <ion-icon slot="end" name="checkmark-outline" color="success" class="check-small"></ion-icon>
+              <ion-item [class.pending]="progress.transcription === 'pending'"
+                [class.process]="progress.transcription === 'process'">
+                <ion-icon slot="start"
+                  [name]="progress.transcription === 'done' ? 'checkmark-circle' : (progress.transcription === 'process' ? 'time-outline' : 'ellipse-outline')"
+                  [color]="progress.transcription === 'done' ? 'success' : (progress.transcription === 'process' ? 'secondary' : 'medium')"></ion-icon>
+                <ion-label>Transcripción <span *ngIf="progress.transcription === 'process'" class="muted">-
+                    Procesando</span></ion-label>
+                <ion-icon *ngIf="progress.transcription === 'done'" slot="end" name="checkmark-outline" color="success"
+                  class="check-small"></ion-icon>
               </ion-item>
 
-              <ion-item>
-                <ion-icon slot="start" name="checkmark-circle" color="success"></ion-icon>
-                <ion-label>Extracción Clínica</ion-label>
-                <ion-icon slot="end" name="checkmark-outline" color="success" class="check-small"></ion-icon>
+              <ion-item [class.pending]="progress.clinicalExtraction === 'pending'"
+                [class.process]="progress.clinicalExtraction === 'process'">
+                <ion-icon slot="start"
+                  [name]="progress.clinicalExtraction === 'done' ? 'checkmark-circle' : (progress.clinicalExtraction === 'process' ? 'time-outline' : 'ellipse-outline')"
+                  [color]="progress.clinicalExtraction === 'done' ? 'success' : (progress.clinicalExtraction === 'process' ? 'secondary' : 'medium')"></ion-icon>
+                <ion-label>Extracción <span *ngIf="progress.clinicalExtraction === 'process'" class="muted">- Generando
+                    Reporte</span></ion-label>
+                <ion-icon *ngIf="progress.clinicalExtraction === 'done'" slot="end" name="checkmark-outline"
+                  color="success" class="check-small"></ion-icon>
               </ion-item>
 
               <ion-item class="pending">
@@ -90,18 +116,30 @@
         <ion-card class="dashboard-card preview-card">
           <ion-card-content>
 
-            <!-- PREVIEW: rendered by each report component -->
-            <div *ngIf="!isEditing">
-              <app-clinical-report *ngIf="selectedSegment === 'veterinario'"></app-clinical-report>
-              <app-training-report *ngIf="selectedSegment === 'adiestramiento'"></app-training-report>
-            </div>
+            <!-- PREVIEW AND EDIT MODE: rendered by each report component -->
+            <div>
+              <ion-item *ngIf="transcriptText" lines="none"
+                style="margin-bottom: 20px; border-radius: 8px; background: rgba(var(--ion-color-medium-rgb), 0.1);">
+                <ion-label *ngIf="!isEditing" style="white-space: normal; padding: 10px;">
+                  <h3>Texto Transcrito:</h3>
+                  <p>{{ transcriptText }}</p>
+                </ion-label>
+                <div *ngIf="isEditing" style="width: 100%; padding: 10px;">
+                  <h3>Texto Transcrito:</h3>
+                  <ion-textarea name="transcriptText" [value]="transcriptText"
+                    (ionInput)="transcriptText = ($event.detail.value ?? '')" [autoGrow]="true"
+                    style="background: white; border-radius: 4px; padding: 5px; margin-top: 10px;">
+                  </ion-textarea>
+                </div>
+              </ion-item>
 
-            <!-- EDITING MODE -->
-            <div *ngIf="isEditing">
+              <app-clinical-report *ngIf="selectedSegment === 'veterinario'" [isEditing]="isEditing"
+                [clinicalData]="clinicalData || {symptoms: ['Prurito', 'Enrojecimiento'], diagnosis: 'Dermatitis alérgica', treatment: 'Champú medicado, antihistamínicos', notes: 'Revisión en 14 días'}">
+              </app-clinical-report>
 
-              <p class="muted" style="text-align: center; margin: 40px 0;">
-                El editor completo estará disponible próximamente con Whisper + Agente IA.
-              </p>
+              <app-training-report *ngIf="selectedSegment === 'adiestramiento'" [isEditing]="isEditing"
+                [trainingData]="trainingData || {behavior_observed: 'Tironeo de correa', corrections: ['Cambio de dirección'], homework: 'Practicar junto 10 min diarios', notes: 'Perrito mejoró'}">
+              </app-training-report>
             </div>
 
             <!-- SHARED ACTION BUTTONS -->

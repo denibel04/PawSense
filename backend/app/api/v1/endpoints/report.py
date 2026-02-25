@@ -1,10 +1,46 @@
-from fastapi import APIRouter, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
+from app.services.audio_service import transcribe_audio
+from app.services.agent_service import generate_report
 
 router = APIRouter()
 
-@router.post("/generate")
-async def generate_report(breed_prediction: dict, user_notes: str = None):
+@router.post("/generate/audio")
+async def generate_report_from_audio(
+    file: UploadFile = File(...),
+    report_type: str = Form("veterinario") # "veterinario" o "adiestramiento"
+):
+    """
+    Recibe un archivo de audio, lo transcribe con Whisper local y usa 
+    Gemini para extraer el JSON estructurado según el tipo de reporte.
+    """
+    try:
+        # 1. Leer audio
+        file_bytes = await file.read()
+        
+        # 2. Transcribir
+        print(f"[{report_type}] Transcribiendo audio: {file.filename}...")
+        transcript = await transcribe_audio(file_bytes)
+        
+        if not transcript.strip():
+            raise HTTPException(status_code=400, detail="No se pudo transcribir el audio, o estaba vacío.")
+            
+        print(f"Transcripción exitosa ({len(transcript)} caracteres).")
+        print(f"--- TEXTO EXTRAÍDO --- \n{transcript}\n----------------------")
+        print("Generando reporte con LLM Agent...")
+        
+        # 3. Procesar con LLM Agent
+        report_data = await generate_report(transcript, report_type)
+        return {
+            "transcript": transcript,
+            "data": report_data
+        }
+    except Exception as e:
+        print(f"Error interno en generate_report_from_audio: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/generate/pdf")
+async def generate_pdf(breed_prediction: dict, user_notes: str = None):
     """
     Generar un informe PDF completo.
     

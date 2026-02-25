@@ -11,3 +11,4 @@ python-dotenv==1.2.1      # Carga de variables de entorno (.env)
 google-genai==1.64.0  # Cliente de Google GenAI (Replaces google-generativeai)
 opencv-python-headless==4.13.0.92    # Uso de la camara
 opencv-contrib-python==4.13.0.92
+git+https://github.com/openai/whisper.git  # Whisper para transcripción local
