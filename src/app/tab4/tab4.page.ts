@@ -8,7 +8,7 @@ import {
   IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline } from 'ionicons/icons';
+import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, paw } from 'ionicons/icons';
 import { TrainingReportComponent } from './training-report/training-report.component';
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 
@@ -46,7 +46,7 @@ export class Tab4Page {
   ];
 
   constructor() {
-    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline });
+    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, paw });
   }
 
   toggleEditMode() {

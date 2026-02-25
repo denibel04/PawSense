@@ -7,7 +7,7 @@ import {
   IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { send } from 'ionicons/icons';
+import { send, paw } from 'ionicons/icons';
 import { ChatService } from '../core/services/chat.service';
 
 @Component({
@@ -28,13 +28,11 @@ export class Tab3Page implements OnInit {
   newMessage: string = '';
   isLoading: boolean = false;
   contextData: string = '';
+  cdr: ChangeDetectorRef;
 
-  constructor(
-    private chatService: ChatService,
-    private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
-  ) {
-    addIcons({ send });
+  constructor(private chatService: ChatService, private changeDetectorRef: ChangeDetectorRef, private ngZone: NgZone) {
+    this.cdr = changeDetectorRef;
+    addIcons({ send, paw });
   }
 
   ngOnInit() {

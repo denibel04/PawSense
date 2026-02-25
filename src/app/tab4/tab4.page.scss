@@ -6,6 +6,33 @@ $text-main: #333333;
 $text-muted: #888888;
 $success-color: #34c759;
 
+/* Logo Styles */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--ion-color-primary);
+  font-family: 'Tondo', sans-serif;
+
+  ion-icon {
+    font-size: 1.8rem;
+  }
+}
+
+ion-toolbar {
+  --padding-start: 1.5rem;
+  --padding-end: 1.5rem;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+
+  @media (min-width: 768px) {
+    --padding-start: 2rem;
+    --padding-end: 2rem;
+  }
+}
+
 .dashboard-header {
     background: white;
     border-bottom: 1px solid $border-color;

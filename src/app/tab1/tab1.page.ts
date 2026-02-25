@@ -2,9 +2,11 @@ import { Component } from '@angular/core';
 import { 
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton, 
   IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
-  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge 
+  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, IonIcon
 } from '@ionic/angular/standalone';
-import { CommonModule } from '@angular/common'; 
+import { CommonModule } from '@angular/common';
+import { addIcons } from 'ionicons';
+import { paw } from 'ionicons/icons';
 import { DogService } from '../core/services/dog.service';
 
 @Component({
@@ -15,17 +17,18 @@ import { DogService } from '../core/services/dog.service';
   imports: [
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton, 
     IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
-    IonGrid, IonRow, IonCol, IonProgressBar, IonBadge,
+    IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, IonIcon,
     CommonModule
   ],
 })
 export class Tab1Page {
+  constructor(private dogService: DogService) {
+    addIcons({ paw });
+  }
   selectedFile: File | null = null;
   predictionResult: any = null;
   isLoading = false;
   imagePreview: string | null = null;
-
-  constructor(private dogService: DogService) {} 
 
   onFileSelected(event: Event) {
     const element = event.currentTarget as HTMLInputElement;
