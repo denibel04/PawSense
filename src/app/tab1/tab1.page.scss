@@ -1,18 +1,3 @@
-/* Logo Styles */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--ion-color-primary);
-  font-family: 'Tondo', sans-serif;
-
-  ion-icon {
-    font-size: 1.8rem;
-  }
-}
-
 ion-toolbar {
   --padding-start: 1.5rem;
   --padding-end: 1.5rem;
@@ -28,7 +13,7 @@ ion-toolbar {
 .preview-img {
   max-height: 250px;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   border: 3px solid #f4f4f4;
 }
 
@@ -36,7 +21,7 @@ ion-toolbar {
   border: 2px solid #2dd36f;
   background: #f0fff4;
   margin: 20px 0;
-  
+
   .label-winner {
     text-transform: uppercase;
     font-size: 0.75rem;
@@ -44,7 +29,7 @@ ion-toolbar {
     color: #666;
     margin-bottom: 5px;
   }
-  
+
   .winner-title {
     font-weight: 800;
     color: #1a1a1a;
@@ -69,12 +54,12 @@ ion-toolbar {
   display: flex;
   justify-content: space-between;
   margin-bottom: 8px;
-  
+
   .breed-name {
     font-weight: 600;
     color: #333;
   }
-  
+
   .prob-val {
     font-family: monospace;
     font-weight: bold;

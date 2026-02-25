@@ -1,17 +1,119 @@
-ion-card {
-    margin: 10px 0;
+// Color Variables
+$light-bg: #f5f7f9;
+$border-color: #e6e9ec;
+$primary-orange: var(--pawsense-orange);
+$text-main: #333333;
+$text-muted: #888888;
+$skeleton-gray: #e2e5e9;
+
+.preview-container {
+    padding: 20px;
+    background: #fafafa;
     border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid $border-color;
 }
 
-ion-item {
-    --padding-start: 0;
-    --inner-padding-end: 0;
-    margin-top: 10px;
+.preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid $border-color;
+    padding-bottom: 16px;
+    margin-bottom: 20px;
 
-    ion-button[slot="end"] {
-        margin-top: 25px; // Align dictation button with input
-        opacity: 0.8;
+    .preview-title {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: $text-main;
+        letter-spacing: -0.3px;
+    }
+
+    .brand-watermark {
+        font-size: 14px;
+        font-weight: 600;
+        color: $primary-orange;
+    }
+}
+
+.preview-grid {
+    margin-bottom: 24px;
+}
+
+// Data Column (Left)
+.data-column {
+    padding-right: 12px;
+
+    @media (max-width: 576px) {
+        padding-right: 0;
+        padding-bottom: 16px;
+    }
+}
+
+.data-section {
+    p {
+        margin: 0 0 12px 0;
+        font-size: 13px;
+        line-height: 1.5;
+        color: $text-main;
+
+        strong {
+            font-weight: 600;
+            color: $text-main;
+        }
+
+        .data-value {
+            font-weight: 500;
+            color: $text-main;
+            margin-left: 4px;
+        }
+
+        .muted {
+            color: $text-muted;
+        }
+    }
+}
+
+// Section Columns (Middle & Right)
+.section-column {
+    padding: 0 12px;
+
+    @media (max-width: 576px) {
+        padding: 0;
+    }
+}
+
+.report-section {
+    margin-bottom: 20px;
+
+    &:last-child {
+        margin-bottom: 0;
+    }
+}
+
+.section-title {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-main;
+    display: flex;
+    align-items: center;
+
+    .orange-dot {
+        color: $primary-orange;
+        font-size: 16px;
+        margin-right: 8px;
+    }
+}
+
+.skeleton-line {
+    height: 6px;
+    background: $skeleton-gray;
+    border-radius: 3px;
+    margin-bottom: 8px;
+    width: 80%;
+
+    &:last-child {
+        margin-bottom: 0;
     }
 }

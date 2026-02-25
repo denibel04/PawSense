@@ -1,60 +1,60 @@
-<ion-card>
-    <ion-card-header>
-        <ion-card-title>Información de Entrenamiento</ion-card-title>
-    </ion-card-header>
+<div class="preview-container">
+    <div class="preview-header">
+        <h3 class="preview-title">Informe de Adiestramiento</h3>
+    </div>
 
-    <ion-card-content>
-        <ion-item lines="full">
-            <ion-label position="stacked">Nombre del Perro</ion-label>
-            <ion-input [(ngModel)]="trainingData.dogName" placeholder="Ej. Max"></ion-input>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('dogName')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
+    <ion-grid class="preview-grid ion-no-padding">
+        <ion-row>
+            <!-- LEFT COLUMN: Training Data -->
+            <ion-col size-xs="12" size-md="4" class="data-column">
+                <div class="data-section">
+                    <p><strong>Nombre:</strong> <span class="data-value">{{ trainingData.dogName || '—' }}</span></p>
+                    <p><strong>Fecha:</strong> <span class="data-value">{{ trainingData.sessionDate | date:'dd/MM/yyyy'
+                            }}</span></p>
+                    <p><strong>Duración:</strong> <span class="data-value">{{ trainingData.duration || '—' }} min</span>
+                    </p>
+                    <p><strong>Comandos:</strong> <span class="data-value">{{ trainingData.commandsWorkingOn || '—'
+                            }}</span></p>
+                    <p><strong>Notas:</strong> <span class="data-value muted">{{ trainingData.behaviorNotes || 'Sin
+                            notas' }}</span></p>
+                </div>
+            </ion-col>
 
-        <ion-item lines="full">
-            <ion-label position="stacked" class="ion-margin-bottom">Fecha de Sesión</ion-label>
-            <ion-datetime-button datetime="session-datetime"></ion-datetime-button>
-            <ion-modal [keepContentsMounted]="true">
-                <ng-template>
-                    <ion-datetime id="session-datetime" presentation="date"
-                        [(ngModel)]="trainingData.sessionDate"></ion-datetime>
-                </ng-template>
-            </ion-modal>
-        </ion-item>
+            <!-- MIDDLE COLUMN: Progreso & Evaluación -->
+            <ion-col size-xs="12" size-md="4" class="section-column">
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Progreso
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="70"></div>
+                </div>
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Evaluación
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="60"></div>
+                </div>
+            </ion-col>
 
-        <ion-item lines="full">
-            <ion-label position="stacked">Duración (minutos)</ion-label>
-            <ion-input type="number" [(ngModel)]="trainingData.duration" placeholder="Ej. 45"></ion-input>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('duration')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <ion-item lines="full">
-            <ion-label position="stacked">Comandos Trabajados</ion-label>
-            <ion-textarea [(ngModel)]="trainingData.commandsWorkingOn" autoGrow="true" rows="2"
-                placeholder="Ej. Sentado, Quieto"></ion-textarea>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('commandsWorkingOn')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <ion-item lines="full">
-            <ion-label position="stacked">Comportamiento / Notas</ion-label>
-            <ion-textarea [(ngModel)]="trainingData.behaviorNotes" autoGrow="true" rows="3"
-                placeholder="Comportamiento del perro durante la sesión..."></ion-textarea>
-            <ion-button fill="clear" slot="end" (click)="toggleDictation('behaviorNotes')"
-                [color]="isDictating ? 'danger' : 'primary'">
-                <ion-icon name="mic" slot="icon-only"></ion-icon>
-            </ion-button>
-        </ion-item>
-
-        <div class="ion-padding-top">
-            <ion-button expand="block" shape="round">Guardar Reporte</ion-button>
-        </div>
-    </ion-card-content>
-</ion-card>
+            <!-- RIGHT COLUMN: Observaciones & Plan -->
+            <ion-col size-xs="12" size-md="4" class="section-column">
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Observaciones
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="85"></div>
+                </div>
+                <div class="report-section">
+                    <h4 class="section-title">
+                        <span class="orange-dot">●</span> Plan Siguiente
+                    </h4>
+                    <div class="skeleton-line"></div>
+                    <div class="skeleton-line" [style.width.%]="75"></div>
+                </div>
+            </ion-col>
+        </ion-row>
+    </ion-grid>
+</div>

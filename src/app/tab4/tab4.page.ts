@@ -8,7 +8,7 @@ import {
   IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, paw } from 'ionicons/icons';
+import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw } from 'ionicons/icons';
 import { TrainingReportComponent } from './training-report/training-report.component';
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 
@@ -20,8 +20,8 @@ import { ClinicalReportComponent } from './clinical-report/clinical-report.compo
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent,
-    IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton,
+    IonHeader, IonToolbar, IonContent,
+    IonList, IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent,
     TrainingReportComponent, ClinicalReportComponent
@@ -46,7 +46,7 @@ export class Tab4Page {
   ];
 
   constructor() {
-    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, paw });
+    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw });
   }
 
   toggleEditMode() {

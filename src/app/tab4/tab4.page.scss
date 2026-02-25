@@ -6,45 +6,23 @@ $text-main: #333333;
 $text-muted: #888888;
 $success-color: #34c759;
 
-/* Logo Styles */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--ion-color-primary);
-  font-family: 'Tondo', sans-serif;
 
-  ion-icon {
-    font-size: 1.8rem;
-  }
-}
 
 ion-toolbar {
-  --padding-start: 1.5rem;
-  --padding-end: 1.5rem;
-  --padding-top: 1rem;
-  --padding-bottom: 1rem;
+    --padding-start: 1.5rem;
+    --padding-end: 1.5rem;
+    --padding-top: 1rem;
+    --padding-bottom: 1rem;
 
-  @media (min-width: 768px) {
-    --padding-start: 2rem;
-    --padding-end: 2rem;
-  }
-}
-
-.dashboard-header {
-    background: white;
-    border-bottom: 1px solid $border-color;
-
-    ion-toolbar {
-        --background: white;
+    @media (min-width: 768px) {
+        --padding-start: 2rem;
+        --padding-end: 2rem;
     }
 }
 
 .segment-toolbar {
-    padding: 10px 0;
-    border-top: 1px solid $border-color;
+    margin: 0px 25px;
+    padding-top: 20px;
 
     .segment-container {
         display: flex;
@@ -53,20 +31,31 @@ ion-toolbar {
     }
 
     ion-segment {
-        background: transparent;
+        --background: white;
+        height: 50px;
         max-width: 500px;
+        border: 1px solid $border-color;
+        border-radius: 4px;
+        opacity: 1;
+
 
         ion-segment-button {
             --color-checked: white;
             --indicator-color: var(--pawsense-orange);
             --color: $text-main;
-            font-weight: 500;
-            border: 1px solid $border-color;
-            border-radius: 4px;
-            margin: 0 4px;
+            font-weight: bold;
+            --background-hover-opacity: 1;
+
+
 
             &::part(indicator-background) {
                 border-radius: 4px;
+
+
+            }
+
+            ion-label {
+                font-size: large;
             }
         }
     }
@@ -172,6 +161,15 @@ ion-toolbar {
     }
 }
 
+/* Section Title - Orange */
+.section-title-orange {
+    color: var(--pawsense-orange);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 20px 0 10px 0;
+    padding-left: 4px;
+}
+
 /* Extracted Data Area (Center) */
 .inner-report-box,
 .inner-preview-box {
@@ -225,10 +223,10 @@ ion-toolbar {
         }
 
         .dot-bullet {
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: #ccc;
+            background: var(--pawsense-orange);
             margin-right: 8px;
         }
     }
@@ -261,12 +259,8 @@ ion-toolbar {
 /* Preview Card */
 .preview-card {
 
-    .clickable-span {
-        font-size: 14px;
-        color: var(--pawsense-orange);
-        cursor: pointer;
-        float: right;
-        font-weight: normal;
+    ion-card-header {
+        display: none;
     }
 
     .preview-grid {
@@ -279,6 +273,14 @@ ion-toolbar {
 
         p {
             margin: 4px 0;
+        }
+
+        .red-flag-text {
+            color: var(--pawsense-orange);
+
+            strong {
+                color: var(--pawsense-orange);
+            }
         }
     }
 
@@ -309,4 +311,16 @@ ion-toolbar {
 /* Utilities */
 .muted {
     color: $text-muted !important;
+}
+
+/* Editing toolbar */
+.editing-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+
+    ion-button {
+        --border-radius: 6px;
+        font-weight: 500;
+    }
 }

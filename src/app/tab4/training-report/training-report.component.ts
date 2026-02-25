@@ -1,13 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import {
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonItem, IonLabel, IonInput, IonTextarea, IonIcon, IonButton,
-    IonDatetime, IonDatetimeButton, IonModal, IonSelect, IonSelectOption
+    IonGrid, IonRow, IonCol
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { mic } from 'ionicons/icons';
 
 @Component({
     selector: 'app-training-report',
@@ -15,14 +10,18 @@ import { mic } from 'ionicons/icons';
     styleUrls: ['./training-report.component.scss'],
     standalone: true,
     imports: [
-        CommonModule, FormsModule,
-        IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-        IonItem, IonLabel, IonInput, IonTextarea, IonIcon, IonButton,
-        IonDatetime, IonDatetimeButton, IonModal
+        CommonModule,
+        IonGrid,
+        IonRow,
+        IonCol
     ]
 })
 export class TrainingReportComponent {
-    trainingData = {
+    /**
+     * Training data for preview visualization.
+     * Populated via @Input() — will be updated dynamically by Whisper + agent.
+     */
+    @Input() trainingData = {
         dogName: '',
         sessionDate: new Date().toISOString(),
         duration: '',
@@ -30,16 +29,5 @@ export class TrainingReportComponent {
         behaviorNotes: '',
         trainerComments: ''
     };
-
-    isDictating = false;
-
-    constructor() {
-        addIcons({ mic });
-    }
-
-    toggleDictation(field: string) {
-        // Placeholder for actual dictation logic
-        this.isDictating = !this.isDictating;
-        console.log(`Toggling dictation for ${field}: ${this.isDictating}`);
-    }
 }
+

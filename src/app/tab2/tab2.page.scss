@@ -1,18 +1,3 @@
-/* Logo Styles */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--ion-color-primary);
-  font-family: 'Tondo', sans-serif;
-
-  ion-icon {
-    font-size: 1.8rem;
-  }
-}
-
 ion-toolbar {
   --padding-start: 1.5rem;
   --padding-end: 1.5rem;

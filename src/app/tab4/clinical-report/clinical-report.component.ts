@@ -1,10 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
-    IonGrid, IonRow, IonCol, IonButton, IonIcon
+    IonGrid, IonRow, IonCol
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { downloadOutline, createOutline } from 'ionicons/icons';
 
 @Component({
     selector: 'app-clinical-report',
@@ -15,43 +13,19 @@ import { downloadOutline, createOutline } from 'ionicons/icons';
         CommonModule,
         IonGrid,
         IonRow,
-        IonCol,
-        IonButton,
-        IonIcon
+        IonCol
     ]
 })
 export class ClinicalReportComponent {
     /**
-     * Mock clinical data for preview visualization
-     * In production, this would be populated from backend/parent component
+     * Clinical data for preview visualization.
+     * Populated via @Input() — will be updated dynamically by Whisper + agent.
      */
-    clinicalData = {
+    @Input() clinicalData = {
         symptoms: 'Prurito, Enrojecimiento',
         duration: '14 días',
         appetite: 'Normal',
         urgency: 'No Urgente',
         redFlags: 'Ninguno detectado'
     };
-
-    constructor() {
-        addIcons({ downloadOutline, createOutline });
-    }
-
-    /**
-     * Handle download PDF action
-     * TODO: Integrate with ReportService for actual PDF generation
-     */
-    onDownloadPdf() {
-        console.log('Descargando PDF del informe...');
-        // this.reportService.exportPdf(this.clinicalData).subscribe(...)
-    }
-
-    /**
-     * Handle edit report action
-     * TODO: Emit event to parent component to switch to edit mode
-     */
-    onEditReport() {
-        console.log('Abriendo editor de informe...');
-        // This would typically emit an event to parent (Tab4Page)
-    }
 }

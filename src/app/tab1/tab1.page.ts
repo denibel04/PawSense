@@ -15,7 +15,7 @@ import { DogService } from '../core/services/dog.service';
   styleUrls: ['tab1.page.scss'],
   standalone: true,
   imports: [
-    IonHeader, IonToolbar, IonTitle, IonContent, IonButton, 
+    IonHeader, IonToolbar, IonContent, IonButton, 
     IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
     IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, IonIcon,
     CommonModule
