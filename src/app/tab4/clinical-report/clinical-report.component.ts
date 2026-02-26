@@ -27,23 +27,30 @@ import {
 })
 export class ClinicalReportComponent {
     @Input() isEditing = false;
+    currentDate: Date = new Date();
 
     // Local mutable copy – updated via setter when parent pushes new data
     data: any = {
-        symptoms: [],
-        diagnosis: '',
-        treatment: '',
-        notes: ''
+        resena: '',
+        anamnesis: '',
+        exploracion_fisica: '',
+        exploracion_especial: '',
+        diagnostico: '',
+        tratamiento: [],
+        recomendaciones: []
     };
 
     @Input() set clinicalData(value: any) {
         if (value) {
             // Deep-clone so edits don't mutate the parent directly
             this.data = {
-                symptoms: Array.isArray(value.symptoms) ? [...value.symptoms] : [],
-                diagnosis: value.diagnosis ?? '',
-                treatment: value.treatment ?? '',
-                notes: value.notes ?? ''
+                resena: value.resena ?? '',
+                anamnesis: value.anamnesis ?? '',
+                exploracion_fisica: value.exploracion_fisica ?? '',
+                exploracion_especial: value.exploracion_especial ?? '',
+                diagnostico: value.diagnostico ?? '',
+                tratamiento: Array.isArray(value.tratamiento) ? [...value.tratamiento] : [],
+                recomendaciones: Array.isArray(value.recomendaciones) ? [...value.recomendaciones] : []
             };
         }
     }

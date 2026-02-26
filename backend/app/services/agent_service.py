@@ -17,10 +17,13 @@ async def generate_report(transcribed_text: str, report_type: str = "veterinario
         prompt = f"""Eres un asistente veterinario experto. A partir de la transcripción de una consulta veterinaria, \
 extrae y estructura la información en los siguientes campos:
 
-- symptoms: lista de síntomas clínicos mencionados (array de strings, e.g. ["fiebre", "vómitos"])
-- diagnosis: diagnóstico provisional o definitivo mencionado (string)
-- treatment: tratamiento indicado, medicamentos o procedimientos (string)
-- notes: cualquier otra observación relevante, seguimiento o recomendación (string)
+- resena: información inicial del paciente como raza, edad, peso (string)
+- anamnesis: motivo de la consulta, historia clínica y eventos recientes (string)
+- exploracion_fisica: hallazgos de la exploración física general como mucosas, TRC, palpación (string)
+- exploracion_especial: observaciones detalladas de la exploración oftalmológica u otra específica (string)
+- diagnostico: diagnóstico presuntivo o definitivo (string)
+- tratamiento: medicamentos o intervenciones pautadas con sus indicaciones (array de strings)
+- recomendaciones: otros consejos como usar collar isabelino o fecha de próxima revisión (array de strings)
 
 Si algún campo no se menciona explícitamente, déjalo vacío ("" o []).
 
@@ -32,10 +35,12 @@ Transcripción de la consulta:
         prompt = f"""Eres un experto en adiestramiento canino. A partir de la transcripción de una sesión de entrenamiento, \
 extrae y estructura la información en los siguientes campos:
 
-- behavior_observed: el comportamiento principal del perro observado durante la sesión (string)
-- corrections: lista de correcciones, técnicas o comandos aplicados durante la sesión (array de strings)
-- homework: tareas o ejercicios que el dueño debe practicar en casa (string)
-- notes: observaciones adicionales sobre el progreso o actitud del perro (string)
+- fecha: Fecha mencionada en la que se realizó la sesión, estructurada obligatoriamente en formato dd/mm/yyyy (string)
+- duracion: Tiempo de duración de la sesión (string)
+- objetivos: Lista de objetivos específicos planteados o trabajados (array de strings)
+- conductas_resultados: Descripción de las conductas sobre las que se ha trabajado y sus resultados (string)
+- tipo_refuerzo: Tipo de métodos o refuerzos usados durante la sesión (string)
+- observaciones_actitud: Actitud del perro u observaciones finales (string)
 
 Si algún campo no se menciona explícitamente, déjalo vacío ("" o []).
 

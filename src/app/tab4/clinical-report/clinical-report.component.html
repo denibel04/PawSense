@@ -1,91 +1,137 @@
 <div class="preview-container">
-    <div class="preview-header">
-        <h3 class="preview-title">Informe Veterinario</h3>
+    <div class="preview-header" style="flex-direction: column; align-items: flex-start;">
+        <h3 class="preview-title">INFORME VETERINARIO</h3>
+        <p class="subtitle" style="font-size: 14px; font-weight: 600; color: #888888; margin: 5px 0 0 0;">FECHA: {{
+            currentDate | date:'dd/MM/yyyy' }}</p>
     </div>
 
     <!-- VISTA PREVIA LECTURA -->
-    <ion-grid *ngIf="!isEditing" class="preview-grid ion-no-padding">
-        <ion-row>
-            <!-- LEFT COLUMN: Clinical Data -->
-            <ion-col size-xs="12" size-md="4" class="data-column">
-                <div class="data-section">
-                    <p><strong>Síntomas:</strong> <span class="data-value">
-                            <ng-container *ngFor="let s of data.symptoms; let last = last">
-                                {{s}}{{last ? '' : ', '}}
-                            </ng-container>
-                            <span *ngIf="!data.symptoms || data.symptoms.length === 0">—</span>
-                        </span></p>
-                    <p><strong>Diagnóstico:</strong> <span class="data-value">{{ data.diagnosis || '—' }}</span></p>
-                    <p><strong>Tratamiento:</strong> <span class="data-value">{{ data.treatment || '—' }}</span></p>
-                    <p><strong>Notas:</strong> <span class="data-value muted">{{ data.notes || '—' }}</span></p>
-                </div>
-            </ion-col>
+    <div *ngIf="!isEditing" class="preview-content">
+        <div class="report-section data-section">
+            <p><strong>Reseña:</strong> <span class="data-value">{{ data.resena || '—' }}</span></p>
+        </div>
 
-            <!-- MIDDLE COLUMN: Triage & Diferenciales -->
-            <ion-col size-xs="12" size-md="4" class="section-column">
-                <div class="report-section">
-                    <h4 class="section-title">
-                        <span class="orange-dot">●</span> Triage
-                    </h4>
-                    <div class="skeleton-line"></div>
-                    <div class="skeleton-line" [style.width.%]="70"></div>
-                </div>
-                <!-- ... -->
-            </ion-col>
+        <div class="report-section data-section">
+            <p><strong>Anamnesis:</strong> <span class="data-value">{{ data.anamnesis || '—' }}</span></p>
+        </div>
 
-            <ion-col size-xs="12" size-md="4" class="section-column">
-                <div class="report-section">
-                    <h4 class="section-title">
-                        <span class="orange-dot">●</span> Recomendaciones
-                    </h4>
-                    <div class="skeleton-line"></div>
-                </div>
-            </ion-col>
-        </ion-row>
-    </ion-grid>
+        <div class="report-section data-section">
+            <p><strong>Exploración Física General:</strong> <span class="data-value">{{ data.exploracion_fisica || '—'
+                    }}</span></p>
+        </div>
+
+        <div class="report-section data-section">
+            <p><strong>Exploración Específica:</strong> <span class="data-value">{{ data.exploracion_especial || '—'
+                    }}</span></p>
+        </div>
+
+        <div class="report-section data-section">
+            <p><strong>Diagnóstico presuntivo:</strong> <span class="data-value">{{ data.diagnostico || '—' }}</span>
+            </p>
+        </div>
+
+        <div class="report-section data-section">
+            <p><strong>Se pauta tratamiento con:</strong></p>
+            <ul class="data-list" style="margin: 0; padding-left: 20px; font-size: 13px; color: #333333;">
+                <li *ngFor="let t of data.tratamiento" style="margin-bottom: 4px;">{{ t }}</li>
+                <li *ngIf="!data.tratamiento || data.tratamiento.length === 0" class="muted">—</li>
+            </ul>
+        </div>
+
+        <div class="report-section data-section">
+            <p><strong>Recomendaciones / Revisión:</strong></p>
+            <ul class="data-list" style="margin: 0; padding-left: 20px; font-size: 13px; color: #333333;">
+                <li *ngFor="let r of data.recomendaciones" style="margin-bottom: 4px;">{{ r }}</li>
+                <li *ngIf="!data.recomendaciones || data.recomendaciones.length === 0" class="muted">—</li>
+            </ul>
+        </div>
+    </div>
 
     <!-- FORMULARIO DE EDICIÓN -->
     <div *ngIf="isEditing" class="edit-form-container" style="padding: 10px;">
         <ion-list lines="none" style="background: transparent;">
 
-            <h4 class="section-title" style="margin-left: 15px;"><span class="orange-dot">●</span> Síntomas</h4>
-            <div *ngFor="let s of data.symptoms; let i = index; trackBy: trackByIndex"
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Reseña</ion-label>
+                <ion-textarea name="resena" [value]="data.resena" (ionInput)="data.resena = ($event.detail.value ?? '')"
+                    [autoGrow]="true" fill="outline" placeholder="Ej: Paciente canino Cavalier de 1 año de edad..."
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-textarea>
+            </ion-item>
+
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Anamnesis</ion-label>
+                <ion-textarea name="anamnesis" [value]="data.anamnesis"
+                    (ionInput)="data.anamnesis = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+                    placeholder="Ej: Paciente acude a consulta porque..."
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-textarea>
+            </ion-item>
+
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Exploración Física General</ion-label>
+                <ion-textarea name="exploracion_fisica" [value]="data.exploracion_fisica"
+                    (ionInput)="data.exploracion_fisica = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+                    placeholder="Ej: Mucosas rosas, TRC < 2 seg..."
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-textarea>
+            </ion-item>
+
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Exploración Específica</ion-label>
+                <ion-textarea name="exploracion_especial" [value]="data.exploracion_especial"
+                    (ionInput)="data.exploracion_especial = ($event.detail.value ?? '')" [autoGrow]="true"
+                    fill="outline" placeholder="Ej: Observación oftalmológica, úlcera corneal..."
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-textarea>
+            </ion-item>
+
+            <ion-item style="--background: transparent;">
+                <ion-label position="stacked">Diagnóstico Presuntivo</ion-label>
+                <ion-input name="diagnostico" [value]="data.diagnostico"
+                    (ionInput)="data.diagnostico = ($event.detail.value ?? '')" fill="outline"
+                    placeholder="Ej: Úlcera corneal con conjuntivitis asociada..."
+                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+                </ion-input>
+            </ion-item>
+
+            <h4 class="section-title" style="margin-left: 15px; margin-top: 20px;"><span class="orange-dot">●</span>
+                Tratamiento pautado</h4>
+            <div *ngFor="let t of data.tratamiento; let i = index; trackBy: trackByIndex"
                 style="display: flex; align-items: center; margin-bottom: 5px; padding-left: 15px;">
-                <ion-input [name]="'symptom_' + i" [value]="data.symptoms[i]"
-                    (ionInput)="data.symptoms[i] = ($event.detail.value ?? '')" fill="outline"
+                <ion-input [name]="'tratamiento_' + i" [value]="data.tratamiento[i]"
+                    (ionInput)="data.tratamiento[i] = ($event.detail.value ?? '')" fill="outline"
+                    placeholder="Ej: Voltaren colirio: 2 gotas..."
                     style="background: white; border-radius: 4px; --padding-start: 10px;">
                 </ion-input>
-                <ion-button fill="clear" color="danger" (click)="data.symptoms.splice(i, 1)" style="margin-left: 5px;">
+                <ion-button fill="clear" color="danger" (click)="data.tratamiento.splice(i, 1)"
+                    style="margin-left: 5px;">
                     <ion-icon name="close-outline"></ion-icon>
                 </ion-button>
             </div>
             <div style="padding-left: 15px;">
-                <ion-button fill="outline" size="small" (click)="data.symptoms.push('')">+ Añadir Síntoma</ion-button>
+                <ion-button fill="outline" size="small" (click)="data.tratamiento.push('')">+ Añadir
+                    Tratamiento</ion-button>
             </div>
 
-            <ion-item style="--background: transparent; margin-top: 15px;">
-                <ion-label position="stacked">Diagnóstico</ion-label>
-                <ion-input name="diagnosis" [value]="data.diagnosis"
-                    (ionInput)="data.diagnosis = ($event.detail.value ?? '')" fill="outline"
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
+            <h4 class="section-title" style="margin-left: 15px; margin-top: 20px;"><span class="orange-dot">●</span>
+                Recomendaciones</h4>
+            <div *ngFor="let r of data.recomendaciones; let i = index; trackBy: trackByIndex"
+                style="display: flex; align-items: center; margin-bottom: 5px; padding-left: 15px;">
+                <ion-input [name]="'recomendacion_' + i" [value]="data.recomendaciones[i]"
+                    (ionInput)="data.recomendaciones[i] = ($event.detail.value ?? '')" fill="outline"
+                    placeholder="Ej: Mantener collar isabelino durante 7 días..."
+                    style="background: white; border-radius: 4px; --padding-start: 10px;">
                 </ion-input>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Tratamiento</ion-label>
-                <ion-textarea name="treatment" [value]="data.treatment"
-                    (ionInput)="data.treatment = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Notas Adicionales</ion-label>
-                <ion-textarea name="notes" [value]="data.notes" (ionInput)="data.notes = ($event.detail.value ?? '')"
-                    [autoGrow]="true" fill="outline"
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
+                <ion-button fill="clear" color="danger" (click)="data.recomendaciones.splice(i, 1)"
+                    style="margin-left: 5px;">
+                    <ion-icon name="close-outline"></ion-icon>
+                </ion-button>
+            </div>
+            <div style="padding-left: 15px; margin-bottom: 20px;">
+                <ion-button fill="outline" size="small" (click)="data.recomendaciones.push('')">+ Añadir
+                    Recomendación</ion-button>
+            </div>
 
         </ion-list>
     </div>
