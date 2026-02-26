@@ -100,6 +100,24 @@ async def predict_video(file: UploadFile = File(...)):
         if not cap.isOpened():
             return {"error": "No se pudo abrir el vídeo"}
 
+        # --- VALIDACIÓN DE FRAUDE: Detectar si es una imagen disfrazada de video ---
+        num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        ret, frame_check = cap.read()
+        
+        # Si tiene 1 frame o menos, o no se puede leer el primero, es probablemente una imagen
+        if num_frames <= 1 or not ret:
+            cap.release()
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+            from fastapi import HTTPException
+            raise HTTPException(
+                status_code=400, 
+                detail="Detección de fraude: Has intentado subir una imagen como si fuera un vídeo."
+            )
+        
+        # Reiniciar el video para el procesamiento
+        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
         fps = cap.get(cv2.CAP_PROP_FPS)
         if fps <= 0: fps = 30
         

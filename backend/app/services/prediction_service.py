@@ -265,10 +265,10 @@ class PredictionService:
             - Devuelve "Golden Retriever" como ejemplo
             - Puedes extender para variar según image_path si es necesario
         """
-        # Por ahora devuelve "Golden Retriever" como ejemplo
-        # En testing real, podrías variar según parámetros
-        return self.MOCK_PREDICTIONS.get("golden", [
-            PredictionResult("Unknown Breed", 0.50)
+        # Por defecto, si no hay coincidencia o cargamos una imagen "rango", 
+        # devolvemos Desconocido en lugar de un Golden para evitar falsos positivos
+        return self.MOCK_PREDICTIONS.get("unknown", [
+            PredictionResult("Raza Desconocida", 0.0)
         ])
 
     def get_top_predictions(

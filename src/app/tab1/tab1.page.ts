@@ -3,14 +3,14 @@ import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
   IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
   IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, IonIcon,
-  IonSegment, IonSegmentButton
+  IonSegment, IonSegmentButton, ToastController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DogService } from '../core/services/dog.service';
 import { API_CONFIG } from '../core/constants/api.constants';
 import { addIcons } from 'ionicons';
-import { camera, stopCircle, playCircle, cameraOutline, cloudUploadOutline, sparklesOutline } from 'ionicons/icons';
+import { camera, stopCircle, playCircle, cameraOutline, cloudUploadOutline, sparklesOutline, paw, alertCircleOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-tab1',
@@ -45,8 +45,8 @@ export class Tab1Page implements OnDestroy {
   activeSegment: 'visor' | 'analizador' = 'visor';
   private intervalId: any;
 
-  constructor(private dogService: DogService) {
-    addIcons({ camera, stopCircle, playCircle, cameraOutline, cloudUploadOutline, sparklesOutline });
+  constructor(private dogService: DogService, private toastController: ToastController) {
+    addIcons({ camera, stopCircle, playCircle, cameraOutline, cloudUploadOutline, sparklesOutline, paw, alertCircleOutline });
   }
 
   ngOnDestroy() {
@@ -174,15 +174,17 @@ export class Tab1Page implements OnDestroy {
       this.predictionResult = null; // Reset results
       this.stopRealTime();
 
-      if (file.type.startsWith('image/') && file.type !== 'image/gif') {
-        this.fileType = 'image';
+      if (file.type.startsWith('image/')) {
+        // Solo tratamos como 'video' si es explícitamente un GIF
+        this.fileType = file.type === 'image/gif' ? 'video' : 'image';
+
         this.videoPreview = null;
         const reader = new FileReader();
         reader.onload = () => {
           this.imagePreview = reader.result as string;
         };
         reader.readAsDataURL(file);
-      } else if (file.type.startsWith('video/') || file.type === 'image/gif') {
+      } else if (file.type.startsWith('video/')) {
         this.fileType = 'video';
         this.imagePreview = null;
         this.videoPreview = URL.createObjectURL(file);
@@ -204,9 +206,20 @@ export class Tab1Page implements OnDestroy {
         this.predictionResult = response;
         this.isLoading = false;
       },
-      error: (err) => {
+      error: async (err) => {
         console.error('Prediction failed:', err);
         this.isLoading = false;
+
+        const message = err.error?.detail || 'Error al procesar el archivo. Revisa que el formato sea correcto.';
+
+        const toast = await this.toastController.create({
+          message: message,
+          duration: 4000,
+          color: 'danger',
+          position: 'top',
+          icon: 'alert-circle-outline'
+        });
+        await toast.present();
       }
     });
   }
