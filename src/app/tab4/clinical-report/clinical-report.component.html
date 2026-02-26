@@ -1,54 +1,130 @@
-<div class="preview-container">
-    <div class="preview-header" style="flex-direction: column; align-items: flex-start;">
-        <h3 class="preview-title">INFORME VETERINARIO</h3>
-        <p class="subtitle" style="font-size: 14px; font-weight: 600; color: #888888; margin: 5px 0 0 0;">FECHA: {{
-            currentDate | date:'dd/MM/yyyy' }}</p>
+﻿<div class="report-wrapper">
+
+  <!-- ===================== VISTA PREVIA ===================== -->
+  <div *ngIf="!isEditing">
+
+    <!-- HEADER -->
+    <div class="rpt-header">
+      <div>
+        <div class="rpt-title">INFORME MÉDICO VETERINARIO</div>
+        <div class="rpt-brand">🐾 PawSense</div>
+      </div>
+      <div class="rpt-date">
+        <strong>Fecha de Consulta:</strong> {{ data.fechaConsulta || '—' }}<br>
+        <strong>Generado:</strong> {{ today }}
+      </div>
     </div>
 
-    <!-- VISTA PREVIA LECTURA -->
-    <div *ngIf="!isEditing" class="preview-content">
-        <div class="report-section data-section">
-            <p><strong>Reseña:</strong> <span class="data-value">{{ data.resena || '—' }}</span></p>
+    <!-- INFORMACIÓN DEL PACIENTE -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📋 Información del Paciente</div>
+      <div class="rpt-section-content">
+        <div class="rpt-info-grid">
+          <div class="rpt-info-box">
+            <div class="rpt-label">Nombre de la Mascota</div>
+            <div class="rpt-value">{{ data.paciente?.nombre || '—' }}</div>
+          </div>
+          <div class="rpt-info-box">
+            <div class="rpt-label">Especie</div>
+            <div class="rpt-value">{{ data.paciente?.especie || '—' }}</div>
+          </div>
+          <div class="rpt-info-box">
+            <div class="rpt-label">Edad</div>
+            <div class="rpt-value">{{ data.paciente?.edad || '—' }}</div>
+          </div>
+          <div class="rpt-info-box">
+            <div class="rpt-label">Raza</div>
+            <div class="rpt-value">{{ data.paciente?.raza || '—' }}</div>
+          </div>
+          <div class="rpt-info-box">
+            <div class="rpt-label">Peso</div>
+            <div class="rpt-value">{{ data.paciente?.peso || '—' }}</div>
+          </div>
         </div>
-
-        <div class="report-section data-section">
-            <p><strong>Anamnesis:</strong> <span class="data-value">{{ data.anamnesis || '—' }}</span></p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Exploración Física General:</strong> <span class="data-value">{{ data.exploracion_fisica || '—'
-                    }}</span></p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Exploración Específica:</strong> <span class="data-value">{{ data.exploracion_especial || '—'
-                    }}</span></p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Diagnóstico presuntivo:</strong> <span class="data-value">{{ data.diagnostico || '—' }}</span>
-            </p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Se pauta tratamiento con:</strong></p>
-            <ul class="data-list" style="margin: 0; padding-left: 20px; font-size: 13px; color: #333333;">
-                <li *ngFor="let t of data.tratamiento" style="margin-bottom: 4px;">{{ t }}</li>
-                <li *ngIf="!data.tratamiento || data.tratamiento.length === 0" class="muted">—</li>
-            </ul>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Recomendaciones / Revisión:</strong></p>
-            <ul class="data-list" style="margin: 0; padding-left: 20px; font-size: 13px; color: #333333;">
-                <li *ngFor="let r of data.recomendaciones" style="margin-bottom: 4px;">{{ r }}</li>
-                <li *ngIf="!data.recomendaciones || data.recomendaciones.length === 0" class="muted">—</li>
-            </ul>
-        </div>
+      </div>
     </div>
 
-    <!-- FORMULARIO DE EDICIÓN -->
-    <div *ngIf="isEditing" class="edit-form-container" style="padding: 10px;">
+    <!-- SIGNOS Y SÍNTOMAS -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">🔍 Signos y Síntomas Clínicos</div>
+      <div class="rpt-section-content">
+        <div *ngIf="data.symptoms && data.symptoms.length > 0" class="rpt-tags">
+          <span *ngFor="let s of data.symptoms" class="rpt-tag">{{ s }}</span>
+        </div>
+        <span *ngIf="!data.symptoms || data.symptoms.length === 0" class="rpt-empty">—</span>
+      </div>
+    </div>
+
+    <!-- ANTECEDENTES -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📚 Antecedentes Clínicos</div>
+      <div class="rpt-section-content">
+        <div class="rpt-info-grid rpt-info-grid--full">
+          <div class="rpt-info-box">
+            <div class="rpt-label">Antecedentes Patológicos</div>
+            <div class="rpt-value">{{ data.antecedentes || '—' }}</div>
+          </div>
+          <div class="rpt-info-box">
+            <div class="rpt-label">Examen Físico</div>
+            <div class="rpt-value">{{ data.examen_fisico || '—' }}</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- DIAGNÓSTICO -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">🔬 Diagnóstico</div>
+      <div class="rpt-section-content">
+        <div class="rpt-highlight-box">
+          <strong>Diagnóstico Principal:</strong><br>
+          {{ data.diagnosis || '—' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- TRATAMIENTO -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">💊 Plan Terapéutico y Medicación</div>
+      <div class="rpt-section-content">
+        <div class="rpt-treatment-box">
+          <strong>Tratamiento Indicado:</strong><br><br>
+          {{ data.treatment || '—' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- RECOMENDACIONES -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">💡 Recomendaciones para el Propietario</div>
+      <div class="rpt-section-content">
+        <p class="rpt-text">{{ data.recomendaciones || '—' }}</p>
+      </div>
+    </div>
+
+    <!-- NOTAS -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📝 Notas Adicionales</div>
+      <div class="rpt-section-content">
+        <p class="rpt-text">{{ data.notes || '—' }}</p>
+      </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="rpt-footer">
+      <strong>Informe Generado por PawSense</strong><br>
+      Sistema de Inteligencia Artificial para Veterinaria y Adiestramiento Canino
+      <div class="rpt-footer-note">
+        Este informe ha sido generado automáticamente por el sistema PawSense usando tecnología de IA (Gemini).
+        Se recomienda validación profesional de cualquier diagnóstico o recomendación médica.
+      </div>
+    </div>
+
+  </div><!-- /vista previa -->
+
+  <!-- ===================== FORMULARIO DE EDICIÓN ===================== -->
+  <div *ngIf="isEditing" class="edit-form-container">
         <ion-list lines="none" style="background: transparent;">
 
             <ion-item style="--background: transparent;">
@@ -135,4 +211,5 @@
 
         </ion-list>
     </div>
+
 </div>

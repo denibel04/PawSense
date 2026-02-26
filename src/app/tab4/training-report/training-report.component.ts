@@ -29,25 +29,29 @@ export class TrainingReportComponent {
     @Input() isEditing = false;
     currentDate: Date = new Date();
 
+    today: string = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
     // Local mutable copy – updated via setter when parent pushes new data
     data: any = {
-        fecha: '',
-        duracion: '',
-        objetivos: [],
-        conductas_resultados: '',
-        tipo_refuerzo: '',
-        observaciones_actitud: ''
+        behavior_observed: '',
+        corrections: [],
+        homework: '',
+        notes: '',
+        paciente: {},
+        recomendaciones: '',
+        fechaConsulta: ''
     };
 
     @Input() set trainingData(value: any) {
         if (value) {
             this.data = {
-                fecha: value.fecha ?? '',
-                duracion: value.duracion ?? '',
-                objetivos: Array.isArray(value.objetivos) ? [...value.objetivos] : [],
-                conductas_resultados: value.conductas_resultados ?? '',
-                tipo_refuerzo: value.tipo_refuerzo ?? '',
-                observaciones_actitud: value.observaciones_actitud ?? ''
+                behavior_observed: value.behavior_observed ?? '',
+                corrections: Array.isArray(value.corrections) ? [...value.corrections] : [],
+                homework: value.homework ?? '',
+                notes: value.notes ?? '',
+                paciente: value.paciente ?? {},
+                recomendaciones: value.recomendaciones ?? '',
+                fechaConsulta: value.fechaConsulta ?? ''
             };
         }
     }

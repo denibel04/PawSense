@@ -8,7 +8,7 @@ import {
   AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw } from 'ionicons/icons';
+import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw, pauseCircleOutline, playCircleOutline, stopCircleOutline, refreshOutline } from 'ionicons/icons';
 import { TrainingReportComponent } from './training-report/training-report.component';
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
@@ -36,6 +36,7 @@ export class Tab4Page {
 
   // Audio state
   isRecording = false;
+  isPaused = false;
   isSpeaking = false;
   audioBase64: string | null = null;
   audioMimeType: string | null = null;
@@ -43,6 +44,7 @@ export class Tab4Page {
   transcriptText: string = '';
   clinicalData: any = null;
   trainingData: any = null;
+  pdfBase64: string | null = null;
 
   recognition: any;
   finalTranscript = '';
@@ -67,7 +69,7 @@ export class Tab4Page {
     private alertController: AlertController,
     private toastController: ToastController
   ) {
-    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw, stopCircleOutline: 'stop-circle-outline' });
+    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw, stopCircleOutline, pauseCircleOutline, playCircleOutline, refreshOutline });
     this.initSpeechRecognition();
   }
 
@@ -105,12 +107,61 @@ export class Tab4Page {
     this.isEditing = !this.isEditing;
   }
 
-  async toggleRecording() {
-    if (this.isRecording) {
-      await this.stopRecording();
-    } else {
+  async startNewRecording() {
+    if (!this.isRecording) {
+      // Reset state for new recording
+      this.isPaused = false;
+      this.transcriptText = '';
+      this.finalTranscript = '';
       await this.startRecording();
     }
+  }
+
+  async pauseRecording() {
+    try {
+      this.isPaused = true;
+      this.isSpeaking = false;
+      if (this.recognition) {
+        try { this.recognition.stop(); } catch (e) { }
+      }
+      // Note: capacitor-voice-recorder may not have a pause method, 
+      // but we'll pause the speech recognition
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error pausing recording', error);
+    }
+  }
+
+  async resumeRecording() {
+    try {
+      this.isPaused = false;
+      this.isSpeaking = true;
+      if (this.recognition) {
+        try { this.recognition.start(); } catch (e) { }
+      }
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('Error resuming recording', error);
+    }
+  }
+
+  async finalizeRecording() {
+    if (this.isRecording || this.isPaused) {
+      await this.stopRecording();
+    }
+  }
+
+  async restartRecording() {
+    this.isRecording = false;
+    this.isPaused = false;
+    this.isSpeaking = false;
+    if (this.recognition) {
+      try { this.recognition.stop(); } catch (e) { }
+    }
+    this.transcriptText = '';
+    this.finalTranscript = '';
+    this.audioBase64 = null;
+    this.cdr.detectChanges();
   }
 
   async startRecording() {
@@ -135,6 +186,7 @@ export class Tab4Page {
   async stopRecording() {
     try {
       this.isRecording = false;
+      this.isPaused = false;
       this.isSpeaking = false;
       if (this.recognition) {
         try { this.recognition.stop(); } catch (e) { }
@@ -158,6 +210,7 @@ export class Tab4Page {
     } catch (error) {
       console.error('Error stopping recording', error);
       this.isRecording = false;
+      this.isPaused = false;
       this.isSpeaking = false;
       this.cdr.detectChanges();
     }
@@ -216,50 +269,191 @@ export class Tab4Page {
 
   processAudio(file: Blob, filename: string) {
     this.audioProcessing = true;
+    this.pdfBase64 = null;
     this.progress.transcription = 'process';
     this.progress.clinicalExtraction = 'pending';
+    this.progress.revision = 'pending';
+    this.progress.finalReport = 'pending';
 
     const reportType: 'veterinario' | 'adiestramiento' = this.selectedSegment === 'adiestramiento' ? 'adiestramiento' : 'veterinario';
 
+    console.log(`[DEBUG] Iniciando generación de reporte tipo: ${reportType}`);
+    console.log(`[DEBUG] Archivo: ${filename}, Tamaño: ${file.size} bytes`);
+
     this.reportService.generateReportFromAudio(file, filename, reportType).subscribe({
-      next: (response) => {
-        this.progress.transcription = 'done';
-        this.progress.clinicalExtraction = 'done';
-        this.progress.revision = 'pending';
-        this.audioProcessing = false;
-        this.transcriptText = response.transcript;
-        if (reportType === 'veterinario') {
-          this.clinicalData = response.data;
-        } else {
-          this.trainingData = response.data;
+      next: (event) => {
+        console.log(`[DEBUG] SSE Event recibido:`, event);
+
+        // Actualizar progreso según estado
+        switch (event.status) {
+          case 'Transcripción':
+            this.progress.transcription = 'process';
+            break;
+
+          case 'Extracción':
+            this.progress.transcription = 'done';
+            this.progress.clinicalExtraction = 'process';
+            // Si hay datos extraídos, mostrarlos
+            if (event.extractedData) {
+              console.log(`[DEBUG] Datos extraídos recibidos:`, event.extractedData);
+              if (reportType === 'veterinario') {
+                this.clinicalData = this.transformVeterinaryData(event.extractedData);
+                console.log(`[DEBUG] clinicalData transformado:`, this.clinicalData);
+              } else {
+                this.trainingData = this.transformTrainingData(event.extractedData);
+                console.log(`[DEBUG] trainingData transformado:`, this.trainingData);
+              }
+            } else {
+              console.warn(`[WARN] No hay extractedData en evento de Extracción`);
+            }
+            break;
+
+          case 'Revisión':
+            this.progress.clinicalExtraction = 'done';
+            this.progress.revision = 'process';
+            break;
+
+          case 'Informe Final':
+            this.progress.revision = 'done';
+            this.progress.finalReport = 'process';
+            break;
+
+          case 'completed':
+            this.progress.transcription = 'done';
+            this.progress.clinicalExtraction = 'done';
+            this.progress.revision = 'done';
+            this.progress.finalReport = 'done';
+            this.audioProcessing = false;
+
+            // Mostrar datos finales
+            if (event.extractedData) {
+              console.log(`[DEBUG] Datos finales extraídos:`, event.extractedData);
+              if (reportType === 'veterinario') {
+                this.clinicalData = this.transformVeterinaryData(event.extractedData);
+                console.log(`[DEBUG] clinicalData final:`, this.clinicalData);
+              } else {
+                this.trainingData = this.transformTrainingData(event.extractedData);
+                console.log(`[DEBUG] trainingData final:`, this.trainingData);
+              }
+            }
+
+            // Guardar PDF base64 para descarga
+            if (event.pdfBase64) {
+              this.pdfBase64 = event.pdfBase64;
+              console.log(`[DEBUG] PDF recibido (base64), tamaño:`, event.pdfBase64.length);
+            }
+            if (event.pdfPath) {
+              console.log(`[DEBUG] PDF generado en:`, event.pdfPath);
+            }
+            break;
+
+          case 'error':
+            console.error(`[ERROR] Error en reporte:`, event.message);
+            this.progress.transcription = 'pending';
+            this.progress.clinicalExtraction = 'pending';
+            this.progress.revision = 'pending';
+            this.progress.finalReport = 'pending';
+            this.audioProcessing = false;
+            break;
         }
+
         this.cdr.detectChanges();
       },
-      error: async (err) => {
-        console.error('Error al generar reporte:', err);
-
-        const toast = await this.toastController.create({
-          message: 'Error al subir u procesar el audio. Asegúrate de que es un formato válido.',
-          duration: 3000,
-          color: 'danger',
-          position: 'top',
-          icon: 'close-circle-outline'
-        });
-        await toast.present();
-
+      error: (err) => {
+        console.error('[ERROR] Error al generar reporte:', err);
         this.progress.transcription = 'pending';
+        this.progress.clinicalExtraction = 'pending';
+        this.progress.revision = 'pending';
+        this.progress.finalReport = 'pending';
+        this.audioProcessing = false;
+        this.cdr.detectChanges();
+      },
+      complete: () => {
+        console.log('[DEBUG] Generación de reporte completada');
         this.audioProcessing = false;
         this.cdr.detectChanges();
       }
     });
   }
 
+  /**
+   * Transforma datos extraídos de Gemini al formato esperado por clinical-report component
+   */
+  private transformVeterinaryData(data: any): any {
+    console.log('[DEBUG] Transformando datos veterinarios:', data);
+    
+    // El backend retorna 'sintomas' (array), 'diagnostico', 'tratamiento', etc.
+    const transformed = {
+      symptoms: data.sintomas || [],  // Cambio clave: es 'sintomas' (no 'signos')
+      diagnosis: data.diagnostico || '',
+      treatment: data.tratamiento || data.receta_detallada || '',
+      notes: data.notas || '',
+      paciente: data.paciente || {},
+      antecedentes: data.antecedentes_patologicos || '',
+      examen_fisico: data.examen_fisico || '',
+      recomendaciones: data.recomendaciones || '',
+      fechaConsulta: data.fechaConsulta || ''
+    };
+    
+    console.log('[DEBUG] Datos transformados:', transformed);
+    return transformed;
+  }
+
+  /**
+   * Transforma datos extraídos de Gemini al formato esperado por training-report component
+   */
+  private transformTrainingData(data: any): any {
+    console.log('[DEBUG] Transformando datos de adiestramiento:', data);
+    
+    // El backend retorna los campos directamente del schema
+    const transformed = {
+      behavior_observed: data.comportamiento_observado || '',
+      corrections: Array.isArray(data.correcciones) ? data.correcciones : [],
+      homework: Array.isArray(data.tareas_casa) ? data.tareas_casa.join(', ') : data.tareas_casa || '',
+      notes: data.notas || data.recomendaciones || '',
+      paciente: data.paciente || {},
+      recomendaciones: data.recomendaciones || '',
+      fechaConsulta: data.fechaConsulta || ''
+    };
+    
+    console.log('[DEBUG] Datos transformados:', transformed);
+    return transformed;
+  }
+
   downloadReport() {
-    // TODO: Integrar con PDFReportService
+    if (!this.pdfBase64) {
+      console.warn('[WARN] No hay PDF disponible para descargar');
+      return;
+    }
+
+    try {
+      // Convertir base64 a blob
+      const byteCharacters = atob(this.pdfBase64);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+      // Crear enlace de descarga
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PawSense_${this.selectedSegment}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      console.log('[DEBUG] PDF descargado exitosamente');
+    } catch (error) {
+      console.error('[ERROR] Error al descargar PDF:', error);
+    }
   }
 
   downloadOldReport(id: number) {
-    // TODO: Integrar con PDFReportService
+    // TODO: Integrar con historial de reportes
   }
 }
 

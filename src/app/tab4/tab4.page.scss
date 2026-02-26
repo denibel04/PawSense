@@ -361,3 +361,93 @@ ion-toolbar {
         font-weight: 500;
     }
 }
+
+/* Recording buttons layout */
+.record-button-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+
+    ion-button {
+        margin: 0;
+    }
+
+    &.grid-button {
+        ion-button {
+            height: 44px;
+            font-size: 12px;
+
+            ion-icon {
+                margin-right: 4px;
+                font-size: 16px;
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    ion-button {
+        --padding-start: 8px;
+        --padding-end: 8px;
+        font-size: 12px;
+
+        ion-icon {
+            margin-right: 4px;
+        }
+    }
+}
+
+/* PROGRESS STATES STYLING */
+.progress-card {
+    ion-item {
+        &.done {
+            ion-label {
+                color: $success-color;
+                font-weight: 600;
+            }
+        }
+
+        &.process {
+            animation: pulse-item 1.5s ease-in-out infinite;
+            
+            ion-label {
+                color: var(--pawsense-orange);
+                font-weight: 600;
+            }
+        }
+    }
+}
+
+/* SPINNER ANIMATION */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* PULSE ANIMATION FOR ACTIVE PROGRESS ITEMS */
+@keyframes pulse-item {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* LOADING STATE STYLING */
+ion-item[style*="background: rgba(var(--ion-color-warning-rgb"]>ion-label>ion-icon[name="spinner"] {
+    display: inline-block;
+}
+
+/* IMPROVE REPORT COMPONENTS DISPLAY */
+.preview-card {
+    app-clinical-report,
+    app-training-report {
+        display: block;
+        width: 100%;
+    }
+}
