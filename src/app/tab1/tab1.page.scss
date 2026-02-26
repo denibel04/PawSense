@@ -1,12 +1,20 @@
-:host {
-  --ion-font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --bg-soft: #f4f7fa;
-  --card-radius: 32px;
-  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+ion-toolbar {
+  --padding-start: 1.5rem;
+  --padding-end: 1.5rem;
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+
+  @media (min-width: 768px) {
+    --padding-start: 2rem;
+    --padding-end: 2rem;
+  }
 }
 
-ion-content {
-  --background: var(--bg-soft);
+.preview-img {
+  max-height: 250px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 3px solid #f4f4f4;
 }
 
 .main-container-v2 {

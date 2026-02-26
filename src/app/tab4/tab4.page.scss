@@ -6,18 +6,23 @@ $text-main: #333333;
 $text-muted: #888888;
 $success-color: #34c759;
 
-.dashboard-header {
-    background: white;
-    border-bottom: 1px solid $border-color;
 
-    ion-toolbar {
-        --background: white;
+
+ion-toolbar {
+    --padding-start: 1.5rem;
+    --padding-end: 1.5rem;
+    --padding-top: 1rem;
+    --padding-bottom: 1rem;
+
+    @media (min-width: 768px) {
+        --padding-start: 2rem;
+        --padding-end: 2rem;
     }
 }
 
 .segment-toolbar {
-    padding: 10px 0;
-    border-top: 1px solid $border-color;
+    margin: 0px 25px;
+    padding-top: 20px;
 
     .segment-container {
         display: flex;
@@ -26,20 +31,31 @@ $success-color: #34c759;
     }
 
     ion-segment {
-        background: transparent;
+        --background: white;
+        height: 50px;
         max-width: 500px;
+        border: 1px solid $border-color;
+        border-radius: 4px;
+        opacity: 1;
+
 
         ion-segment-button {
             --color-checked: white;
             --indicator-color: var(--pawsense-orange);
             --color: $text-main;
-            font-weight: 500;
-            border: 1px solid $border-color;
-            border-radius: 4px;
-            margin: 0 4px;
+            font-weight: bold;
+            --background-hover-opacity: 1;
+
+
 
             &::part(indicator-background) {
                 border-radius: 4px;
+
+
+            }
+
+            ion-label {
+                font-size: large;
             }
         }
     }
@@ -52,6 +68,34 @@ $success-color: #34c759;
         padding: 20px;
         max-width: 1200px;
         margin: 0 auto;
+    }
+}
+
+// ================================
+// Tab 4 (Informes) Styles
+// ================================
+
+.audio-ripple-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    pointer-events: none;
+    animation: pulse-ripple 1s infinite alternate ease-in-out;
+}
+
+@keyframes pulse-ripple {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.2;
+    }
+
+    100% {
+        transform: scale(1.05);
+        opacity: 0.6;
     }
 }
 
@@ -93,6 +137,15 @@ $success-color: #34c759;
         height: 44px;
         font-weight: 600;
         --border-radius: 6px;
+        transition: all 0.2s ease-in-out;
+
+        &.drag-over {
+            --background: rgba(255, 140, 0, 0.1);
+            --border-style: dashed;
+            --border-width: 2px;
+            --border-color: var(--pawsense-orange);
+            --color: var(--pawsense-orange);
+        }
 
         ion-icon {
             margin-right: 8px;
@@ -143,6 +196,15 @@ $success-color: #34c759;
             }
         }
     }
+}
+
+/* Section Title - Orange */
+.section-title-orange {
+    color: var(--pawsense-orange);
+    font-size: 18px;
+    font-weight: 600;
+    margin: 20px 0 10px 0;
+    padding-left: 4px;
 }
 
 /* Extracted Data Area (Center) */
@@ -198,10 +260,10 @@ $success-color: #34c759;
         }
 
         .dot-bullet {
-            width: 4px;
-            height: 4px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
-            background: #ccc;
+            background: var(--pawsense-orange);
             margin-right: 8px;
         }
     }
@@ -234,12 +296,8 @@ $success-color: #34c759;
 /* Preview Card */
 .preview-card {
 
-    .clickable-span {
-        font-size: 14px;
-        color: var(--pawsense-orange);
-        cursor: pointer;
-        float: right;
-        font-weight: normal;
+    ion-card-header {
+        display: none;
     }
 
     .preview-grid {
@@ -252,6 +310,14 @@ $success-color: #34c759;
 
         p {
             margin: 4px 0;
+        }
+
+        .red-flag-text {
+            color: var(--pawsense-orange);
+
+            strong {
+                color: var(--pawsense-orange);
+            }
         }
     }
 
@@ -282,4 +348,16 @@ $success-color: #34c759;
 /* Utilities */
 .muted {
     color: $text-muted !important;
+}
+
+/* Editing toolbar */
+.editing-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+
+    ion-button {
+        --border-radius: 6px;
+        font-weight: 500;
+    }
 }

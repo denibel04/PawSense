@@ -1,10 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import {
-    IonGrid, IonRow, IonCol, IonButton, IonIcon
+    IonGrid, IonRow, IonCol, IonItem, IonLabel, IonInput, IonTextarea, IonList, IonButton, IonIcon
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { downloadOutline, createOutline } from 'ionicons/icons';
 
 @Component({
     selector: 'app-clinical-report',
@@ -13,45 +12,50 @@ import { downloadOutline, createOutline } from 'ionicons/icons';
     standalone: true,
     imports: [
         CommonModule,
+        FormsModule,
         IonGrid,
         IonRow,
         IonCol,
+        IonItem,
+        IonLabel,
+        IonInput,
+        IonTextarea,
+        IonList,
         IonButton,
         IonIcon
     ]
 })
 export class ClinicalReportComponent {
-    /**
-     * Mock clinical data for preview visualization
-     * In production, this would be populated from backend/parent component
-     */
-    clinicalData = {
-        symptoms: 'Prurito, Enrojecimiento',
-        duration: '14 días',
-        appetite: 'Normal',
-        urgency: 'No Urgente',
-        redFlags: 'Ninguno detectado'
+    @Input() isEditing = false;
+    currentDate: Date = new Date();
+
+    // Local mutable copy – updated via setter when parent pushes new data
+    data: any = {
+        resena: '',
+        anamnesis: '',
+        exploracion_fisica: '',
+        exploracion_especial: '',
+        diagnostico: '',
+        tratamiento: [],
+        recomendaciones: []
     };
 
-    constructor() {
-        addIcons({ downloadOutline, createOutline });
+    @Input() set clinicalData(value: any) {
+        if (value) {
+            // Deep-clone so edits don't mutate the parent directly
+            this.data = {
+                resena: value.resena ?? '',
+                anamnesis: value.anamnesis ?? '',
+                exploracion_fisica: value.exploracion_fisica ?? '',
+                exploracion_especial: value.exploracion_especial ?? '',
+                diagnostico: value.diagnostico ?? '',
+                tratamiento: Array.isArray(value.tratamiento) ? [...value.tratamiento] : [],
+                recomendaciones: Array.isArray(value.recomendaciones) ? [...value.recomendaciones] : []
+            };
+        }
     }
 
-    /**
-     * Handle download PDF action
-     * TODO: Integrate with ReportService for actual PDF generation
-     */
-    onDownloadPdf() {
-        console.log('Descargando PDF del informe...');
-        // this.reportService.exportPdf(this.clinicalData).subscribe(...)
-    }
-
-    /**
-     * Handle edit report action
-     * TODO: Emit event to parent component to switch to edit mode
-     */
-    onEditReport() {
-        console.log('Abriendo editor de informe...');
-        // This would typically emit an event to parent (Tab4Page)
+    trackByIndex(index: number): number {
+        return index;
     }
 }

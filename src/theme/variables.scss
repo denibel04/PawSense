@@ -21,20 +21,6 @@
     font-style: normal;
 }
 
-.brand-title {
-    font-size: 2rem;
-    font-weight: bold;
-    font-family: 'Tondo-Modified', sans-serif;
-}
-
-.title-text {
-    font-size: 2rem;
-    font-weight: 500;
-    border-left: 3px solid var(--ion-color-medium-shade);
-    margin-left: 1rem;
-    padding-left: 1rem;
-    font-family: 'Tondo', sans-serif;
-}
 
 .dashboard-header {
     background: white;
@@ -42,5 +28,20 @@
 
     ion-toolbar {
         --background: white;
+    }
+}
+
+/* Logo Styles */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--ion-color-primary);
+    font-family: 'Tondo-Modified', sans-serif;
+
+    ion-icon {
+        font-size: 1.8rem;
     }
 }

@@ -1,13 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
-    IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-    IonItem, IonLabel, IonInput, IonTextarea, IonIcon, IonButton,
-    IonDatetime, IonDatetimeButton, IonModal, IonSelect, IonSelectOption
+    IonGrid, IonRow, IonCol, IonItem, IonLabel, IonInput, IonTextarea, IonList, IonButton, IonIcon
 } from '@ionic/angular/standalone';
-import { addIcons } from 'ionicons';
-import { mic } from 'ionicons/icons';
 
 @Component({
     selector: 'app-training-report',
@@ -15,31 +11,89 @@ import { mic } from 'ionicons/icons';
     styleUrls: ['./training-report.component.scss'],
     standalone: true,
     imports: [
-        CommonModule, FormsModule,
-        IonCard, IonCardHeader, IonCardTitle, IonCardContent,
-        IonItem, IonLabel, IonInput, IonTextarea, IonIcon, IonButton,
-        IonDatetime, IonDatetimeButton, IonModal
+        CommonModule,
+        FormsModule,
+        IonGrid,
+        IonRow,
+        IonCol,
+        IonItem,
+        IonLabel,
+        IonInput,
+        IonButton,
+        IonTextarea,
+        IonList,
+        IonIcon
     ]
 })
 export class TrainingReportComponent {
-    trainingData = {
-        dogName: '',
-        sessionDate: new Date().toISOString(),
-        duration: '',
-        commandsWorkingOn: '',
-        behaviorNotes: '',
-        trainerComments: ''
+    @Input() isEditing = false;
+    currentDate: Date = new Date();
+
+    // Local mutable copy – updated via setter when parent pushes new data
+    data: any = {
+        fecha: '',
+        duracion: '',
+        objetivos: [],
+        conductas_resultados: '',
+        tipo_refuerzo: '',
+        observaciones_actitud: ''
     };
 
-    isDictating = false;
-
-    constructor() {
-        addIcons({ mic });
+    @Input() set trainingData(value: any) {
+        if (value) {
+            this.data = {
+                fecha: value.fecha ?? '',
+                duracion: value.duracion ?? '',
+                objetivos: Array.isArray(value.objetivos) ? [...value.objetivos] : [],
+                conductas_resultados: value.conductas_resultados ?? '',
+                tipo_refuerzo: value.tipo_refuerzo ?? '',
+                observaciones_actitud: value.observaciones_actitud ?? ''
+            };
+        }
     }
 
-    toggleDictation(field: string) {
-        // Placeholder for actual dictation logic
-        this.isDictating = !this.isDictating;
-        console.log(`Toggling dictation for ${field}: ${this.isDictating}`);
+    onFechaInput(event: any) {
+        let input = event.target.value;
+        if (!input) {
+            this.data.fecha = '';
+            return;
+        }
+
+        // Remove all non-numeric characters
+        let value = input.replace(/\D/g, '');
+
+        // Limit to 8 digits
+        if (value.length > 8) {
+            value = value.substring(0, 8);
+        }
+
+        let day = value.substring(0, 2);
+        let month = value.substring(2, 4);
+        let year = value.substring(4, 8);
+
+        // Cap values to generic max valid dates
+        if (day.length === 2 && parseInt(day) > 31) {
+            day = '31';
+        }
+        if (month.length === 2 && parseInt(month) > 12) {
+            month = '12';
+        }
+
+        let formattedValue = day;
+        if (value.length >= 3) {
+            formattedValue += '/' + month;
+        }
+        if (value.length >= 5) {
+            formattedValue += '/' + year;
+        }
+
+        // Update the model and the input visual value
+        this.data.fecha = formattedValue;
+        event.target.value = formattedValue;
+    }
+
+    trackByIndex(index: number): number {
+        return index;
     }
 }
+
