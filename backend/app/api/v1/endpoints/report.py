@@ -51,7 +51,15 @@ async def generate_report_from_audio(
             
             logger.info(f"Transcripción completada ({len(transcript)} caracteres)")
             logger.debug(f"Transcripción: {transcript[:200]}...")
-            yield f"data: {json.dumps({'status': 'Transcripción', 'message': 'Transcripción completada', 'percent': 25})}\n\n"
+            
+            # Send completion event along with the parsed text so the frontend can display it
+            completion_event = {
+                'status': 'Transcripción', 
+                'message': 'Transcripción completada', 
+                'percent': 25,
+                'transcript': transcript
+            }
+            yield f"data: {json.dumps(completion_event)}\n\n"
             
             # 3. Pipeline completo con ReportService (Extracción → HTML → PDF)
             logger.info("Iniciando pipeline de generación de reporte")

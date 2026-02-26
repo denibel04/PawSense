@@ -288,11 +288,17 @@ export class Tab4Page {
         switch (event.status) {
           case 'Transcripción':
             this.progress.transcription = 'process';
+            if (event.transcript) {
+              this.transcriptText = event.transcript;
+            }
             break;
 
           case 'Extracción':
             this.progress.transcription = 'done';
             this.progress.clinicalExtraction = 'process';
+            if (event.transcript && !this.transcriptText) {
+              this.transcriptText = event.transcript;
+            }
             // Si hay datos extraídos, mostrarlos
             if (event.extractedData) {
               if (reportType === 'veterinario') {
@@ -321,6 +327,9 @@ export class Tab4Page {
             this.progress.revision = 'done';
             this.progress.finalReport = 'done';
             this.audioProcessing = false;
+            if (event.transcript && !this.transcriptText) {
+              this.transcriptText = event.transcript;
+            }
 
             // Mostrar datos finales
             if (event.extractedData) {

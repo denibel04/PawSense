@@ -12,6 +12,7 @@ export interface SSEEvent {
     htmlReport?: string;
     pdfPath?: string;
     pdfBase64?: string;
+    transcript?: string;
     error?: boolean;
 }
 

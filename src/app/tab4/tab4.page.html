@@ -201,14 +201,6 @@
             <!-- PREVIEW AND EDIT MODE: rendered by each report component -->
             <div>
 
-              <!-- LOADING STATE -->
-              <ion-item *ngIf="audioProcessing && !clinicalData && !trainingData" lines="none" class="loading-box">
-                <ion-label style="width: 100%;">
-                  <ion-icon name="spinner" class="loading-icon"></ion-icon>
-                  <p style="margin-top: 10px; color: var(--ion-color-medium);">Generando reporte...</p>
-                </ion-label>
-              </ion-item>
-
               <app-clinical-report *ngIf="selectedSegment === 'veterinario'" [isEditing]="isEditing"
                 [clinicalData]="clinicalData || {symptoms: [], diagnosis: '', treatment: '', notes: ''}">
               </app-clinical-report>
