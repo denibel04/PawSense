@@ -82,4 +82,5 @@ venv.bak/
 backend/venv/
 venv/
 
-
+#PDFs
+*.pdf

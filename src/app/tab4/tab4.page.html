@@ -1,4 +1,4 @@
-<ion-header [translucent]="true" class="ion-no-border dashboard-header">
+<ion-header class="ion-no-border dashboard-header">
   <ion-toolbar>
     <!-- Brand Title (logo) -->
     <div class="logo">
@@ -10,7 +10,7 @@
 
 </ion-header>
 
-<ion-content [fullscreen]="true" class="dashboard-content">
+<ion-content class="dashboard-content">
 
   <div class="segment-toolbar">
     <div class="segment-container">
@@ -35,60 +35,55 @@
           </ion-card-header>
           <ion-card-content>
             <!-- ESTADO: No está grabando -->
-            <div *ngIf="!isRecording && !isPaused" class="record-button-container"
-              style="position: relative; overflow: hidden; border-radius: 8px; margin-bottom: 10px;">
-              <ion-button expand="block" color="primary" class="primary-action-btn"
-                (click)="startNewRecording()" style="margin: 0;">
+            <div *ngIf="!isRecording && !isPaused" class="record-button-container">
+              <ion-button expand="block" color="primary" class="primary-action-btn record-btn-flex"
+                (click)="startNewRecording()">
                 <ion-icon slot="start" name="mic-outline"></ion-icon>
                 Grabar Consulta
               </ion-button>
             </div>
 
             <!-- ESTADO: Grabando (no pausada) -->
-            <div *ngIf="isRecording && !isPaused" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div *ngIf="isRecording && !isPaused" class="record-grid-container">
               <div class="record-button-container" style="position: relative; overflow: hidden; border-radius: 8px;">
-                <ion-button expand="block" color="warning" class="primary-action-btn"
-                  (click)="pauseRecording()" style="margin: 0;">
+                <ion-button expand="block" color="warning" class="primary-action-btn record-btn-flex"
+                  (click)="pauseRecording()">
                   <ion-icon slot="start" name="pause-circle-outline"></ion-icon>
                   Pausar
                 </ion-button>
                 <div *ngIf="isSpeaking" class="audio-ripple-overlay"></div>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <ion-button color="danger" class="secondary-btn"
-                  (click)="finalizeRecording()">
-                  <ion-icon slot="start" name="stop-circle-outline"></ion-icon>
-                  Finalizar
-                </ion-button>
-                <ion-button fill="outline" color="medium" class="secondary-btn"
-                  (click)="restartRecording()">
-                  <ion-icon slot="start" name="refresh-outline"></ion-icon>
-                  Regrabar
-                </ion-button>
-              </div>
+              <ion-button expand="block" color="danger" class="secondary-btn record-btn-flex"
+                (click)="finalizeRecording()">
+                <ion-icon slot="start" name="stop-circle-outline"></ion-icon>
+                Finalizar
+              </ion-button>
+              <ion-button expand="block" fill="outline" color="medium" class="secondary-btn record-btn-flex"
+                (click)="restartRecording()">
+                <ion-icon slot="start" name="refresh-outline"></ion-icon>
+                Regrabar
+              </ion-button>
             </div>
 
             <!-- ESTADO: Pausada -->
-            <div *ngIf="isPaused" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;">
+            <div *ngIf="isPaused" class="record-grid-container">
               <div class="record-button-container" style="position: relative; overflow: hidden; border-radius: 8px;">
-                <ion-button expand="block" color="success" class="primary-action-btn"
-                  (click)="resumeRecording()" style="margin: 0;">
+                <ion-button expand="block" color="success" class="primary-action-btn record-btn-flex"
+                  (click)="resumeRecording()">
                   <ion-icon slot="start" name="play-circle-outline"></ion-icon>
                   Continuar
                 </ion-button>
               </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-                <ion-button color="danger" class="secondary-btn"
-                  (click)="finalizeRecording()">
-                  <ion-icon slot="start" name="stop-circle-outline"></ion-icon>
-                  Finalizar
-                </ion-button>
-                <ion-button fill="outline" color="medium" class="secondary-btn"
-                  (click)="restartRecording()">
-                  <ion-icon slot="start" name="refresh-outline"></ion-icon>
-                  Regrabar
-                </ion-button>
-              </div>
+              <ion-button expand="block" color="danger" class="secondary-btn record-btn-flex"
+                (click)="finalizeRecording()">
+                <ion-icon slot="start" name="stop-circle-outline"></ion-icon>
+                Finalizar
+              </ion-button>
+              <ion-button expand="block" fill="outline" color="medium" class="secondary-btn record-btn-flex"
+                (click)="restartRecording()">
+                <ion-icon slot="start" name="refresh-outline"></ion-icon>
+                Regrabar
+              </ion-button>
             </div>
 
             <ion-button expand="block" fill="outline" color="medium" class="secondary-btn"
@@ -98,17 +93,15 @@
               Subir o Arrastrar Audio
             </ion-button>
             <input type="file" #fileInput accept="audio/*" style="display: none" (change)="onFileSelected($event)">
-            <p *ngIf="audioProcessing" class="status-text muted">Analizando sonido en el servidor...</p>
 
             <!-- REALTIME TRANSCRIPT BUBBLE (while recording) -->
-            <div *ngIf="isRecording && transcriptText"
-              style="margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(var(--ion-color-medium-rgb), 0.1); font-size: 0.85rem; color: var(--ion-color-medium); font-style: italic;">
+            <div *ngIf="isRecording && transcriptText" class="transcript-bubble">
               <ion-icon name="mic-outline" style="margin-right: 6px; vertical-align: middle;"></ion-icon>{{
               transcriptText }}
             </div>
 
             <!-- PROCESSING STATUS -->
-            <p *ngIf="audioProcessing" style="margin-top: 12px; padding: 8px 12px; border-radius: 6px; background: rgba(var(--ion-color-primary-rgb), 0.1); font-size: 0.9rem; color: var(--ion-color-primary); border-left: 3px solid var(--ion-color-primary);">
+            <p *ngIf="audioProcessing" class="processing-bubble">
               <ion-icon name="hourglass" style="margin-right: 6px;"></ion-icon>
               <span id="processingText">Procesando audio en el servidor...</span>
             </p>
@@ -127,13 +120,13 @@
             <ion-list lines="none">
 
               <ion-item [class.pending]="progress.transcription === 'pending'"
-                [class.process]="progress.transcription === 'process'"
-                [class.done]="progress.transcription === 'done'">
+                [class.process]="progress.transcription === 'process'" [class.done]="progress.transcription === 'done'">
                 <ion-icon slot="start"
                   [name]="progress.transcription === 'done' ? 'checkmark-circle' : (progress.transcription === 'process' ? 'time-outline' : 'ellipse-outline')"
                   [color]="progress.transcription === 'done' ? 'success' : (progress.transcription === 'process' ? 'secondary' : 'medium')"></ion-icon>
                 <ion-label>Transcripción <span *ngIf="progress.transcription === 'process'" class="muted">-
-                    Procesando</span><span *ngIf="progress.transcription === 'done'" class="muted">- Completado</span></ion-label>
+                    Procesando</span><span *ngIf="progress.transcription === 'done'" class="muted">-
+                    Completado</span></ion-label>
                 <ion-icon *ngIf="progress.transcription === 'done'" slot="end" name="checkmark-outline" color="success"
                   class="check-small"></ion-icon>
               </ion-item>
@@ -145,27 +138,30 @@
                   [name]="progress.clinicalExtraction === 'done' ? 'checkmark-circle' : (progress.clinicalExtraction === 'process' ? 'time-outline' : 'ellipse-outline')"
                   [color]="progress.clinicalExtraction === 'done' ? 'success' : (progress.clinicalExtraction === 'process' ? 'secondary' : 'medium')"></ion-icon>
                 <ion-label>Extracción <span *ngIf="progress.clinicalExtraction === 'process'" class="muted">- Generando
-                    Reporte</span><span *ngIf="progress.clinicalExtraction === 'done'" class="muted">- Completado</span></ion-label>
+                    Reporte</span><span *ngIf="progress.clinicalExtraction === 'done'" class="muted">-
+                    Completado</span></ion-label>
                 <ion-icon *ngIf="progress.clinicalExtraction === 'done'" slot="end" name="checkmark-outline"
                   color="success" class="check-small"></ion-icon>
               </ion-item>
 
               <ion-item [class.pending]="progress.revision === 'pending'"
-                [class.process]="progress.revision === 'process'"
-                [class.done]="progress.revision === 'done'">
+                [class.process]="progress.revision === 'process'" [class.done]="progress.revision === 'done'">
                 <ion-icon slot="start"
                   [name]="progress.revision === 'done' ? 'checkmark-circle' : (progress.revision === 'process' ? 'time-outline' : 'ellipse-outline')"
                   [color]="progress.revision === 'done' ? 'success' : (progress.revision === 'process' ? 'primary' : 'medium')"></ion-icon>
-                <ion-label>Revisión <span *ngIf="progress.revision === 'process'" class="highlight">- En proceso</span><span *ngIf="progress.revision === 'done'" class="muted">- Completado</span></ion-label>
+                <ion-label>Revisión <span *ngIf="progress.revision === 'process'" class="highlight">- En
+                    proceso</span><span *ngIf="progress.revision === 'done'" class="muted">-
+                    Completado</span></ion-label>
               </ion-item>
 
               <ion-item [class.pending]="progress.finalReport === 'pending'"
-                [class.process]="progress.finalReport === 'process'"
-                [class.done]="progress.finalReport === 'done'">
+                [class.process]="progress.finalReport === 'process'" [class.done]="progress.finalReport === 'done'">
                 <ion-icon slot="start"
                   [name]="progress.finalReport === 'done' ? 'checkmark-circle' : (progress.finalReport === 'process' ? 'time-outline' : 'ellipse-outline')"
                   [color]="progress.finalReport === 'done' ? 'success' : (progress.finalReport === 'process' ? 'medium' : 'medium')"></ion-icon>
-                <ion-label>Informe Final <span *ngIf="progress.finalReport === 'process'" class="muted">- En proceso</span><span *ngIf="progress.finalReport === 'done'" class="muted">- Completado</span></ion-label>
+                <ion-label>Informe Final <span *ngIf="progress.finalReport === 'process'" class="muted">- En
+                    proceso</span><span *ngIf="progress.finalReport === 'done'" class="muted">-
+                    Completado</span></ion-label>
               </ion-item>
 
             </ion-list>
@@ -177,32 +173,38 @@
     <!-- BOTTOM ROW: VISTA PREVIA -->
     <ion-row>
       <ion-col size="12">
+        <!-- TRANSCRIPT CARD -->
+        <ion-card *ngIf="transcriptText && !isRecording && !isPaused" class="dashboard-card transcript-card"
+          style="margin-bottom: 20px;">
+          <ion-card-header>
+            <ion-card-title>Texto Transcrito</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-item lines="none" class="transcript-edit-bubble" style="margin-bottom: 0;">
+              <ion-label *ngIf="!isEditing" style="white-space: normal; padding: 10px;">
+                <p>{{ transcriptText }}</p>
+              </ion-label>
+              <div *ngIf="isEditing" style="width: 100%; padding: 10px;">
+                <ion-textarea name="transcriptText" [value]="transcriptText"
+                  (ionInput)="transcriptText = ($event.detail.value ?? '')" [autoGrow]="true"
+                  style="background: white; border-radius: 4px; padding: 5px; margin-top: 5px;">
+                </ion-textarea>
+              </div>
+            </ion-item>
+          </ion-card-content>
+        </ion-card>
+
         <h2 class="section-title-orange">Vista Previa del Informe</h2>
         <ion-card class="dashboard-card preview-card">
           <ion-card-content>
 
             <!-- PREVIEW AND EDIT MODE: rendered by each report component -->
             <div>
-              <ion-item *ngIf="transcriptText" lines="none"
-                style="margin-bottom: 20px; border-radius: 8px; background: rgba(var(--ion-color-medium-rgb), 0.1);">
-                <ion-label *ngIf="!isEditing" style="white-space: normal; padding: 10px;">
-                  <h3>Texto Transcrito:</h3>
-                  <p>{{ transcriptText }}</p>
-                </ion-label>
-                <div *ngIf="isEditing" style="width: 100%; padding: 10px;">
-                  <h3>Texto Transcrito:</h3>
-                  <ion-textarea name="transcriptText" [value]="transcriptText"
-                    (ionInput)="transcriptText = ($event.detail.value ?? '')" [autoGrow]="true"
-                    style="background: white; border-radius: 4px; padding: 5px; margin-top: 10px;">
-                  </ion-textarea>
-                </div>
-              </ion-item>
 
               <!-- LOADING STATE -->
-              <ion-item *ngIf="audioProcessing && !clinicalData && !trainingData" lines="none" 
-                style="margin-bottom: 20px; border-radius: 8px; background: rgba(var(--ion-color-warning-rgb), 0.05); padding: 20px; text-align: center;">
+              <ion-item *ngIf="audioProcessing && !clinicalData && !trainingData" lines="none" class="loading-box">
                 <ion-label style="width: 100%;">
-                  <ion-icon name="spinner" style="animation: spin 1s linear infinite; font-size: 32px; color: var(--ion-color-primary); margin-bottom: 10px;"></ion-icon>
+                  <ion-icon name="spinner" class="loading-icon"></ion-icon>
                   <p style="margin-top: 10px; color: var(--ion-color-medium);">Generando reporte...</p>
                 </ion-label>
               </ion-item>
@@ -217,7 +219,7 @@
             </div>
 
             <!-- SHARED ACTION BUTTONS -->
-            <div class="preview-actions" style="margin-top: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div class="preview-actions-grid preview-actions">
               <ion-button color="primary" class="primary-action-btn" (click)="downloadReport()" [disabled]="!pdfBase64">
                 <ion-icon slot="start" name="download-outline"></ion-icon>
                 Descargar PDF
@@ -234,5 +236,4 @@
     </ion-row>
 
   </ion-grid>
-  <p style="margin: 40px;"> </p>
 </ion-content>

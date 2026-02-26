@@ -13,9 +13,6 @@ import {
     imports: [
         CommonModule,
         FormsModule,
-        IonGrid,
-        IonRow,
-        IonCol,
         IonItem,
         IonLabel,
         IonInput,
@@ -29,7 +26,7 @@ export class ClinicalReportComponent {
     @Input() isEditing = false;
     currentDate: Date = new Date();
 
-    today: string = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+    today: string = new Date().toISOString().slice(0, 10);
 
     // Local mutable copy – updated via setter when parent pushes new data
     data: any = {

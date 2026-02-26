@@ -158,6 +158,11 @@ export class Tab4Page {
     if (this.recognition) {
       try { this.recognition.stop(); } catch (e) { }
     }
+    try {
+      await VoiceRecorder.stopRecording();
+    } catch (e) {
+      console.error('Error stopping voice recorder on restart', e);
+    }
     this.transcriptText = '';
     this.finalTranscript = '';
     this.audioBase64 = null;
@@ -277,13 +282,8 @@ export class Tab4Page {
 
     const reportType: 'veterinario' | 'adiestramiento' = this.selectedSegment === 'adiestramiento' ? 'adiestramiento' : 'veterinario';
 
-    console.log(`[DEBUG] Iniciando generación de reporte tipo: ${reportType}`);
-    console.log(`[DEBUG] Archivo: ${filename}, Tamaño: ${file.size} bytes`);
-
     this.reportService.generateReportFromAudio(file, filename, reportType).subscribe({
       next: (event) => {
-        console.log(`[DEBUG] SSE Event recibido:`, event);
-
         // Actualizar progreso según estado
         switch (event.status) {
           case 'Transcripción':
@@ -295,13 +295,10 @@ export class Tab4Page {
             this.progress.clinicalExtraction = 'process';
             // Si hay datos extraídos, mostrarlos
             if (event.extractedData) {
-              console.log(`[DEBUG] Datos extraídos recibidos:`, event.extractedData);
               if (reportType === 'veterinario') {
                 this.clinicalData = this.transformVeterinaryData(event.extractedData);
-                console.log(`[DEBUG] clinicalData transformado:`, this.clinicalData);
               } else {
                 this.trainingData = this.transformTrainingData(event.extractedData);
-                console.log(`[DEBUG] trainingData transformado:`, this.trainingData);
               }
             } else {
               console.warn(`[WARN] No hay extractedData en evento de Extracción`);
@@ -327,23 +324,16 @@ export class Tab4Page {
 
             // Mostrar datos finales
             if (event.extractedData) {
-              console.log(`[DEBUG] Datos finales extraídos:`, event.extractedData);
               if (reportType === 'veterinario') {
                 this.clinicalData = this.transformVeterinaryData(event.extractedData);
-                console.log(`[DEBUG] clinicalData final:`, this.clinicalData);
               } else {
                 this.trainingData = this.transformTrainingData(event.extractedData);
-                console.log(`[DEBUG] trainingData final:`, this.trainingData);
               }
             }
 
             // Guardar PDF base64 para descarga
             if (event.pdfBase64) {
               this.pdfBase64 = event.pdfBase64;
-              console.log(`[DEBUG] PDF recibido (base64), tamaño:`, event.pdfBase64.length);
-            }
-            if (event.pdfPath) {
-              console.log(`[DEBUG] PDF generado en:`, event.pdfPath);
             }
             break;
 
@@ -369,7 +359,6 @@ export class Tab4Page {
         this.cdr.detectChanges();
       },
       complete: () => {
-        console.log('[DEBUG] Generación de reporte completada');
         this.audioProcessing = false;
         this.cdr.detectChanges();
       }
@@ -380,8 +369,6 @@ export class Tab4Page {
    * Transforma datos extraídos de Gemini al formato esperado por clinical-report component
    */
   private transformVeterinaryData(data: any): any {
-    console.log('[DEBUG] Transformando datos veterinarios:', data);
-    
     // El backend retorna 'sintomas' (array), 'diagnostico', 'tratamiento', etc.
     const transformed = {
       symptoms: data.sintomas || [],  // Cambio clave: es 'sintomas' (no 'signos')
@@ -394,8 +381,7 @@ export class Tab4Page {
       recomendaciones: data.recomendaciones || '',
       fechaConsulta: data.fechaConsulta || ''
     };
-    
-    console.log('[DEBUG] Datos transformados:', transformed);
+
     return transformed;
   }
 
@@ -403,8 +389,6 @@ export class Tab4Page {
    * Transforma datos extraídos de Gemini al formato esperado por training-report component
    */
   private transformTrainingData(data: any): any {
-    console.log('[DEBUG] Transformando datos de adiestramiento:', data);
-    
     // El backend retorna los campos directamente del schema
     const transformed = {
       behavior_observed: data.comportamiento_observado || '',
@@ -415,8 +399,7 @@ export class Tab4Page {
       recomendaciones: data.recomendaciones || '',
       fechaConsulta: data.fechaConsulta || ''
     };
-    
-    console.log('[DEBUG] Datos transformados:', transformed);
+
     return transformed;
   }
 
@@ -445,15 +428,9 @@ export class Tab4Page {
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
-      console.log('[DEBUG] PDF descargado exitosamente');
     } catch (error) {
       console.error('[ERROR] Error al descargar PDF:', error);
     }
-  }
-
-  downloadOldReport(id: number) {
-    // TODO: Integrar con historial de reportes
   }
 }
 

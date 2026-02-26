@@ -7,14 +7,10 @@ from typing import AsyncGenerator, Dict, Any, Optional
 from pathlib import Path
 import tempfile
 import base64
-from google import genai
-from google.genai import types
-from app.core.config import settings
+
+from app.services.agent_service import generate_report
 
 logger = logging.getLogger(__name__)
-
-# Inicializar cliente Gemini
-client = genai.Client(api_key=settings.GOOGLE_API_KEY)
 
 class ReportService:
     """
@@ -75,35 +71,13 @@ class ReportService:
         """
         yield {"status": "Extracción", "message": "Conectando con Gemini..."}
 
-        if report_type == "veterinario":
-            schema = _get_veterinary_schema()
-            prompt = _build_veterinary_prompt(transcript)
-        else:
-            schema = _get_training_schema()
-            prompt = _build_training_prompt(transcript)
-
         try:
             yield {"status": "Extracción", "message": "Procesando transcripción..."}
 
-            response = await asyncio.to_thread(
-                lambda: client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        response_schema=schema,
-                    ),
-                )
-            )
+            extracted_data = await generate_report(transcript, report_type)
 
             yield {"status": "Extracción", "message": "Validando respuesta..."}
 
-            raw_response = response.text
-            logger.info(f"Respuesta Gemini: {raw_response[:500]}...")
-
-            # Validar JSON
-            extracted_data = json.loads(raw_response)
-            
             # Validar campos requeridos
             _validate_extracted_data(extracted_data, report_type)
             
@@ -391,113 +365,6 @@ def _run_playwright_sync(html_path: str, filename: str) -> bytes:
             loop.close()
     else:
         return asyncio.run(_playwright_task())
-
-
-def _get_veterinary_schema():
-    """Retorna el schema Pydantic para reporte veterinario."""
-    from pydantic import BaseModel, Field
-    from typing import List
-
-    class PacienteSchema(BaseModel):
-        nombre: str = Field(description="Nombre del paciente (perro/gato)", default="No especificado")
-        especie: str = Field(description="Especie (perro, gato, etc.)", default="perro")
-        edad: str = Field(description="Edad del paciente", default="No especificada")
-        raza: str = Field(description="Raza del paciente", default="No especificada")
-        peso: str = Field(description="Peso del paciente en Kg", default="No especificado")
-        genero: str = Field(description="Sexo (macho/hembra)", default="No especificado")
-
-    class VeterinaryReportSchema(BaseModel):
-        tipoInforme: str = Field(default="veterinaria")
-        paciente: PacienteSchema
-        sintomas: List[str] = Field(description="Lista de síntomas reportados", default=[])
-        diagnostico: str = Field(description="Diagnóstico preliminar o definitivo", default="No especificado")
-        tratamiento: str = Field(description="Tratamiento recomendado", default="Ninguno")
-        recomendaciones: str = Field(description="Recomendaciones para el propietario", default="")
-        notas: str = Field(description="Notas adicionales", default="")
-        fechaConsulta: str = Field(description="Fecha de la consulta", default=datetime.now().isoformat())
-        antecedentes_patologicos: str = Field(description="Antecedentes patológicos", default="")
-        antecedentes_no_patologicos: str = Field(description="Antecedentes no patológicos", default="")
-        examen_fisico: str = Field(description="Resultados del examen físico", default="")
-
-    return VeterinaryReportSchema
-
-
-def _get_training_schema():
-    """Retorna el schema Pydantic para reporte de adiestramiento."""
-    from pydantic import BaseModel, Field
-    from typing import List
-
-    class PacienteSchema(BaseModel):
-        nombre: str = Field(description="Nombre del perro", default="No especificado")
-        especie: str = Field(default="perro")
-        edad: str = Field(description="Edad del perro", default="No especificada")
-        raza: str = Field(description="Raza del perro", default="No especificada")
-        peso: str = Field(description="Peso del perro", default="No especificado")
-        genero: str = Field(description="Sexo del perro", default="No especificado")
-
-    class TrainingReportSchema(BaseModel):
-        tipoInforme: str = Field(default="adiestramiento")
-        paciente: PacienteSchema
-        comportamiento_observado: str = Field(description="Comportamiento principal observado durante la sesión", default="")
-        correcciones: List[str] = Field(description="Correcciones, técnicas o comandos aplicados", default=[])
-        tareas_casa: str = Field(description="Tareas o ejercicios para practicar en casa", default="Ninguna")
-        recomendaciones: str = Field(description="Recomendaciones adicionales", default="")
-        notas: str = Field(description="Notas generales sobre el progreso", default="")
-        fechaConsulta: str = Field(description="Fecha de la sesión", default=datetime.now().isoformat())
-
-    return TrainingReportSchema
-
-
-def _build_veterinary_prompt(transcript: str) -> str:
-    """Construye el prompt para Gemini - Veterinario."""
-    return f"""Eres un asistente veterinario experto. A partir de la transcripción de una consulta veterinaria, \
-extrae y estructura la información en un JSON que incluya:
-
-INFORMACIÓN CRÍTICA (DEBE llenar):
-- tipoInforme: siempre "veterinaria"
-- paciente: objeto con nombre, especie, edad, raza, peso, genero (extrae del contexto)
-- sintomas: lista de síntomas clínicos mencionados (array de strings)
-- diagnostico: diagnóstico provisional o definitivo
-- tratamiento: medicamentos, dosis, procedimientos indicados
-- recomendaciones: consejos para el propietario sobre cuidados posteriores
-- notas: observaciones adicionales
-- fechaConsulta: fecha actual en ISO format
-
-INFORMACIÓN SECUNDARIA (completa si está disponible):
-- antecedentes_patologicos: enfermedades previas o complicaciones
-- antecedentes_no_patologicos: vacunaciones, cirugías previas, hábitos
-- examen_fisico: hallazgos del examen físico realizado
-
-Si algún campo no se menciona explícitamente, usa valores por defecto apropiados ("No especificado", arrays vacíos, etc).
-NO devuelvas texto explicativo, SOLO JSON válido.
-
-Transcripción de la consulta:
-\"\"\"{transcript}\"\"\"
-"""
-
-
-def _build_training_prompt(transcript: str) -> str:
-    """Construye el prompt para Gemini - Adiestramiento."""
-    return f"""Eres un experto certificado en adiestramiento canino. A partir de la transcripción de una sesión de entrenamiento, \
-extrae y estructura la información en un JSON que incluya:
-
-INFORMACIÓN CRÍTICA (DEBE llenar):
-- tipoInforme: siempre "adiestramiento"
-- paciente: objeto con nombre, especie, edad, raza, peso, genero (extrae del contexto)
-- comportamiento_observado: el comportamiento principal del perro durante la sesión
-- correcciones: lista de técnicas, comandos o correcciones aplicadas (array de strings)
-- tareas_casa: ejercicios específicos que el propietario debe practicar en casa
-- recomendaciones: consejos para mejorar el entrenamiento
-- notas: observaciones sobre el progreso o actitud del perro
-- fechaConsulta: fecha actual en ISO format
-
-Si algún campo no se menciona explícitamente, usa valores por defecto apropiados.
-NO devuelvas texto explicativo, SOLO JSON válido.
-
-Transcripción de la sesión:
-\"\"\"{transcript}\"\"\"
-"""
-
 
 def _validate_extracted_data(data: Dict[str, Any], report_type: str) -> None:
     """Valida que los datos extraídos contienen los campos requeridos."""

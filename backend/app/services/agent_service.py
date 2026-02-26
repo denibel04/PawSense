@@ -15,34 +15,46 @@ async def generate_report(transcribed_text: str, report_type: str = "veterinario
     if report_type == "veterinario":
         schema = ClinicalReportSchema
         prompt = f"""Eres un asistente veterinario experto. A partir de la transcripción de una consulta veterinaria, \
-extrae y estructura la información en los siguientes campos:
+extrae y estructura la información en un JSON que incluya:
 
-- resena: información inicial del paciente como raza, edad, peso (string)
-- anamnesis: motivo de la consulta, historia clínica y eventos recientes (string)
-- exploracion_fisica: hallazgos de la exploración física general como mucosas, TRC, palpación (string)
-- exploracion_especial: observaciones detalladas de la exploración oftalmológica u otra específica (string)
-- diagnostico: diagnóstico presuntivo o definitivo (string)
-- tratamiento: medicamentos o intervenciones pautadas con sus indicaciones (array de strings)
-- recomendaciones: otros consejos como usar collar isabelino o fecha de próxima revisión (array de strings)
+INFORMACIÓN CRÍTICA (DEBE llenar):
+- tipoInforme: siempre "veterinaria"
+- paciente: objeto con nombre, especie, edad, raza, peso, genero (extrae del contexto)
+- sintomas: lista de síntomas clínicos mencionados (array de strings)
+- diagnostico: diagnóstico provisional o definitivo
+- tratamiento: medicamentos, dosis, procedimientos indicados
+- recomendaciones: consejos para el propietario sobre cuidados posteriores
+- notas: observaciones adicionales
+- fechaConsulta: fecha actual en ISO format
 
-Si algún campo no se menciona explícitamente, déjalo vacío ("" o []).
+INFORMACIÓN SECUNDARIA (completa si está disponible):
+- antecedentes_patologicos: enfermedades previas o complicaciones
+- antecedentes_no_patologicos: vacunaciones, cirugías previas, hábitos
+- examen_fisico: hallazgos del examen físico realizado
+
+Si algún campo no se menciona explícitamente, usa valores por defecto apropiados ("No especificado", arrays vacíos, etc).
+NO devuelvas texto explicativo, SOLO JSON válido.
 
 Transcripción de la consulta:
 \"\"\"{transcribed_text}\"\"\"
 """
     else:
         schema = TrainingReportSchema
-        prompt = f"""Eres un experto en adiestramiento canino. A partir de la transcripción de una sesión de entrenamiento, \
-extrae y estructura la información en los siguientes campos:
+        prompt = f"""Eres un experto certificado en adiestramiento canino. A partir de la transcripción de una sesión de entrenamiento, \
+extrae y estructura la información en un JSON que incluya:
 
-- fecha: Fecha mencionada en la que se realizó la sesión, estructurada obligatoriamente en formato dd/mm/yyyy (string)
-- duracion: Tiempo de duración de la sesión (string)
-- objetivos: Lista de objetivos específicos planteados o trabajados (array de strings)
-- conductas_resultados: Descripción de las conductas sobre las que se ha trabajado y sus resultados (string)
-- tipo_refuerzo: Tipo de métodos o refuerzos usados durante la sesión (string)
-- observaciones_actitud: Actitud del perro u observaciones finales (string)
+INFORMACIÓN CRÍTICA (DEBE llenar):
+- tipoInforme: siempre "adiestramiento"
+- paciente: objeto con nombre, especie, edad, raza, peso, genero (extrae del contexto)
+- comportamiento_observado: el comportamiento principal del perro durante la sesión
+- correcciones: lista de técnicas, comandos o correcciones aplicadas (array de strings)
+- tareas_casa: ejercicios específicos que el propietario debe practicar en casa
+- recomendaciones: consejos para mejorar el entrenamiento
+- notas: observaciones sobre el progreso o actitud del perro
+- fechaConsulta: fecha actual en ISO format
 
-Si algún campo no se menciona explícitamente, déjalo vacío ("" o []).
+Si algún campo no se menciona explícitamente, usa valores por defecto apropiados.
+NO devuelvas texto explicativo, SOLO JSON válido.
 
 Transcripción de la sesión:
 \"\"\"{transcribed_text}\"\"\"
@@ -68,7 +80,7 @@ Transcripción de la sesión:
         return result
     except json.JSONDecodeError as e:
         print(f"[AGENT] ERROR al parsear JSON de Gemini: {e}")
-        print(f"[AGENT] Texto recibido: {response.text if response else 'N/A'}")
+        print(f"[AGENT] Texto recibido: {response.text if hasattr(response, 'text') else 'N/A'}")
         return {}
     except Exception as e:
         print(f"[AGENT] ERROR inesperado: {e}")
