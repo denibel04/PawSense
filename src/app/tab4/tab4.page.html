@@ -44,9 +44,11 @@
               <div *ngIf="isRecording && isSpeaking" class="audio-ripple-overlay"></div>
             </div>
 
-            <ion-button expand="block" fill="outline" color="medium" class="secondary-btn" (click)="triggerFileInput()">
+            <ion-button expand="block" fill="outline" color="medium" class="secondary-btn"
+              [class.drag-over]="isDragging" (click)="triggerFileInput()" (dragover)="onDragOver($event)"
+              (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
               <ion-icon slot="start" name="folder-outline"></ion-icon>
-              Subir Audio
+              Subir o Arrastrar Audio
             </ion-button>
             <input type="file" #fileInput accept="audio/*" style="display: none" (change)="onFileSelected($event)">
             <p *ngIf="audioProcessing" class="status-text muted">Analizando sonido en el servidor...</p>

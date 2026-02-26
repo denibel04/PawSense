@@ -137,6 +137,15 @@ ion-toolbar {
         height: 44px;
         font-weight: 600;
         --border-radius: 6px;
+        transition: all 0.2s ease-in-out;
+
+        &.drag-over {
+            --background: rgba(255, 140, 0, 0.1);
+            --border-style: dashed;
+            --border-width: 2px;
+            --border-color: var(--pawsense-orange);
+            --color: var(--pawsense-orange);
+        }
 
         ion-icon {
             margin-right: 8px;

@@ -4,10 +4,11 @@ import {
   IonHeader, IonToolbar, IonTitle, IonContent,
   IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton,
   IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
-  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonTextarea
+  IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonTextarea,
+  AlertController, ToastController
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw } from 'ionicons/icons';
+import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw } from 'ionicons/icons';
 import { TrainingReportComponent } from './training-report/training-report.component';
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
@@ -31,6 +32,7 @@ export class Tab4Page {
 
   selectedSegment = 'veterinario';
   isEditing = false; // Toggles between read-only preview and edit mode
+  isDragging = false; // Drag & drop state
 
   // Audio state
   isRecording = false;
@@ -61,9 +63,11 @@ export class Tab4Page {
 
   constructor(
     private cdr: ChangeDetectorRef,
-    private reportService: ReportService
+    private reportService: ReportService,
+    private alertController: AlertController,
+    private toastController: ToastController
   ) {
-    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, paw, stopCircleOutline: 'stop-circle-outline' });
+    addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw, stopCircleOutline: 'stop-circle-outline' });
     this.initSpeechRecognition();
   }
 
@@ -165,11 +169,49 @@ export class Tab4Page {
     }
   }
 
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      const file = event.dataTransfer.files[0];
+      this.handleFileUpload(file);
+    }
+  }
+
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (file) {
-      this.processAudio(file, file.name);
+      this.handleFileUpload(file);
     }
+    // Clear input value to allow selecting the same file again
+    event.target.value = '';
+  }
+
+  async handleFileUpload(file: File) {
+    if (!file.type.startsWith('audio/')) {
+      const alert = await this.alertController.create({
+        header: 'Formato no soportado',
+        message: 'Por favor, selecciona un archivo de audio válido (mp3, wav, m4a, etc).',
+        buttons: ['OK']
+      });
+      await alert.present();
+      return;
+    }
+    this.processAudio(file, file.name);
   }
 
   processAudio(file: Blob, filename: string) {
@@ -193,8 +235,18 @@ export class Tab4Page {
         }
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: async (err) => {
         console.error('Error al generar reporte:', err);
+
+        const toast = await this.toastController.create({
+          message: 'Error al subir u procesar el audio. Asegúrate de que es un formato válido.',
+          duration: 3000,
+          color: 'danger',
+          position: 'top',
+          icon: 'close-circle-outline'
+        });
+        await toast.present();
+
         this.progress.transcription = 'pending';
         this.audioProcessing = false;
         this.cdr.detectChanges();

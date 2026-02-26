@@ -14,11 +14,24 @@ async def generate_report_from_audio(
     Recibe un archivo de audio, lo transcribe con Whisper local y usa 
     Gemini para extraer el JSON estructurado según el tipo de reporte.
     """
+    import os
     try:
-        # 1. Leer audio
+        # 1. Validar extensión y tipo de archivo
+        file_ext = os.path.splitext(file.filename)[1].lower()
+        allowed_extensions = [".aac", ".mp3", ".wav", ".m4a", ".ogg", ".webm", ".flac"]
+        
+        if file_ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Extensión de audio no soportada.")
+            
+        if file.content_type and not file.content_type.startswith("audio/"):
+            # Permitir casos excepcionales donde el audio viene con tipos MIME genéricos o de video
+            if file.content_type not in ["application/octet-stream", "video/mp4", "video/webm"]:
+                raise HTTPException(status_code=400, detail="El tipo MIME del archivo no corresponde a audio.")
+
+        # 2. Leer audio
         file_bytes = await file.read()
         
-        # 2. Transcribir
+        # 3. Transcribir
         print(f"[{report_type}] Transcribiendo audio: {file.filename}...")
         transcript = await transcribe_audio(file_bytes)
         
