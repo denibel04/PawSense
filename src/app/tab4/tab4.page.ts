@@ -412,15 +412,72 @@ export class Tab4Page {
     return transformed;
   }
 
-  downloadReport() {
-    if (!this.pdfBase64) {
-      console.warn('[WARN] No hay PDF disponible para descargar');
+  /**
+   * Transforma el modelo UI de vuelta al formato JSON que espera el backend
+   */
+  private untransformVeterinaryData(): any {
+    const data = this.clinicalData || {};
+    return {
+      tipoInforme: 'veterinaria',
+      sintomas: data.symptoms || [],
+      sintomas_formateados: Array.isArray(data.symptoms) ? data.symptoms.join(', ') : data.symptoms,
+      diagnostico: data.diagnosis || '',
+      tratamiento: data.treatment || '',
+      notas: data.notes || '',
+      paciente: data.paciente || {},
+      antecedentes_patologicos: data.antecedentes || '',
+      antecedentes_no_patologicos: '',
+      examen_fisico: data.examen_fisico || '',
+      recomendaciones: data.recomendaciones || '',
+      fechaConsulta: data.fechaConsulta || new Date().toISOString()
+    };
+  }
+
+  /**
+   * Transforma el modelo UI de vuelta al formato JSON que espera el backend
+   */
+  private untransformTrainingData(): any {
+    const data = this.trainingData || {};
+    return {
+      tipoInforme: 'adiestramiento',
+      comportamiento_observado: data.behavior_observed || '',
+      correcciones: Array.isArray(data.corrections) ? data.corrections : [],
+      correcciones_formateadas: Array.isArray(data.corrections) ? data.corrections.join(', ') : data.corrections,
+      tareas_casa: data.homework ? data.homework.split(',').map((t: string) => t.trim()) : [],
+      notas: data.notes || '',
+      paciente: data.paciente || {},
+      recomendaciones: data.recomendaciones || '',
+      fechaConsulta: data.fechaConsulta || new Date().toISOString()
+    };
+  }
+
+  async downloadReport() {
+    // Si la extracción no ha terminado, no podemos generar PDF
+    if (this.progress.finalReport !== 'done') {
+      const alert = await this.alertController.create({
+        header: 'Reporte incompleto',
+        message: 'Por favor, espera a que termine el procesamiento del reporte.',
+        buttons: ['OK']
+      });
+      await alert.present();
       return;
     }
 
+    const reportType = this.selectedSegment === 'veterinario' ? 'veterinario' : 'adiestramiento';
+    const reportData = reportType === 'veterinario' ? this.untransformVeterinaryData() : this.untransformTrainingData();
+
     try {
+      this.audioProcessing = true; // Usar el mismo flag para mostrar "procesando" y bloquear UI
+
+      const response = await this.reportService.generatePdfFromData(reportData, reportType).toPromise();
+
+      const pdfBase64 = response?.pdfBase64;
+      if (!pdfBase64) {
+        throw new Error('No se recibió el PDF del servidor.');
+      }
+
       // Convertir base64 a blob
-      const byteCharacters = atob(this.pdfBase64);
+      const byteCharacters = atob(pdfBase64);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -432,13 +489,21 @@ export class Tab4Page {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PawSense_${this.selectedSegment}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.download = `PawSense_${reportType}_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error('[ERROR] Error al descargar PDF:', error);
+      console.error('[ERROR] Error al generar/descargar PDF:', error);
+      const alert = await this.alertController.create({
+        header: 'Error al generar PDF',
+        message: 'Ocurrió un error al generar el documento PDF. Intenta de nuevo.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    } finally {
+      this.audioProcessing = false;
     }
   }
 }

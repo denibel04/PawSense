@@ -1,6 +1,10 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Dict, Any
 from datetime import datetime
+
+class GeneratePdfRequest(BaseModel):
+    data: Dict[str, Any]
+    report_type: str = "veterinario"
 
 class PacienteSchema(BaseModel):
     nombre: str = Field(description="Nombre del paciente (perro/gato)", default="No especificado")

@@ -170,4 +170,11 @@ export class ReportService {
     validateReportData(data: any, reportType: string): Observable<any> {
         return this.api.post('/report/validate', { data, report_type: reportType });
     }
+
+    /**
+     * Envía los datos editados al backend para generar el reporte en PDF
+     */
+    generatePdfFromData(data: any, reportType: 'veterinario' | 'adiestramiento'): Observable<any> {
+        return this.api.post('/report/generate/pdf', { data, report_type: reportType });
+    }
 }

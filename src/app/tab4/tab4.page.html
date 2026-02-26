@@ -202,17 +202,18 @@
             <div>
 
               <app-clinical-report *ngIf="selectedSegment === 'veterinario'" [isEditing]="isEditing"
-                [clinicalData]="clinicalData || {symptoms: [], diagnosis: '', treatment: '', notes: ''}">
+                [(clinicalData)]="clinicalData">
               </app-clinical-report>
 
               <app-training-report *ngIf="selectedSegment === 'adiestramiento'" [isEditing]="isEditing"
-                [trainingData]="trainingData || {behavior_observed: '', corrections: [], homework: '', notes: ''}">
+                [(trainingData)]="trainingData">
               </app-training-report>
             </div>
 
             <!-- SHARED ACTION BUTTONS -->
             <div class="preview-actions-grid preview-actions">
-              <ion-button color="primary" class="primary-action-btn" (click)="downloadReport()" [disabled]="!pdfBase64">
+              <ion-button color="primary" class="primary-action-btn" (click)="downloadReport()"
+                [disabled]="progress.finalReport !== 'done'">
                 <ion-icon slot="start" name="download-outline"></ion-icon>
                 Descargar PDF
               </ion-button>

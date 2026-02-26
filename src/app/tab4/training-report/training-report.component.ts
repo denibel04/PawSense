@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter, DoCheck } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -18,12 +18,13 @@ import {
         IonInput,
         IonButton,
         IonTextarea,
-        IonList,
         IonIcon
     ]
 })
-export class TrainingReportComponent {
+export class TrainingReportComponent implements DoCheck {
     @Input() isEditing = false;
+    @Output() trainingDataChange = new EventEmitter<any>();
+
     currentDate: Date = new Date();
 
     today: string = new Date().toISOString().slice(0, 10);
@@ -55,6 +56,13 @@ export class TrainingReportComponent {
 
     trackByIndex(index: number): number {
         return index;
+    }
+
+    ngDoCheck() {
+        if (this.isEditing) {
+            // Emite los cambios locales hacia el componente padre
+            this.trainingDataChange.emit(this.data);
+        }
     }
 }
 

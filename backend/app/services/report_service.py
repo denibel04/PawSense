@@ -289,23 +289,21 @@ class ReportService:
             if not html_content:
                 raise ValueError("No se pudo generar HTML")
 
-            # Fase 3: Generar PDF
-            pdf_filename = f"report_{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_base64 = None
-            async for progress in ReportService.generate_pdf_report(html_content, report_type, pdf_filename):
-                # Capturar el pdfBase64 del yield intermedio
-                if progress.get("pdfBase64"):
-                    pdf_base64 = progress.get("pdfBase64")
-                yield progress
+            # Fase 3: Omitida en la generación inicial, se generará al descargar.
+            yield {
+                "status": "Informe Final",
+                "message": "Datos listos para revisión (PDF se generará al descargar)",
+                "completed": True
+            }
 
             # Respuesta final
             yield {
                 "status": "completed",
-                "message": "Reporte generado exitosamente",
+                "message": "Reporte generado (pendiente de descargar PDF)",
                 "extractedData": extracted_data,
                 "htmlReport": html_content,
-                "pdfPath": pdf_filename,
-                "pdfBase64": pdf_base64
+                "pdfPath": None,
+                "pdfBase64": None
             }
 
         except Exception as e:

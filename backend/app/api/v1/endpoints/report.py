@@ -4,6 +4,7 @@ import json
 import logging
 from app.services.audio_service import transcribe_audio
 from app.services.report_service import ReportService
+from app.schemas.report import GeneratePdfRequest
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -134,22 +135,37 @@ async def generate_report_from_audio(
         }
     )
 
+
+
 @router.post("/generate/pdf")
-async def generate_pdf(breed_prediction: dict, user_notes: str = None):
+async def generate_pdf(request: GeneratePdfRequest):
     """
-    Generar un informe PDF completo.
-    
-    TODO: Victor
-    1. Recibir los datos de la predicción (Top-3 razas).
-    2. (Opcional) Llamar a un agente IA para generar un resumen narrativo ("Este perro parece ser un Golden... requiere estos cuidados...").
-    3. Usar `reportlab` o `fpdf` para crear un PDF.
-       - Incluir foto del perro (si se subió).
-       - Gráfico de barras con los porcentajes de raza.
-       - Texto con recomendaciones.
-    4. Guardar PDF temporalmente.
-    5. Retornar URL de descarga.
+    Generar un informe PDF completo a partir de los datos pasados desde el frontend.
     """
-    return {"download_url": "/api/v1/report/download/12345.pdf"}
+    try:
+        # Generar HTML
+        html_content = None
+        async for progress in ReportService.generate_html_report(request.data, request.report_type):
+            if progress.get("completed"):
+                html_content = progress.get("html")
+        
+        if not html_content:
+            raise HTTPException(status_code=500, detail="No se pudo generar el HTML")
+            
+        # Generar PDF
+        pdf_base64 = None
+        async for progress in ReportService.generate_pdf_report(html_content, request.report_type):
+            if progress.get("completed"):
+                pdf_base64 = progress.get("pdfBase64")
+                
+        if not pdf_base64:
+            raise HTTPException(status_code=500, detail="No se pudo generar el PDF")
+            
+        return {"pdfBase64": pdf_base64}
+        
+    except Exception as e:
+        logger.error(f"Error en generate_pdf: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/download/{report_id}")
 async def download_report(report_id: str):
