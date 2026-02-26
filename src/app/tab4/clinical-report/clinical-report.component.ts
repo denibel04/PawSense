@@ -29,28 +29,34 @@ export class ClinicalReportComponent {
     @Input() isEditing = false;
     currentDate: Date = new Date();
 
+    today: string = new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' });
+
     // Local mutable copy – updated via setter when parent pushes new data
     data: any = {
-        resena: '',
-        anamnesis: '',
-        exploracion_fisica: '',
-        exploracion_especial: '',
-        diagnostico: '',
-        tratamiento: [],
-        recomendaciones: []
+        symptoms: [],
+        diagnosis: '',
+        treatment: '',
+        notes: '',
+        paciente: {},
+        antecedentes: '',
+        examen_fisico: '',
+        recomendaciones: '',
+        fechaConsulta: ''
     };
 
     @Input() set clinicalData(value: any) {
         if (value) {
             // Deep-clone so edits don't mutate the parent directly
             this.data = {
-                resena: value.resena ?? '',
-                anamnesis: value.anamnesis ?? '',
-                exploracion_fisica: value.exploracion_fisica ?? '',
-                exploracion_especial: value.exploracion_especial ?? '',
-                diagnostico: value.diagnostico ?? '',
-                tratamiento: Array.isArray(value.tratamiento) ? [...value.tratamiento] : [],
-                recomendaciones: Array.isArray(value.recomendaciones) ? [...value.recomendaciones] : []
+                symptoms: Array.isArray(value.symptoms) ? [...value.symptoms] : [],
+                diagnosis: value.diagnosis ?? '',
+                treatment: value.treatment ?? '',
+                notes: value.notes ?? '',
+                paciente: value.paciente ?? {},
+                antecedentes: value.antecedentes ?? '',
+                examen_fisico: value.examen_fisico ?? '',
+                recomendaciones: value.recomendaciones ?? '',
+                fechaConsulta: value.fechaConsulta ?? ''
             };
         }
     }
