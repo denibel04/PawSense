@@ -15,8 +15,28 @@
     <ng-container *ngFor="let msg of messages">
       <!-- Only show if content exists (prevent phantom bubble) -->
       <div *ngIf="msg.content" [class]="'message-wrapper ' + (msg.role === 'user' ? 'user' : 'assistant')">
-        <div class="chat-bubble">
-          <ion-label class="ion-text-wrap">
+        <div class="chat-bubble" [class.report-bubble]="msg.type === 'report-ready' || msg.type === 'report-progress'">
+          
+          <!-- Report Progress -->
+          <div *ngIf="msg.type === 'report-progress'" class="report-progress-container">
+            <ion-icon name="document-text-outline" class="report-icon"></ion-icon>
+            <ion-label class="ion-text-wrap">{{ msg.content }}</ion-label>
+            <ion-progress-bar [value]="(msg.reportProgress || 0) / 100" color="primary"></ion-progress-bar>
+          </div>
+
+          <!-- Report Ready -->
+          <div *ngIf="msg.type === 'report-ready'" class="report-ready-container">
+            <ion-icon name="document-text-outline" class="report-icon success"></ion-icon>
+            <ion-label class="ion-text-wrap report-success-text">{{ msg.content }}</ion-label>
+            <div class="report-actions">
+              <ion-button fill="solid" size="small" color="primary" (click)="goToReportsTab()">
+                Ver informe en Reportes
+              </ion-button>
+            </div>
+          </div>
+
+          <!-- Normal text message -->
+          <ion-label *ngIf="msg.type !== 'report-progress' && msg.type !== 'report-ready'" class="ion-text-wrap">
             {{ msg.content }}
           </ion-label>
         </div>
@@ -39,7 +59,7 @@
         spellcheck="true" class="chatbox"></ion-textarea>
       <ion-buttons slot="end">
         <div class="ion-activatable ripple-parent circle" (click)="sendMessage()"
-          [class.disabled]="!newMessage.trim() || isLoading">
+          [class.disabled]="!newMessage.trim() || isLoading || reportGenerating">
           <ion-icon name="send"></ion-icon>
           <ion-ripple-effect type="unbounded"></ion-ripple-effect>
         </div>

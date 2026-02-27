@@ -5,7 +5,7 @@ import {
   IonList, IonItem, IonLabel, IonIcon, IonBadge, IonButton,
   IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
   IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonCardSubtitle, IonTextarea,
-  AlertController, ToastController
+  AlertController, ToastController, ViewWillEnter
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw, pauseCircleOutline, playCircleOutline, stopCircleOutline, refreshOutline } from 'ionicons/icons';
@@ -13,6 +13,7 @@ import { TrainingReportComponent } from './training-report/training-report.compo
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { ReportService } from '../core/services/report.service';
+import { ReportSharedService } from '../core/services/report-shared.service';
 @Component({
   selector: 'app-tab4',
   templateUrl: './tab4.page.html',
@@ -27,7 +28,7 @@ import { ReportService } from '../core/services/report.service';
     TrainingReportComponent, ClinicalReportComponent
   ]
 })
-export class Tab4Page {
+export class Tab4Page implements ViewWillEnter {
   @ViewChild('fileInput', { static: false }) fileInput!: ElementRef;
 
   selectedSegment = 'veterinario';
@@ -66,11 +67,37 @@ export class Tab4Page {
   constructor(
     private cdr: ChangeDetectorRef,
     private reportService: ReportService,
+    private reportSharedService: ReportSharedService,
     private alertController: AlertController,
     private toastController: ToastController
   ) {
     addIcons({ documentText, cloudDownload, time, micOutline, folderOutline, checkmarkCircle, checkmarkOutline, ellipseOutline, timeOutline, createOutline, downloadOutline, closeOutline, closeCircleOutline, paw, stopCircleOutline, pauseCircleOutline, playCircleOutline, refreshOutline });
     this.initSpeechRecognition();
+  }
+
+  /**
+   * Ionic lifecycle hook — fires every time the tab becomes active.
+   * If the chat tab stored report data via the shared service, consume it
+   * and display the report ready for editing / PDF download.
+   */
+  ionViewWillEnter(): void {
+    const shared = this.reportSharedService.consumeReportData();
+    if (shared) {
+      this.selectedSegment = shared.reportType;
+      if (shared.reportType === 'veterinario') {
+        this.clinicalData = this.transformVeterinaryData(shared.extractedData);
+      } else {
+        this.trainingData = this.transformTrainingData(shared.extractedData);
+      }
+      // Mark all progress steps as done so the preview shows up
+      this.progress = {
+        transcription: 'done',
+        clinicalExtraction: 'done',
+        revision: 'done',
+        finalReport: 'done'
+      };
+      this.cdr.detectChanges();
+    }
   }
 
   initSpeechRecognition() {

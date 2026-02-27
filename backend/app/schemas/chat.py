@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 class ChatMessage(BaseModel):
     role: str
@@ -9,6 +9,12 @@ class ChatRequest(BaseModel):
     question: str
     context: str
     history: Optional[List[ChatMessage]] = []
+
+class ChatReportRequest(BaseModel):
+    """Request to generate a report from chat conversation."""
+    report_type: str = "veterinario"  # "veterinario" | "adiestramiento"
+    dog_info: Dict[str, str] = {}  # {nombre, raza, edad, peso, genero}
+    conversation: List[ChatMessage] = []  # Full chat history
 
 class DogInfoResponse(BaseModel):
     found: bool

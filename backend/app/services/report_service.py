@@ -46,6 +46,7 @@ class ReportService:
         "IA_RAZA": "paciente.raza",
         "IA_PESO": "paciente.peso",
         "IA_ESPECIE": "paciente.especie",
+        "IA_GENERO": "paciente.genero",
         
         # Síntomas y diagnóstico
         "IA_SIGNOS": "sintomas_formateados",
@@ -71,6 +72,8 @@ class ReportService:
         "[EDAD]": "paciente.edad",
         "[RAZA]": "paciente.raza",
         "[PESO]": "paciente.peso",
+        "[ESPECIE]": "paciente.especie",
+        "[GENERO]": "paciente.genero",
         
         # Sesión de entrenamiento
         "[COMPORTAMIENTO]": "comportamiento_observado",

@@ -6,6 +6,7 @@ export const API_CONFIG = {
     predict: '/predict',
     status: '/',
     chatAsk: '/chat/ask',
-    chatInfo: '/chat/info'
+    chatInfo: '/chat/info',
+    chatGenerateReport: '/chat/generate-report'
   }
 };

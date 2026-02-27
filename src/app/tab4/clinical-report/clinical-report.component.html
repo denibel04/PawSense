@@ -40,6 +40,10 @@
             <div class="rpt-label">Peso</div>
             <div class="rpt-value">{{ data.paciente?.peso || '—' }}</div>
           </div>
+          <div class="rpt-info-box">
+            <div class="rpt-label">Género</div>
+            <div class="rpt-value">{{ data.paciente?.genero || '—' }}</div>
+          </div>
         </div>
       </div>
     </div>
@@ -181,6 +185,14 @@
             <ion-label position="stacked" class="rpt-label">Peso</ion-label>
             <ion-input name="paciente_peso" [value]="data.paciente?.peso"
               (ionInput)="data.paciente.peso = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: 25 kg"
+              class="rpt-edit-input">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Género</ion-label>
+            <ion-input name="paciente_genero" [value]="data.paciente?.genero"
+              (ionInput)="data.paciente.genero = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: Macho"
               class="rpt-edit-input">
             </ion-input>
           </ion-item>

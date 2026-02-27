@@ -44,6 +44,75 @@
         width: 24px;
         height: 24px;
     }
+
+    // Report bubble variant
+    &.report-bubble {
+        background-color: var(--ion-color-light);
+        border: 1.5px solid var(--pawsense-orange);
+        border-radius: 16px;
+        padding: 14px 16px;
+        max-width: 85%;
+    }
+}
+
+// Report Progress Container
+.report-progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+
+    .report-icon {
+        font-size: 24px;
+        color: var(--pawsense-orange);
+    }
+
+    ion-progress-bar {
+        width: 100%;
+        border-radius: 8px;
+        --progress-background: var(--pawsense-orange);
+        height: 6px;
+    }
+
+    ion-label {
+        font-size: 14px;
+        color: var(--ion-text-color);
+    }
+}
+
+// Report Ready Container
+.report-ready-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    text-align: center;
+
+    .report-icon.success {
+        font-size: 28px;
+        color: var(--ion-color-success);
+    }
+
+    .report-success-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--ion-color-success-shade);
+    }
+
+    .report-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 4px;
+        justify-content: center;
+
+        ion-button {
+            --border-radius: 20px;
+            font-size: 13px;
+            text-transform: none;
+            font-weight: 500;
+        }
+    }
 }
 
 // Circular Ripple Button Styles

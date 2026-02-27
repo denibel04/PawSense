@@ -3,6 +3,8 @@ Utilidades para el servicio de chat con Gemini.
 Incluye validación de dominio, mensajes amables y construcción de prompts.
 """
 
+import re
+
 DOG_DOMAIN_KEYWORDS = {
     # Español
     "perro", "perros", "cachorro", "cachorros", "raza", "razas",
@@ -115,8 +117,10 @@ def build_system_prompt(context: str = "") -> str:
     system_prompt = (
         "Eres un experto en perros amable y servicial. "
         "Responde siempre en español o ingles con tono cercano, natural y práctico. "
-        "No uses markdown: sin **, ### o listas con viñetas. "
-        "Sin embargo, USA puntuación natural (como signos de exclamación ¡! y puntos) para sonar amable y humano. "
+        "PROHIBIDO USAR MARKDOWN: Nunca uses **, *, ###, ##, #, ```, ni listas con viñetas (- o *). "
+        "En lugar de negritas (**texto**), simplemente escribe el texto normal sin decoración. "
+        "En lugar de listas con viñetas, usa frases separadas por puntos o saltos de línea naturales. "
+        "USA puntuación natural (como signos de exclamación ¡! y puntos) para sonar amable y humano. "
         "Mantén respuestas cortas y directas. "
         "Si te falta información importante, haz una sola pregunta aclaratoria. "
         "Solo responde preguntas sobre perros: razas, cuidados, salud, alimentación, "
@@ -176,12 +180,25 @@ MEDICAL_KEYWORDS = {
     "tóxico", "toxina", "envenenamiento", "intoxicación", "envenenado",
     "golpe de calor", "hipotermia", "insolación",
     "parásito", "parásitos", "pulgas", "garrapatas", "gusanos", "lombriz",
+    "pulga", "garrapata",  # formas singulares
     "enfermedad", "enfermedad", "dolencia", "patología", "condición médica",
     "infección", "infecciones", "bacteriana", "viral", "fungal",
     "medicamento", "medicina", "antibiótico", "antinflamatorio", "vacuna",
     "dosis", "posología", "tratamiento", "terapeútica", "terapia",
     "diabetes", "epilepsia", "cáncer", "tumor", "displasia",
     "artritis", "artrósis", "artrosis", "degeneración discal",
+    # Piel e irritaciones
+    "rasca", "rascarse", "rascado", "rascando", "se rasca",
+    "irritación", "irritada", "irritado", "irritar",
+    "piel", "pelaje", "dermatitis", "eczema", "eccema",
+    "picor", "comezón", "comezon", "prurito",
+    "champú", "champu", "baño medicinal",
+    # Contexto veterinario
+    "veterinario", "veterinaria", "veterinarios", "clínica veterinaria",
+    "cita veterinaria", "cita con el veterinario", "consulta veterinaria",
+    "clínica", "clinica", "diagnóstico", "diagnostico",
+    "cirugía", "cirugia", "operación", "operacion",
+    "radiografía", "ecografía", "análisis", "analisis",
     # Inglés
     "vomit", "vomiting", "diarrhea", "diarrheal", "constipation",
     "fever", "cough", "sneeze", "nasal discharge",
@@ -200,6 +217,7 @@ MEDICAL_KEYWORDS = {
     "dosage", "dose", "treatment", "therapy", "therapeutic",
     "diabetes", "epilepsy", "cancer", "tumor", "dysplasia",
     "arthritis", "arthritis", "arthritis", "disc degeneration",
+    "skin", "rash", "irritation", "itchy", "scratching", "vet",
 }
 
 TRAINING_KEYWORDS = {
@@ -260,6 +278,25 @@ MEDICAL_EMERGENCY_KEYWORDS = {
     "loss of consciousness", "unconscious", "unconsciousness",
     "paralysis", "paralyzed", "paralyze",
     "trauma", "traumatic injury", "severe accident", "major injury",
+}
+
+REPORT_KEYWORDS = {
+    # Español
+    "informe", "reporte", "generar informe", "generar reporte",
+    "crear informe", "crear reporte", "hacer informe", "hacer reporte",
+    "genera un informe", "genera un reporte", "hazme un informe",
+    "hazme un reporte", "quiero un informe", "quiero un reporte",
+    "necesito un informe", "necesito un reporte", "preparar informe",
+    "preparar reporte", "generar documento", "crear documento",
+    "informe veterinario", "informe clínico", "informe de adiestramiento",
+    "reporte veterinario", "reporte clínico", "reporte de adiestramiento",
+    "resumen clínico", "resumen veterinario", "resumen de la conversación",
+    "generar pdf", "crear pdf", "descargar informe", "descargar reporte",
+    # Inglés
+    "report", "generate report", "create report", "make report",
+    "generate a report", "create a report", "clinical report",
+    "training report", "veterinary report", "summary report",
+    "generate pdf", "create pdf", "download report",
 }
 
 OFFICIAL_SOURCES = {
@@ -363,7 +400,11 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
     base_prompt = (
         "Eres un experto en perros amable y servicial. "
         "Responde siempre en español con tono cercano, natural y práctico. "
-        "No uses markdown: sin **, ### o listas con viñetas. "
+        "PROHIBIDO USAR MARKDOWN: Nunca uses **, *, ###, ##, #, ```, ni listas con viñetas (- o *). "
+        "En lugar de negritas (**texto**), simplemente escribe el texto normal sin decoración. "
+        "En lugar de listas con viñetas, usa frases separadas por puntos o saltos de línea naturales. "
+        "Ejemplo INCORRECTO: '**Champú de avena** para perros' → Ejemplo CORRECTO: 'Champú de avena para perros'. "
+        "Ejemplo INCORRECTO: '* Primer punto\n* Segundo punto' → Ejemplo CORRECTO: 'Primer punto. Segundo punto.' "
         "USA puntuación natural (puntos, signos de exclamación ¡!) para ser amable y humano. "
         "Mantén respuestas cortas y directas."
     )
@@ -371,43 +412,71 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
     if context and context.strip():
         base_prompt += f"\n\nINFORMACIÓN DEL PERRO: {context}"
     
+    sources_medical = (
+        "\n\nFUENTES OFICIALES OBLIGATORIAS (SIEMPRE incluir al final de cada respuesta):\n"
+        "Estas son las URLs exactas que DEBES referenciar. Copia las URLs tal cual:\n"
+        "   - AVMA: https://www.avma.org/\n"
+        "   - RVC: https://www.rvc.ac.uk/\n"
+        "   - Cornell Vet: https://vet.cornell.edu/\n"
+        "   - MSD Vet Manual: https://www.msdvetmanual.com/\n"
+        "   - ASPCA: https://www.aspca.org/\n"
+        "   - AAHA: https://www.aaha.org/\n"
+    )
+    
+    sources_training = (
+        "\n\nFUENTES OFICIALES OBLIGATORIAS (SIEMPRE incluir al final de cada respuesta):\n"
+        "Estas son las URLs exactas que DEBES referenciar. Copia las URLs tal cual:\n"
+        "   - AVSAB: https://avsab.org/\n"
+        "   - Dogs Trust: https://www.dogstrust.org.uk/\n"
+        "   - RSPCA: https://www.rspca.org.uk/\n"
+        "   - IAABC: https://iaabc.org/\n"
+        "   - AKC: https://www.akc.org/\n"
+    )
+    
     if intent == "medical":
         base_prompt += (
             "\n\n=== MODO MÉDICO VETERINARIO ===\n"
             "OBLIGATORIO:\n"
-            "1) Solo responde si puedes JUSTIFICAR con fuentes OFICIALES de esta lista:\n"
-            "   - AVMA (American Veterinary Medical Association)\n"
-            "   - RVC (Royal Veterinary College)\n"
-            "   - Cornell University College of Veterinary Medicine\n"
-            "   - MSD Vet Manual\n"
-            "   - ASPCA\n"
-            "   - AAHA (American Animal Hospital Association)\n"
+            "1) Basa tus respuestas en información verificable de estas fuentes oficiales:\n"
+            "   AVMA, RVC, Cornell Vet, MSD Vet Manual, ASPCA, AAHA.\n"
             "2) NO INVENTES información ni medicamentos.\n"
             "3) PROHIBIDO: dar dosis exactas de medicamentos o pautas farmacológicas.\n"
             "4) Si NO puedes confirmarlo con esas fuentes, di: "
-            "'No puedo confirmarlo con fuentes oficiales. Consulta a un veterinario veterinario.'\n"
-            "5) Termina SIEMPRE con 'Fuentes (para contrastar):' + 3-6 URLs de la whitelist.\n"
+            "'No puedo confirmarlo con fuentes oficiales. Consulta a tu veterinario.'\n"
+            "5) SIEMPRE termina tu respuesta con un bloque de fuentes. Esto es OBLIGATORIO, no opcional.\n"
+            "   El bloque DEBE aparecer al final de CADA respuesta, sin excepción.\n"
+            "   Formato EXACTO que debes seguir (sin markdown, sin **, sin viñetas):\n\n"
+            "   Fuentes (para contrastar):\n"
+            "   AVMA - https://www.avma.org/\n"
+            "   MSD Vet Manual - https://www.msdvetmanual.com/\n"
+            "   ASPCA - https://www.aspca.org/\n\n"
+            "   Selecciona entre 2 y 4 fuentes relevantes de la lista según el tema.\n"
             "6) Si hay signos de urgencia (convulsiones, respiración dificultosa, colapso, "
             "sangrado abundante, intoxicación aguda, golpe de calor), advierte urgencias veterinarias."
         )
+        base_prompt += sources_medical
     
     elif intent == "training":
         base_prompt += (
             "\n\n=== MODO ADIESTRAMIENTO Y COMPORTAMIENTO ===\n"
             "OBLIGATORIO:\n"
-            "1) Solo responde si puedes JUSTIFICAR con fuentes OFICIALES de esta lista:\n"
-            "   - AVSAB (American Veterinary Society of Animal Behavior)\n"
-            "   - Dogs Trust (Dog behavior, welfare)\n"
-            "   - RSPCA (Royal Society for Prevention of Cruelty to Animals)\n"
-            "   - IAABC (International Association of Animal Behavior Consultants)\n"
-            "   - AKC (American Kennel Club)\n"
+            "1) Basa tus respuestas en información verificable de estas fuentes oficiales:\n"
+            "   AVSAB, Dogs Trust, RSPCA, IAABC, AKC.\n"
             "2) NO INVENTES técnicas ni remedios.\n"
             "3) PROHIBIDO: recomendar castigo físico o métodos aversivos sin justificación científica.\n"
             "4) Si NO puedes confirmarlo, di: "
             "'No puedo confirmarlo con fuentes oficiales. Consulta a un educador certificado.'\n"
-            "5) Termina SIEMPRE con 'Fuentes (para contrastar):' + 3-6 URLs de la whitelist.\n"
+            "5) SIEMPRE termina tu respuesta con un bloque de fuentes. Esto es OBLIGATORIO, no opcional.\n"
+            "   El bloque DEBE aparecer al final de CADA respuesta, sin excepción.\n"
+            "   Formato EXACTO que debes seguir (sin markdown, sin **, sin viñetas):\n\n"
+            "   Fuentes (para contrastar):\n"
+            "   AVSAB - https://avsab.org/\n"
+            "   AKC - https://www.akc.org/\n"
+            "   Dogs Trust - https://www.dogstrust.org.uk/\n\n"
+            "   Selecciona entre 2 y 4 fuentes relevantes de la lista según el tema.\n"
             "6) Enfatiza técnicas basadas en refuerzo positivo."
         )
+        base_prompt += sources_training
     
     else:  # general
         base_prompt += (
@@ -416,3 +485,202 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
         )
     
     return base_prompt
+
+
+def strip_markdown(text: str) -> str:
+    """
+    Post-procesa el texto para eliminar restos de markdown que Gemini pueda devolver.
+    
+    Elimina: **, *, ###, ##, #, ```, viñetas con - o *.
+    Preserva URLs y líneas que contienen fuentes/referencias.
+    
+    Args:
+        text: El texto a limpiar.
+    
+    Returns:
+        Texto limpio sin markdown.
+    """
+    if not text:
+        return text
+    
+    # Eliminar bloques de código ```...```
+    text = re.sub(r'```[\s\S]*?```', '', text)
+    # Eliminar code inline `texto`
+    text = re.sub(r'`([^`]+)`', r'\1', text)
+    # Eliminar headers ### ## #
+    text = re.sub(r'^#{1,6}\s*', '', text, flags=re.MULTILINE)
+    # Eliminar bold **texto** o __texto__
+    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+    text = re.sub(r'__([^_]+)__', r'\1', text)
+    # Eliminar italic *texto* o _texto_ (cuidado con no romper URLs)
+    text = re.sub(r'(?<!\w)\*([^*]+)\*(?!\w)', r'\1', text)
+    
+    # Eliminar viñetas al inicio de línea SOLO si NO contienen URLs
+    # Preservar líneas tipo "- AVMA: https://..." o "- https://..."
+    cleaned_lines = []
+    for line in text.split('\n'):
+        if re.match(r'^\s*[-*]\s+', line) and not re.search(r'https?://', line):
+            # Es una viñeta sin URL -> quitar el marcador
+            line = re.sub(r'^\s*[-*]\s+', '', line)
+        cleaned_lines.append(line)
+    text = '\n'.join(cleaned_lines)
+    
+    # Limpiar líneas vacías múltiples
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    
+    return text.strip()
+
+
+def detect_report_intent(question: str, context: str = "") -> bool:
+    """
+    Detecta si el usuario está pidiendo generar un informe/reporte desde el chat.
+    
+    Args:
+        question: La pregunta del usuario.
+        context: Contexto del perro (opcional).
+    
+    Returns:
+        True si el usuario quiere generar un informe, False en caso contrario.
+    """
+    search_text = (question).lower()
+    
+    for keyword in REPORT_KEYWORDS:
+        if keyword in search_text:
+            return True
+    
+    return False
+
+
+def detect_report_type_from_conversation(history: list) -> str:
+    """
+    Analiza el historial de la conversación para determinar si el informe
+    debe ser veterinario o de adiestramiento.
+    
+    IMPORTANTE: Solo analiza mensajes del USUARIO para evitar que palabras
+    del asistente (ej: el mensaje de bienvenida menciona "adiestramiento")
+    sesguen la clasificación.
+    
+    Args:
+        history: Lista de mensajes del chat [{role, content}, ...]
+    
+    Returns:
+        "veterinario" | "adiestramiento"
+    """
+    # Solo analizar mensajes del usuario, no del asistente
+    user_text = " ".join(
+        (msg.get("content", "") if isinstance(msg, dict) else getattr(msg, 'content', ''))
+        for msg in history
+        if (msg.get("role", "") if isinstance(msg, dict) else getattr(msg, 'role', '')) == "user"
+    ).lower()
+    
+    medical_score = sum(1 for kw in MEDICAL_KEYWORDS if kw in user_text)
+    training_score = sum(1 for kw in TRAINING_KEYWORDS if kw in user_text)
+    
+    if training_score > medical_score:
+        return "adiestramiento"
+    return "veterinario"
+
+
+# Preguntas que el chatbot hará para recopilar datos del perro antes de generar el informe
+REPORT_DOG_QUESTIONS = {
+    "veterinario": [
+        {"field": "nombre", "question": "¿Cómo se llama tu perro?"},
+        {"field": "raza", "question": "¿De qué raza es?"},
+        {"field": "edad", "question": "¿Qué edad tiene?"},
+        {"field": "peso", "question": "¿Cuánto pesa aproximadamente (en kg)?"},
+        {"field": "genero", "question": "¿Es macho o hembra?"},
+    ],
+    "adiestramiento": [
+        {"field": "nombre", "question": "¿Cómo se llama tu perro?"},
+        {"field": "raza", "question": "¿De qué raza es?"},
+        {"field": "edad", "question": "¿Qué edad tiene?"},
+        {"field": "peso", "question": "¿Cuánto pesa aproximadamente (en kg)?"},
+    ],
+}
+
+
+def extract_known_dog_info(context: str, history: list) -> dict:
+    """
+    Extrae datos del perro que ya se conocen del contexto (predicción de raza)
+    y del historial de la conversación.
+    
+    IMPORTANTE: Solo analiza mensajes del USUARIO (role='user') para evitar
+    extraer datos inventados por el asistente (ej: edades mencionadas en consejos).
+    
+    Args:
+        context: Contexto del perro (ej: "Raza: Airedale Terrier\nTemperamento: ...")
+        history: Lista de mensajes del chat [{role, content}, ...]
+    
+    Returns:
+        Dict con campos conocidos: {nombre, raza, edad, peso, genero}
+    """
+    known = {}
+    
+    # 1. Extraer raza del contexto (viene de la predicción / TheDogAPI)
+    if context:
+        raza_match = re.search(r'raza:\s*(.+?)(?:\n|$)', context, re.IGNORECASE)
+        if raza_match:
+            known["raza"] = raza_match.group(1).strip()
+    
+    # 2. Solo analizar mensajes del USUARIO para extraer datos
+    #    NUNCA analizar mensajes del asistente (pueden mencionar edades, pesos, etc. genéricamente)
+    user_text = " ".join(
+        (msg.get("content", "") if isinstance(msg, dict) else getattr(msg, 'content', ''))
+        for msg in history
+        if (msg.get("role", "") if isinstance(msg, dict) else getattr(msg, 'role', '')) == "user"
+    )
+    user_lower = user_text.lower()
+    
+    # Intentar extraer nombre del perro - SOLO patrones explícitos
+    # Debe ser "se llama X" o "su nombre es X", NO "mi perro tiene..." 
+    nombre_patterns = [
+        r'se llama\s+(\w+)',
+        r'su nombre es\s+(\w+)',
+        r'(?:tengo un|tengo una)\s+\w+\s+(?:llamad[oa]|que se llama)\s+(\w+)',
+    ]
+    # Palabras comunes que NO son nombres de perro
+    stop_words = {"el", "la", "un", "una", "mi", "su", "tiene", "es", "muy",
+                  "pero", "que", "como", "con", "por", "para", "del", "los", "las",
+                  "perro", "perra", "cachorro", "cachorra"}
+    for pattern in nombre_patterns:
+        match = re.search(pattern, user_lower)
+        if match and "nombre" not in known:
+            nombre = match.group(1).strip().capitalize()
+            if (nombre and len(nombre) > 1 
+                and nombre.lower() not in DOG_DOMAIN_KEYWORDS 
+                and nombre.lower() not in stop_words):
+                known["nombre"] = nombre
+    
+    # Intentar extraer edad - solo de texto del usuario
+    edad_patterns = [
+        r'tiene\s+(\d+\s*(?:años|año|meses|mes))',
+        r'(?:de|con)\s+(\d+\s*(?:años|año|meses|mes))',
+        r'edad[:\s]+(\d+\s*(?:años|año|meses|mes))',
+    ]
+    for pattern in edad_patterns:
+        match = re.search(pattern, user_lower)
+        if match and "edad" not in known:
+            known["edad"] = match.group(1).strip()
+    
+    # Intentar extraer peso - solo de texto del usuario
+    peso_patterns = [
+        r'(\d+[\.,]?\d*)\s*(?:kg|kilos|kilogramos)',
+        r'pesa\s+(\d+[\.,]?\d*)\s*(?:kg|kilos|kilogramos)?',
+    ]
+    for pattern in peso_patterns:
+        match = re.search(pattern, user_lower)
+        if match and "peso" not in known:
+            known["peso"] = match.group(1).strip() + " kg"
+    
+    # Intentar extraer género - solo de texto del usuario
+    genero_patterns = [
+        r'(?:es\s+)?\b(macho|hembra)\b',
+        r'(?:es\s+)?\b(male|female)\b',
+    ]
+    for pattern in genero_patterns:
+        match = re.search(pattern, user_lower)
+        if match and "genero" not in known:
+            g = match.group(1)
+            known["genero"] = "Macho" if g in ("macho", "male") else "Hembra"
+    
+    return known

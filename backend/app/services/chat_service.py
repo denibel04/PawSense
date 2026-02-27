@@ -17,9 +17,48 @@ from app.services.chat_utils import (
     is_medical_emergency,
     get_emergency_response,
     build_whitelist_system_prompt,
+    strip_markdown,
+    detect_report_intent,
+    detect_report_type_from_conversation,
+    REPORT_DOG_QUESTIONS,
+    extract_known_dog_info,
+    OFFICIAL_SOURCES,
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _ensure_sources(text: str, intent: str) -> str:
+    """
+    If the model response doesn't already contain source URLs,
+    append the relevant ones based on intent.
+    """
+    # Check if ANY whitelist URL is already present
+    sources = OFFICIAL_SOURCES.get(intent, [])
+    has_sources = any(url in text for url in sources)
+    
+    if has_sources:
+        return text
+    
+    # Append sources block
+    if intent == "medical":
+        sources_block = (
+            "\n\nFuentes (para contrastar):\n"
+            "AVMA - https://www.avma.org/\n"
+            "MSD Vet Manual - https://www.msdvetmanual.com/\n"
+            "ASPCA - https://www.aspca.org/"
+        )
+    elif intent == "training":
+        sources_block = (
+            "\n\nFuentes (para contrastar):\n"
+            "AVSAB - https://avsab.org/\n"
+            "AKC - https://www.akc.org/\n"
+            "Dogs Trust - https://www.dogstrust.org.uk/"
+        )
+    else:
+        return text
+    
+    return text + sources_block
 
 class ChatService:
     def __init__(self):
@@ -55,6 +94,56 @@ class ChatService:
             yield get_out_of_domain_message()
             return
 
+        # Report Intent Check - detect if user wants to generate a report
+        if detect_report_intent(request.question):
+            # Include role so type detection and extraction can filter by user messages
+            history_dicts = [{"role": m.role, "content": m.content} for m in request.history] if request.history else []
+            
+            report_type = detect_report_type_from_conversation(history_dicts)
+            all_questions = REPORT_DOG_QUESTIONS.get(report_type, REPORT_DOG_QUESTIONS["veterinario"])
+            
+            # Extract already-known data from context and conversation (user messages only)
+            known_info = extract_known_dog_info(request.context, history_dicts)
+            
+            # Filter out questions for fields we already know
+            missing_questions = [q for q in all_questions if q["field"] not in known_info]
+            
+            # Build the response
+            tipo_label = "veterinario" if report_type == "veterinario" else "de adiestramiento"
+            
+            if known_info:
+                known_parts = []
+                field_labels = {"nombre": "Nombre", "raza": "Raza", "edad": "Edad", "peso": "Peso", "genero": "Género"}
+                for field, value in known_info.items():
+                    label = field_labels.get(field, field.capitalize())
+                    known_parts.append(f"{label}: {value}")
+                known_str = ", ".join(known_parts)
+                msg = (
+                    f"¡Perfecto! Voy a preparar un informe {tipo_label} basado en nuestra conversación. "
+                    f"Ya tengo estos datos de tu perro: {known_str}. "
+                )
+            else:
+                msg = (
+                    f"¡Perfecto! Voy a preparar un informe {tipo_label} basado en nuestra conversación. "
+                )
+            
+            if missing_questions:
+                msg += "Solo necesito que me confirmes algunos datos más:\n\n"
+                for i, q in enumerate(missing_questions, 1):
+                    msg += f"{i}. {q['question']}\n"
+            else:
+                msg += "Ya tengo toda la información necesaria. ¡Generando el informe!"
+            
+            # Encode known info and missing fields in the marker
+            import json as _json
+            known_json = _json.dumps(known_info, ensure_ascii=False)
+            missing_fields_json = _json.dumps([q['field'] for q in missing_questions], ensure_ascii=False)
+            msg += (
+                f"\n[REPORT_INTENT:{report_type}|KNOWN:{known_json}|MISSING:{missing_fields_json}]"
+            )
+            yield msg
+            return
+
         # Intent Detection
         intent = detect_intent(request.question, request.context)
         logger.info(f"Detected intent: {intent}")
@@ -78,9 +167,20 @@ class ChatService:
             role="user",
             parts=[types.Part.from_text(text=system_prompt)]
         ))
+        
+        # Reforzar el cumplimiento de fuentes en la respuesta priming del modelo
+        if intent in ("medical", "training"):
+            priming_text = (
+                "Entendido. Responderé basándome en las fuentes oficiales indicadas. "
+                "Al final de cada respuesta incluiré siempre el bloque de 'Fuentes (para contrastar):' "
+                "con las URLs correspondientes de la whitelist. No usaré markdown."
+            )
+        else:
+            priming_text = "Entendido. Responderé de forma natural sin markdown."
+        
         chat_history.append(types.Content(
             role="model",
-            parts=[types.Part.from_text(text="Entendido. Responderé basándome en fuentes confiables.")]
+            parts=[types.Part.from_text(text=priming_text)]
         ))
         
         for msg in request.history:
@@ -110,9 +210,20 @@ class ChatService:
                     config=types.GenerateContentConfig(response_mime_type="text/plain")
                 )
                 
+                # Accumulate full response for markdown stripping
+                full_response = ""
                 async for chunk in response_stream:
                     if chunk.text is not None:
-                        yield chunk.text
+                        full_response += chunk.text
+                
+                # Post-process: strip any remaining markdown
+                cleaned_response = strip_markdown(full_response)
+                
+                # Force-append sources if the model didn't include them
+                if intent in ("medical", "training"):
+                    cleaned_response = _ensure_sources(cleaned_response, intent)
+                
+                yield cleaned_response
                 
                 # Break the retry loop on success
                 return
