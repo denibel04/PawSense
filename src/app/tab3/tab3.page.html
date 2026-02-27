@@ -1,18 +1,15 @@
 <ion-header class="ion-no-border dashboard-header">
   <ion-toolbar>
-    <div class="logo">
-      <ion-icon name="paw" color="primary"></ion-icon>
-      <span>PawSense</span>
-    </div>
+    <ion-title>
+      <div class="logo">
+        <ion-icon name="paw" color="primary"></ion-icon>
+        <span>PawSense</span>
+      </div>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Chat</ion-title>
-    </ion-toolbar>
-  </ion-header>
 
   <div class="chat-container">
     <ng-container *ngFor="let msg of messages">

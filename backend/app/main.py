@@ -1,12 +1,39 @@
+from contextlib import asynccontextmanager
+import logging
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.core.config import settings
 from app.api.v1.api import api_router
+from app.services.report_service import PlaywrightPDFGenerator
 
-app = FastAPI(title=settings.PROJECT_NAME, version=settings.PROJECT_VERSION)
+logger = logging.getLogger(__name__)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    try:
+        PlaywrightPDFGenerator.start()
+    except ImportError:
+        logger.warning("Playwright no está instalado. El navegador persistente no estará disponible.")
+    except Exception as e:
+        logger.error(f"Error starting Playwright persistent browser: {e}", exc_info=True)
+    
+    yield
+    
+    # Shutdown
+    try:
+        PlaywrightPDFGenerator.stop()
+    except Exception as e:
+        logger.error(f"Error stopping Playwright persistent browser: {e}", exc_info=True)
+
+app = FastAPI(
+    title=settings.PROJECT_NAME, 
+    version=settings.PROJECT_VERSION,
+    lifespan=lifespan
+)
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
-
-from fastapi.middleware.cors import CORSMiddleware
 
 # Set all CORS enabled origins
 if settings.BACKEND_CORS_ORIGINS:

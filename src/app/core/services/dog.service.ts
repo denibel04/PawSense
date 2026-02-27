@@ -12,12 +12,20 @@ export class DogService {
 
   predictBreed(file: File) {
     const formData = new FormData();
-    formData.append('image_file', file); // Asegúrate de que este nombre coincida con tu FastAPI
+    formData.append('file', file); 
 
     return this.api.post(API_CONFIG.endpoints.predict, formData).pipe(
       tap(data => {
         console.log('Datos recibidos del backend:', data);
       })
     );
+  }
+
+  predictVideo(file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Usamos el endpoint de video que acabamos de crear
+    return this.api.post(API_CONFIG.endpoints.predict + '/video', formData);
   }
 }

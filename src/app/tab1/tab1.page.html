@@ -1,90 +1,121 @@
-<ion-header>
+<ion-header class="ion-no-border dashboard-header">
   <ion-toolbar>
-    <div class="logo">
-      <ion-icon name="paw" color="primary"></ion-icon>
-      <span>PawSense</span>
-    </div>
+    <ion-title>
+      <!-- Brand Title (logo) -->
+      <div class="logo">
+        <ion-icon name="paw" color="primary"></ion-icon>
+        <span>PawSense</span>
+      </div>
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
-<ion-content>
-  <div class="ion-padding">
 
-    <ion-card>
-      <ion-card-content>
-        <ion-item lines="none">
-          <ion-label position="stacked">Foto del perro</ion-label>
-          <input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 10px; width: 100%;">
-        </ion-item>
+<ion-content class="dashboard-content">
+  <div class="main-container-v2">
 
-        <div *ngIf="imagePreview" class="ion-text-center ion-margin-top">
-          <img [src]="imagePreview" class="preview-img">
+    <!-- Switch de Modos -->
+    <ion-segment [(ngModel)]="activeSegment" mode="ios" class="segment-modern">
+      <ion-segment-button value="visor">
+        <ion-label>Cámara Pro</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="analizador">
+        <ion-label>Analizador</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- SECCIÓN 1: VISOR TIEMPO REAL -->
+    <div *ngIf="activeSegment === 'visor'" class="section-container animate-fade">
+      <div class="visor-card-v2" [class.active]="isRealTime">
+        <video #videoElement autoplay playsinline [hidden]="!isRealTime"></video>
+        <canvas #canvasElement style="display: none;"></canvas>
+
+        <div *ngIf="isRealTime" class="realtime-overlay-v2">
+          <div *ngIf="realTimeResult" class="top-predictions-v2">
+            <div *ngFor="let res of realTimeResult; let i = index" class="prediction-pill" [class.primary]="i === 0">
+              {{ i === 0 ? '🏆' : i+1 }} {{ res.breed }} ({{ res.confidence }})
+            </div>
+          </div>
+          <div *ngIf="!realTimeResult" class="scanning-pill">
+            🔍 Escaneando...
+          </div>
         </div>
 
-        <ion-button expand="block" (click)="uploadAndPredict()" [disabled]="!selectedFile || isLoading"
-          class="ion-margin-top">
-          <ion-loading *ngIf="isLoading" slot="start"></ion-loading>
-          {{ isLoading ? 'Analizando con IA...' : 'Analizar Perro' }}
-        </ion-button>
-      </ion-card-content>
-    </ion-card>
+        <div *ngIf="!isRealTime" class="camera-placeholder">
+          <ion-icon name="camera-outline" class="placeholder-icon"></ion-icon>
+          <p>Activa la cámara para identificar perros en vivo</p>
+        </div>
+      </div>
 
-    <div *ngIf="predictionResult">
-      <ion-card class="winner-card">
-        <ion-card-content class="ion-text-center">
-          <p class="label-winner">Resultado Final</p>
-          <h1 class="winner-title">🥇 {{ predictionResult.winner.breed }}</h1>
-          <p class="winner-conf">Confianza: <strong>{{ predictionResult.winner.confidence }}</strong></p>
-          <ion-badge color="success">Modelo: {{ predictionResult.winner.source }}</ion-badge>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-grid>
-        <ion-row>
-          <ion-col size="12" size-md="4">
-            <h3 class="model-header">PyTorch (EfficientNet)</h3>
-            <ion-card *ngFor="let item of predictionResult.details.pytorch; let i = index" [class.is-first]="i === 0">
-              <ion-card-content>
-                <div class="prediction-info">
-                  <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
-                  <span class="prob-val">{{ item.confidence }}%</span>
-                </div>
-                <ion-progress-bar [value]="item.confidence / 100"
-                  [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-
-          <ion-col size="12" size-md="4">
-            <h3 class="model-header">MobileNetV2 (355 r.)</h3>
-            <ion-card *ngFor="let item of predictionResult.details.mobile; let i = index" [class.is-first]="i === 0">
-              <ion-card-content>
-                <div class="prediction-info">
-                  <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
-                  <span class="prob-val">{{ item.confidence }}%</span>
-                </div>
-                <ion-progress-bar [value]="item.confidence / 100"
-                  [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-
-          <ion-col size="12" size-md="4">
-            <h3 class="model-header">Keras V1 (120 r.)</h3>
-            <ion-card *ngFor="let item of predictionResult.details.keras; let i = index" [class.is-first]="i === 0">
-              <ion-card-content>
-                <div class="prediction-info">
-                  <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
-                  <span class="prob-val">{{ item.confidence }}%</span>
-                </div>
-                <ion-progress-bar [value]="item.confidence / 100"
-                  [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
-              </ion-card-content>
-            </ion-card>
-          </ion-col>
-
-        </ion-row>
-      </ion-grid>
+      <ion-button expand="block" (click)="toggleRealTime()" class="btn-modern-v2"
+        [color]="isRealTime ? 'danger' : 'primary'">
+        <ion-icon slot="start" [name]="isRealTime ? 'stop-circle' : 'play-circle'"></ion-icon>
+        {{ isRealTime ? 'Apagar Cámara' : 'Empezar Escaneo Vivo' }}
+      </ion-button>
     </div>
+
+    <!-- SECCIÓN 2: ANALIZADOR DE ARCHIVOS -->
+    <div *ngIf="activeSegment === 'analizador'" class="section-container animate-fade">
+      <div class="upload-card-v2">
+        <div class="upload-zone">
+          <ion-icon name="cloud-upload-outline" class="upload-icon"></ion-icon>
+          <h3>Sube una Foto o Video</h3>
+          <p>Analizaremos con precisión la raza de tu mascota</p>
+          <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*">
+        </div>
+
+        <div *ngIf="imagePreview && !isRealTime" class="preview-container-v2">
+          <img [src]="imagePreview" alt="Preview">
+        </div>
+
+        <div *ngIf="videoPreview && !isRealTime" class="preview-container-v2">
+          <video [src]="videoPreview" controls></video>
+        </div>
+      </div>
+
+      <ion-button *ngIf="selectedFile && !isRealTime" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"
+        class="btn-modern-v2 gradient-btn">
+        <ion-loading *ngIf="isLoading" slot="start"></ion-loading>
+        <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+        {{ isLoading ? 'Analizando...' : 'Lanzar Análisis Pro' }}
+      </ion-button>
+    </div>
+
+    <!-- RESULTADOS (Comunes para ambos) -->
+    <div *ngIf="predictionResult" class="result-card-v2 animate-slide-up">
+      <div class="result-header-v2">
+        <div class="winner-avatar">🐕</div>
+        <div class="winner-info">
+          <h2>{{ predictionResult.winner.breed }}</h2>
+          <p>{{ predictionResult.winner.confidence }} de confianza</p>
+        </div>
+      </div>
+
+      <div class="ion-padding">
+        <div *ngIf="predictionResult.summary" class="video-stats-v2">
+          <div class="stat-item">
+            <span class="stat-val">{{ predictionResult.summary.total_frames_analyzed }}</span>
+            <span class="stat-label">Clips</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-val">{{ predictionResult.summary.frequency }}</span>
+            <span class="stat-label">Coincidencias</span>
+          </div>
+        </div>
+
+        <div *ngIf="predictionResult.details" class="details-list-v2">
+          <div *ngFor="let item of predictionResult.details.pytorch; let i = index" class="detail-row">
+            <div class="row-header">
+              <span>{{ item.breed }}</span>
+              <span class="perc">{{ (item.probability * 100).toFixed(1) }}%</span>
+            </div>
+            <div class="progress-bar-v2">
+              <div class="progress-fill" [style.width.%]="item.probability * 100" [class.winner]="i === 0"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </ion-content>

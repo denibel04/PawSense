@@ -270,3 +270,14 @@
     padding-left: 15px;
     margin-bottom: 10px;
 }
+
+ion-toolbar {
+    --padding-start: 1.5rem;
+    --padding-end: 1.5rem;
+    --padding-top: 1rem;
+    --padding-bottom: 1rem;
+    @media (min-width: 768px) {
+        --padding-start: 2rem;
+        --padding-end: 2rem;
+    }
+}

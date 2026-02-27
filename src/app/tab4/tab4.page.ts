@@ -20,7 +20,7 @@ import { ReportService } from '../core/services/report.service';
   standalone: true,
   imports: [
     CommonModule,
-    IonHeader, IonToolbar, IonContent,
+    IonHeader, IonToolbar, IonContent, IonTitle,
     IonList, IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonTextarea,
@@ -296,7 +296,8 @@ export class Tab4Page {
           case 'Extracción':
             this.progress.transcription = 'done';
             this.progress.clinicalExtraction = 'process';
-            if (event.transcript && !this.transcriptText) {
+            // Forcefully set the transcript to the clean one returned by Gemini
+            if (event.transcript) {
               this.transcriptText = event.transcript;
             }
             // Si hay datos extraídos, mostrarlos
@@ -327,7 +328,8 @@ export class Tab4Page {
             this.progress.revision = 'done';
             this.progress.finalReport = 'done';
             this.audioProcessing = false;
-            if (event.transcript && !this.transcriptText) {
+            // Forcefully set the transcript to the clean one returned by Gemini
+            if (event.transcript) {
               this.transcriptText = event.transcript;
             }
 
