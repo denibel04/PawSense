@@ -30,49 +30,61 @@
     </ion-card>
 
     <div *ngIf="predictionResult">
-
       <ion-card class="winner-card">
         <ion-card-content class="ion-text-center">
           <p class="label-winner">Resultado Final</p>
           <h1 class="winner-title">🥇 {{ predictionResult.winner.breed }}</h1>
           <p class="winner-conf">Confianza: <strong>{{ predictionResult.winner.confidence }}</strong></p>
-          <ion-badge color="success">Modelo más preciso: {{ predictionResult.winner.source }}</ion-badge>
+          <ion-badge color="success">Modelo: {{ predictionResult.winner.source }}</ion-badge>
         </ion-card-content>
       </ion-card>
 
       <ion-grid>
         <ion-row>
-          <ion-col size="12" size-md="6">
-            <h3 class="model-header">PyTorch</h3>
+          <ion-col size="12" size-md="4">
+            <h3 class="model-header">PyTorch (EfficientNet)</h3>
             <ion-card *ngFor="let item of predictionResult.details.pytorch; let i = index" [class.is-first]="i === 0">
               <ion-card-content>
                 <div class="prediction-info">
                   <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
-                  <span class="prob-val">{{ (item.probability * 100).toFixed(2) }}%</span>
+                  <span class="prob-val">{{ item.confidence }}%</span>
                 </div>
-                <ion-progress-bar [value]="item.probability"
+                <ion-progress-bar [value]="item.confidence / 100"
                   [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
               </ion-card-content>
             </ion-card>
           </ion-col>
 
-          <ion-col size="12" size-md="6">
-            <h3 class="model-header">TensorFlow</h3>
-            <ion-card *ngFor="let item of predictionResult.details.tensorflow; let i = index"
-              [class.is-first]="i === 0">
+          <ion-col size="12" size-md="4">
+            <h3 class="model-header">MobileNetV2 (355 r.)</h3>
+            <ion-card *ngFor="let item of predictionResult.details.mobile; let i = index" [class.is-first]="i === 0">
               <ion-card-content>
                 <div class="prediction-info">
                   <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
-                  <span class="prob-val">{{ (item.probability * 100).toFixed(2) }}%</span>
+                  <span class="prob-val">{{ item.confidence }}%</span>
                 </div>
-                <ion-progress-bar [value]="item.probability"
+                <ion-progress-bar [value]="item.confidence / 100"
                   [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
               </ion-card-content>
             </ion-card>
           </ion-col>
+
+          <ion-col size="12" size-md="4">
+            <h3 class="model-header">Keras V1 (120 r.)</h3>
+            <ion-card *ngFor="let item of predictionResult.details.keras; let i = index" [class.is-first]="i === 0">
+              <ion-card-content>
+                <div class="prediction-info">
+                  <span class="breed-name">{{ i + 1 }}. {{ item.breed }}</span>
+                  <span class="prob-val">{{ item.confidence }}%</span>
+                </div>
+                <ion-progress-bar [value]="item.confidence / 100"
+                  [color]="i === 0 ? 'success' : 'primary'"></ion-progress-bar>
+              </ion-card-content>
+            </ion-card>
+          </ion-col>
+
         </ion-row>
       </ion-grid>
-
     </div>
   </div>
 </ion-content>

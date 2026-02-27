@@ -42,19 +42,32 @@ export class Tab1Page {
     }
   }
 
-  uploadAndPredict() {
-    if (!this.selectedFile) return;
+ uploadAndPredict() {
+  if (!this.selectedFile) return;
 
-    this.isLoading = true;
-    this.dogService.predictBreed(this.selectedFile).subscribe({
-      next: (response) => {
-        this.predictionResult = response;
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Prediction failed:', err);
-        this.isLoading = false;
-      }
-    });
-  }
+  this.isLoading = true;
+  this.dogService.predictBreed(this.selectedFile).subscribe({
+    next: (response: any) => {
+      // Mapeamos la respuesta para que encaje con tu HTML
+      this.predictionResult = {
+        winner: {
+          // Elegimos el de mayor confianza de MobileNet (que suele ser el más robusto)
+          breed: response.mobile[0].breed,
+          confidence: response.mobile[0].confidence + '%',
+          source: 'MobileNetV2'
+        },
+        details: {
+          pytorch: response.pytorch,
+          mobile: response.mobile,
+          keras: response.keras
+        }
+      };
+      this.isLoading = false;
+    },
+    error: (err) => {
+      console.error('Prediction failed:', err);
+      this.isLoading = false;
+    }
+  });
+}
 }
