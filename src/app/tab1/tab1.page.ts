@@ -2,16 +2,17 @@ import { Component } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
   IonLabel, IonLoading, IonIcon, IonCard, IonCardContent, 
-  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, ToastController
+  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, ToastController, IonSpinner
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DogService } from '../core/services/dog.service';
 import { addIcons } from 'ionicons';
 import {
-  cloudUploadOutline, sparklesOutline, paw, alertCircleOutline
+  sparklesOutline, paw, alertCircleOutline, cloudUpload, sparkles, alertCircle
 } from 'ionicons/icons';
-import { HeaderComponent } from '../components/header/header.component';
+import { HeaderComponent } from '../shared/components/header/header.component';
+
 
 @Component({
   selector: 'app-tab1',
@@ -22,7 +23,7 @@ import { HeaderComponent } from '../components/header/header.component';
     CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, 
     IonContent, IonButton, IonLabel, IonLoading, IonIcon, 
     IonCard, IonCardContent, IonGrid, IonRow, IonCol, 
-    IonProgressBar, IonBadge, HeaderComponent
+    IonProgressBar, IonBadge, HeaderComponent, IonSpinner
   ],
 })
 export class Tab1Page {
@@ -35,7 +36,7 @@ export class Tab1Page {
 
   constructor(private dogService: DogService, private toastController: ToastController) {
     addIcons({
-      cloudUploadOutline, sparklesOutline, paw, alertCircleOutline
+      cloudUpload, sparklesOutline, paw, alertCircleOutline
     });
   }
 

@@ -9,7 +9,7 @@ import {
 import { addIcons } from 'ionicons';
 import { send, paw } from 'ionicons/icons';
 import { ChatService } from '../core/services/chat.service';
-import { HeaderComponent } from '../components/header/header.component';
+import { HeaderComponent } from '../shared/components/header/header.component';
 
 @Component({
   selector: 'app-tab3',

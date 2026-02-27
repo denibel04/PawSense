@@ -5,27 +5,30 @@
 
     <div class="section-container animate-fade">
       <div class="upload-card-v2">
-        <div class="upload-zone">
-          <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" id="fileInput" hidden>
-          <label for="fileInput" class="upload-label">
-            <ion-icon name="cloud-upload-outline" class="upload-icon"></ion-icon>
-            <h3>Sube una Foto o Video</h3>
-            <p>Selecciona un archivo para identificar la raza</p>
-          </label>
-        </div>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" id="fileInput" hidden>
+
+        <label for="fileInput" class="upload-zone" *ngIf="!imagePreview && !videoPreview">
+          <div class="icon-circle">
+            <ion-icon name="cloud-upload" class="upload-icon"></ion-icon>
+          </div>
+          <h3>Sube una foto o vídeo</h3>
+          <p>Elige una donde se aprecien bien sus rasgos para mejores resultados.</p>
+        </label>
 
         <div *ngIf="imagePreview" class="preview-container-v2 animate-scale">
           <img [src]="imagePreview" alt="Preview">
+          <ion-button fill="clear" (click)="imagePreview = null" color="danger">Quitar</ion-button>
         </div>
 
         <div *ngIf="videoPreview" class="preview-container-v2 animate-scale">
           <video [src]="videoPreview" controls></video>
+          <ion-button fill="clear" (click)="videoPreview = null" color="danger">Quitar</ion-button>
         </div>
       </div>
 
       <ion-button *ngIf="selectedFile" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"
-        class="btn-modern-v2 gradient-btn">
-        <ion-loading *ngIf="isLoading" slot="start"></ion-loading>
+        class="btn-modern-v2 gradient-btn ion-margin-top">
+        <ion-spinner *ngIf="isLoading" slot="start" name="crescent"></ion-spinner>
         <ion-icon *ngIf="!isLoading" slot="start" name="sparkles-outline"></ion-icon>
         {{ isLoading ? 'Analizando...' : 'Lanzar Análisis Pro' }}
       </ion-button>

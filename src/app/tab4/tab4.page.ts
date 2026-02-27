@@ -13,7 +13,7 @@ import { TrainingReportComponent } from './training-report/training-report.compo
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { ReportService } from '../core/services/report.service';
-import { HeaderComponent } from '../components/header/header.component';
+import { HeaderComponent } from '../shared/components/header/header.component';
 
 @Component({
   selector: 'app-tab4',

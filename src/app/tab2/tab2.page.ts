@@ -7,7 +7,7 @@ import { CommonModule } from '@angular/common';
 import { API_CONFIG } from '../core/constants/api.constants';
 import { addIcons } from 'ionicons';
 import { camera, stopCircle, playCircle, cameraOutline, paw } from 'ionicons/icons';
-import { HeaderComponent } from '../components/header/header.component';
+import { HeaderComponent } from '../shared/components/header/header.component';
 
 @Component({
   selector: 'app-tab2',
