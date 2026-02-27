@@ -1,16 +1,36 @@
-import os
-import json
 import asyncio
-import logging
-from datetime import datetime
-from typing import AsyncGenerator, Dict, Any, Optional
-from pathlib import Path
-import tempfile
 import base64
-
-from app.services.agent_service import generate_report
+import json
+import logging
+import os
+import sys
+import tempfile
+import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Any, AsyncGenerator, Dict, Optional
 
 logger = logging.getLogger(__name__)
+
+class ReportGenerationError(Exception):
+    """Excepción base para errores en la generación de reportes."""
+    pass
+
+class DataExtractionError(ReportGenerationError):
+    """Error al extraer o validar datos de la transcripción/audio."""
+    pass
+
+class HTMLGenerationError(ReportGenerationError):
+    """Error al generar el HTML a partir de la plantilla y los datos."""
+    pass
+
+class TemplateNotFoundError(HTMLGenerationError):
+    """La plantilla HTML requerida no existe."""
+    pass
+
+class PDFGenerationError(ReportGenerationError):
+    """Error al convertir el HTML a PDF usando Playwright."""
+    pass
 
 class ReportService:
     """
@@ -61,44 +81,6 @@ class ReportService:
     }
 
     @staticmethod
-    async def extract_data_with_gemini(
-        transcript: str,
-        report_type: str = "veterinario"
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Envía la transcripción a Gemini y extrae datos estructurados.
-        Usa yield para reportar progreso en tiempo real.
-        """
-        yield {"status": "Extracción", "message": "Conectando con Gemini..."}
-
-        try:
-            yield {"status": "Extracción", "message": "Procesando transcripción..."}
-
-            extracted_data = await generate_report(transcript, report_type)
-
-            yield {"status": "Extracción", "message": "Validando respuesta..."}
-
-            # Validar campos requeridos
-            _validate_extracted_data(extracted_data, report_type)
-            
-            yield {"status": "Extracción", "data": extracted_data, "completed": True}
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Error al parsear JSON de Gemini: {e}")
-            yield {
-                "status": "error",
-                "message": f"Error al procesar respuesta de Gemini: {str(e)}"
-            }
-            raise ValueError(f"Respuesta inválida de Gemini: {str(e)}")
-        except Exception as e:
-            logger.error(f"Error en extract_data_with_gemini: {e}")
-            yield {
-                "status": "error",
-                "message": f"Error en extracción: {str(e)}"
-            }
-            raise
-
-    @staticmethod
     async def generate_html_report(
         extracted_data: Dict[str, Any],
         report_type: str = "veterinario"
@@ -117,7 +99,7 @@ class ReportService:
                 template_file = template_path / "adiestramiento.html"
 
             if not template_file.exists():
-                raise FileNotFoundError(f"Plantilla no encontrada: {template_file}")
+                raise TemplateNotFoundError(f"Plantilla no encontrada: {template_file}")
 
             with open(template_file, 'r', encoding='utf-8') as f:
                 template = f.read()
@@ -144,9 +126,13 @@ class ReportService:
             }
 
         except Exception as e:
-            logger.error(f"Error generando HTML: {e}")
-            yield {"status": "error", "message": f"Error en generación HTML: {str(e)}"}
-            raise
+            if isinstance(e, ReportGenerationError):
+                logger.error(f"Error en plantilla: {e}")
+                yield {"status": "error", "message": str(e), "error": True}
+                raise
+            logger.error(f"Error generando HTML: {e}", exc_info=True)
+            yield {"status": "error", "message": f"Error inesperado en generación HTML: {str(e)}", "error": True}
+            raise HTMLGenerationError(f"Error inesperado en html: {str(e)}") from e
 
     @staticmethod
     async def generate_pdf_report(
@@ -178,21 +164,16 @@ class ReportService:
                 tmp_file.write(html_content)
                 tmp_html_path = tmp_file.name
 
-            yield {"status": "Informe Final", "message": "Inicializando renderizador..."}
-
-            # Ejecutar en hilo separado con su propio event loop (fix para Windows)
-            # asyncio.to_thread lanza la función en ThreadPoolExecutor.
-            # Dentro del hilo, asyncio.run() crea un ProactorEventLoop (compatible con subprocesos).
-            pdf_bytes = await asyncio.to_thread(
-                _run_playwright_sync,
-                tmp_html_path,
-                filename
-            )
-
             yield {"status": "Informe Final", "message": "Renderizando documento..."}
 
+            # Enviar trabajo de renderizado al navegador global persistente
+            pdf_bytes = await asyncio.to_thread(
+                PlaywrightPDFGenerator.generate_pdf_sync,
+                tmp_html_path
+            )
+
             if pdf_bytes is None:
-                raise RuntimeError("Playwright no devolvió contenido PDF")
+                raise PDFGenerationError("Playwright devolvió contenido PDF nulo")
 
             # Guardar PDF en disco
             with open(filename, 'wb') as f:
@@ -216,24 +197,37 @@ class ReportService:
                 "message": "PDF no disponible (playwright no instalado). Ejecuta: playwright install",
                 "pdfPath": None,
                 "htmlOnly": True,
-                "completed": True
+                "completed": True,
+                "error": True
+            }
+        except RuntimeError as e:
+            logger.error(f"Error de ejecución generando PDF: {e}", exc_info=True)
+            yield {
+                "status": "Informe Final",
+                "message": "PDF no disponible debido a error de ejecución",
+                "pdfPath": None,
+                "htmlOnly": True,
+                "completed": True,
+                "error": True,
+                "errorMessage": str(e)
             }
         except Exception as e:
-            logger.error(f"Error generando PDF: {type(e).__name__}: {e}")
+            logger.error(f"Error general generando PDF: {type(e).__name__}: {e}", exc_info=True)
             yield {
                 "status": "Informe Final",
                 "message": "PDF no disponible (reporte en HTML)",
                 "pdfPath": None,
                 "htmlOnly": True,
                 "completed": True,
-                "error": str(e)
+                "error": True,
+                "errorMessage": str(e)
             }
         finally:
             if tmp_html_path and os.path.exists(tmp_html_path):
                 try:
                     os.unlink(tmp_html_path)
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"No se pudo eliminar archivo temporal {tmp_html_path}: {e}")
 
     @staticmethod
     def _replace_placeholders(
@@ -260,109 +254,114 @@ class ReportService:
 
         return html
 
-    @staticmethod
-    async def full_pipeline(
-        transcript: str,
-        report_type: str = "veterinario"
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Pipeline completo: Extracción → HTML → PDF con progreso en tiempo real.
-        """
-        try:
-            # Fase 1: Extracción con Gemini
-            extracted_data = None
-            async for progress in ReportService.extract_data_with_gemini(transcript, report_type):
-                yield progress
-                if progress.get("completed"):
-                    extracted_data = progress.get("data")
-
-            if not extracted_data:
-                raise ValueError("No se pudo extraer datos del reporte")
-
-            # Fase 2: Generar HTML
-            html_content = None
-            async for progress in ReportService.generate_html_report(extracted_data, report_type):
-                yield progress
-                if progress.get("completed"):
-                    html_content = progress.get("html")
-
-            if not html_content:
-                raise ValueError("No se pudo generar HTML")
-
-            # Fase 3: Omitida en la generación inicial, se generará al descargar.
-            yield {
-                "status": "Informe Final",
-                "message": "Datos listos para revisión (PDF se generará al descargar)",
-                "completed": True
-            }
-
-            # Respuesta final
-            yield {
-                "status": "completed",
-                "message": "Reporte generado (pendiente de descargar PDF)",
-                "extractedData": extracted_data,
-                "htmlReport": html_content,
-                "pdfPath": None,
-                "pdfBase64": None
-            }
-
-        except Exception as e:
-            logger.error(f"Error en pipeline completo: {e}")
-            yield {
-                "status": "error",
-                "message": f"Error en generación de reporte: {str(e)}"
-            }
-            raise
-
 
 # ============================================================================
 # Funciones auxiliares
 # ============================================================================
 
-def _run_playwright_sync(html_path: str, filename: str) -> bytes:
+class PlaywrightPDFGenerator:
     """
-    Ejecuta Playwright de forma SÍNCRONA en un hilo separado.
-    
-    Llama a asyncio.run() que crea un event loop NUEVO (ProactorEventLoop en Windows),
-    independiente del SelectorEventLoop de uvicorn. Esto resuelve el NotImplementedError
-    que ocurre cuando Playwright intenta crear subprocesos desde el loop de uvicorn.
+    Gestiona una instancia persistente del navegador de Playwright en un hilo
+    separado para una generación de PDF ultrarrápida. Evita tener que iniciar
+    y cerrar el motor Chromium en cada petición.
     """
-    import sys
+    _thread = None
+    _loop = None
+    _browser = None
+    _playwright = None
 
-    async def _playwright_task() -> bytes:
-        from playwright.async_api import async_playwright
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            try:
-                page = await browser.new_page()
-                try:
-                    await page.goto(
-                        f'file:///{os.path.abspath(html_path).replace(os.sep, "/")}',
-                        wait_until='networkidle',
-                        timeout=30000
-                    )
-                    pdf_bytes = await page.pdf(
-                        format='A4',
-                        margin={'top': '0.5in', 'right': '0.5in',
-                                'bottom': '0.5in', 'left': '0.5in'},
-                        print_background=True
-                    )
-                    return pdf_bytes
-                finally:
-                    await page.close()
-            finally:
-                await browser.close()
-
-    # En Windows, forzar ProactorEventLoop para el loop nuevo
-    if sys.platform == 'win32':
-        loop = asyncio.ProactorEventLoop()
-        asyncio.set_event_loop(loop)
+    @classmethod
+    def start(cls):
+        if cls._thread is not None:
+            return
+        
+        # Crear un loop exclusivo para Playwright (ProactorEventLoop requerido en Windows)
+        if sys.platform == 'win32':
+            cls._loop = asyncio.ProactorEventLoop()
+        else:
+            cls._loop = asyncio.new_event_loop()
+            
+        cls._thread = threading.Thread(target=cls._run_loop, daemon=True)
+        cls._thread.start()
+        
+        # Esperar a que el navegador se inicialice
+        future = asyncio.run_coroutine_threadsafe(cls._init_browser(), cls._loop)
         try:
-            return loop.run_until_complete(_playwright_task())
+            future.result(timeout=15)
+        except Exception as e:
+            logger.error(f"Error inicializando Playwright persistente: {e}")
+
+    @classmethod
+    def _run_loop(cls):
+        try:
+            asyncio.set_event_loop(cls._loop)
+            cls._loop.run_forever()
+        except Exception as e:
+            logger.error(f"Event loop persistente detenido de forma inesperada: {e}")
+
+    @classmethod
+    async def _init_browser(cls):
+        try:
+            from playwright.async_api import async_playwright
+            cls._playwright = await async_playwright().start()
+            cls._browser = await cls._playwright.chromium.launch(headless=True)
+            logger.info("Navegador persistente de Playwright inicializado.")
+        except ImportError:
+            logger.warning("No se pudo iniciar el navegador persistente porque Playwright no está instalado. Ejecute: pip install playwright && playwright install")
+            raise
+        except Exception as e:
+            logger.error(f"Error en _init_browser: {e}")
+            raise
+
+    @classmethod
+    def stop(cls):
+        if cls._loop and cls._loop.is_running():
+            future = asyncio.run_coroutine_threadsafe(cls._close_browser(), cls._loop)
+            try:
+                future.result(timeout=5)
+            except Exception:
+                pass
+            cls._loop.call_soon_threadsafe(cls._loop.stop)
+            if cls._thread:
+                cls._thread.join(timeout=5)
+
+    @classmethod
+    async def _close_browser(cls):
+        if cls._browser:
+            await cls._browser.close()
+        if cls._playwright:
+            await cls._playwright.stop()
+        logger.info("Navegador persistente de Playwright cerrado.")
+
+    @classmethod
+    def generate_pdf_sync(cls, html_path: str) -> bytes:
+        if not cls._loop or not cls._loop.is_running():
+            raise RuntimeError("El navegador persistente no está corriendo. ¿Se llamó a PlaywrightPDFGenerator.start()?")
+        
+        future = asyncio.run_coroutine_threadsafe(
+            cls._generate_pdf_async(html_path), 
+            cls._loop
+        )
+        return future.result()
+
+    @classmethod
+    async def _generate_pdf_async(cls, html_path: str) -> bytes:
+        if not cls._browser:
+            raise RuntimeError("Browser persistente no inicializado.")
+        
+        page = await cls._browser.new_page()
+        try:
+            val = f'file:///{os.path.abspath(html_path).replace(os.sep, "/")}'
+            await page.goto(val, wait_until='load', timeout=30000)
+            
+            pdf_bytes = await page.pdf(
+                format='A4',
+                margin={'top': '0.5in', 'right': '0.5in', 'bottom': '0.5in', 'left': '0.5in'},
+                print_background=True
+            )
+            return pdf_bytes
         finally:
-            loop.close()
-    else:
-        return asyncio.run(_playwright_task())
+            await page.close()
 
 def _validate_extracted_data(data: Dict[str, Any], report_type: str) -> None:
     """Valida que los datos extraídos contienen los campos requeridos."""
@@ -377,16 +376,16 @@ def _validate_extracted_data(data: Dict[str, Any], report_type: str) -> None:
 
     for field in required_fields:
         if field not in data:
-            raise ValueError(f"Campo requerido faltante en respuesta: {field}")
+            raise DataExtractionError(f"Campo requerido faltante en respuesta: {field}")
 
     if not isinstance(data.get("paciente"), dict):
-        raise ValueError("'paciente' debe ser un objeto")
+        raise DataExtractionError("'paciente' debe ser un objeto")
 
     paciente = data["paciente"]
     required_paciente_fields = ["nombre", "especie", "edad", "raza", "peso"]
     for field in required_paciente_fields:
         if field not in paciente:
-            raise ValueError(f"Campo requerido en 'paciente': {field}")
+            raise DataExtractionError(f"Campo requerido en 'paciente': {field}")
 
 
 def _get_nested_value(data: Dict[str, Any], path: str) -> Any:

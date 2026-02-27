@@ -16,6 +16,7 @@ class PacienteSchema(BaseModel):
 
 class ClinicalReportSchema(BaseModel):
     tipoInforme: str = Field(default="veterinaria")
+    transcripcion_original: str = Field(description="Transcripción o resumen textual completo del audio analizado", default="")
     paciente: PacienteSchema
     sintomas: List[str] = Field(description="Lista de síntomas reportados", default=[])
     diagnostico: str = Field(description="Diagnóstico preliminar o definitivo", default="No especificado")
@@ -29,6 +30,7 @@ class ClinicalReportSchema(BaseModel):
 
 class TrainingReportSchema(BaseModel):
     tipoInforme: str = Field(default="adiestramiento")
+    transcripcion_original: str = Field(description="Transcripción o resumen textual completo del audio analizado", default="")
     paciente: PacienteSchema
     comportamiento_observado: str = Field(description="Comportamiento principal observado durante la sesión", default="")
     correcciones: List[str] = Field(description="Correcciones, técnicas o comandos aplicados", default=[])
