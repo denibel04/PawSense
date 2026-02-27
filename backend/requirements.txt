@@ -16,4 +16,6 @@ websockets==15.0
 torch==2.6.0
 torchvision==0.21.0
 playwright>=1.40.0        # Generación de PDF desde HTML (reemplaza pyppeteer)
+tensorflow==2.18.0
+numpy>=1.23.5,<2.0.0
 git+https://github.com/openai/whisper.git  # Whisper para transcripción local
