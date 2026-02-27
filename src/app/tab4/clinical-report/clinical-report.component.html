@@ -125,91 +125,169 @@
 
   <!-- ===================== FORMULARIO DE EDICIÓN ===================== -->
   <div *ngIf="isEditing" class="edit-form-container">
-        <ion-list lines="none" style="background: transparent;">
 
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Reseña</ion-label>
-                <ion-textarea name="resena" [value]="data.resena" (ionInput)="data.resena = ($event.detail.value ?? '')"
-                    [autoGrow]="true" fill="outline" placeholder="Ej: Paciente canino Cavalier de 1 año de edad..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Anamnesis</ion-label>
-                <ion-textarea name="anamnesis" [value]="data.anamnesis"
-                    (ionInput)="data.anamnesis = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
-                    placeholder="Ej: Paciente acude a consulta porque..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Exploración Física General</ion-label>
-                <ion-textarea name="exploracion_fisica" [value]="data.exploracion_fisica"
-                    (ionInput)="data.exploracion_fisica = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
-                    placeholder="Ej: Mucosas rosas, TRC < 2 seg..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Exploración Específica</ion-label>
-                <ion-textarea name="exploracion_especial" [value]="data.exploracion_especial"
-                    (ionInput)="data.exploracion_especial = ($event.detail.value ?? '')" [autoGrow]="true"
-                    fill="outline" placeholder="Ej: Observación oftalmológica, úlcera corneal..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Diagnóstico Presuntivo</ion-label>
-                <ion-input name="diagnostico" [value]="data.diagnostico"
-                    (ionInput)="data.diagnostico = ($event.detail.value ?? '')" fill="outline"
-                    placeholder="Ej: Úlcera corneal con conjuntivitis asociada..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-input>
-            </ion-item>
-
-            <h4 class="section-title" style="margin-left: 15px; margin-top: 20px;"><span class="orange-dot">●</span>
-                Tratamiento pautado</h4>
-            <div *ngFor="let t of data.tratamiento; let i = index; trackBy: trackByIndex"
-                style="display: flex; align-items: center; margin-bottom: 5px; padding-left: 15px;">
-                <ion-input [name]="'tratamiento_' + i" [value]="data.tratamiento[i]"
-                    (ionInput)="data.tratamiento[i] = ($event.detail.value ?? '')" fill="outline"
-                    placeholder="Ej: Voltaren colirio: 2 gotas..."
-                    style="background: white; border-radius: 4px; --padding-start: 10px;">
-                </ion-input>
-                <ion-button fill="clear" color="danger" (click)="data.tratamiento.splice(i, 1)"
-                    style="margin-left: 5px;">
-                    <ion-icon name="close-outline"></ion-icon>
-                </ion-button>
-            </div>
-            <div style="padding-left: 15px;">
-                <ion-button fill="outline" size="small" (click)="data.tratamiento.push('')">+ Añadir
-                    Tratamiento</ion-button>
-            </div>
-
-            <h4 class="section-title" style="margin-left: 15px; margin-top: 20px;"><span class="orange-dot">●</span>
-                Recomendaciones</h4>
-            <div *ngFor="let r of data.recomendaciones; let i = index; trackBy: trackByIndex"
-                style="display: flex; align-items: center; margin-bottom: 5px; padding-left: 15px;">
-                <ion-input [name]="'recomendacion_' + i" [value]="data.recomendaciones[i]"
-                    (ionInput)="data.recomendaciones[i] = ($event.detail.value ?? '')" fill="outline"
-                    placeholder="Ej: Mantener collar isabelino durante 7 días..."
-                    style="background: white; border-radius: 4px; --padding-start: 10px;">
-                </ion-input>
-                <ion-button fill="clear" color="danger" (click)="data.recomendaciones.splice(i, 1)"
-                    style="margin-left: 5px;">
-                    <ion-icon name="close-outline"></ion-icon>
-                </ion-button>
-            </div>
-            <div style="padding-left: 15px; margin-bottom: 20px;">
-                <ion-button fill="outline" size="small" (click)="data.recomendaciones.push('')">+ Añadir
-                    Recomendación</ion-button>
-            </div>
-
-        </ion-list>
+    <!-- HEADER / FECHA -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📅 Información Básica</div>
+      <div class="rpt-section-content">
+        <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+          <ion-label position="stacked" class="rpt-label">Fecha de Consulta</ion-label>
+          <ion-input name="fechaConsulta" [value]="data.fechaConsulta"
+            (ionInput)="data.fechaConsulta = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: 2026-02-26"
+            class="rpt-edit-input">
+          </ion-input>
+        </ion-item>
+      </div>
     </div>
+
+    <!-- INFORMACIÓN DEL PACIENTE -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📋 Información del Paciente</div>
+      <div class="rpt-section-content">
+        <div class="rpt-info-grid">
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Nombre de la Mascota</ion-label>
+            <ion-input name="paciente_nombre" [value]="data.paciente?.nombre"
+              (ionInput)="data.paciente.nombre = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: Luna"
+              class="rpt-edit-input">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Especie</ion-label>
+            <ion-input name="paciente_especie" [value]="data.paciente?.especie"
+              (ionInput)="data.paciente.especie = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: Canino"
+              class="rpt-edit-input">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Edad</ion-label>
+            <ion-input name="paciente_edad" [value]="data.paciente?.edad"
+              (ionInput)="data.paciente.edad = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: 3 años"
+              class="rpt-edit-input">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Raza</ion-label>
+            <ion-input name="paciente_raza" [value]="data.paciente?.raza"
+              (ionInput)="data.paciente.raza = ($event.detail.value ?? '')" fill="outline"
+              placeholder="Ej: Golden Retriever" class="rpt-edit-input">
+            </ion-input>
+          </ion-item>
+
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Peso</ion-label>
+            <ion-input name="paciente_peso" [value]="data.paciente?.peso"
+              (ionInput)="data.paciente.peso = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: 25 kg"
+              class="rpt-edit-input">
+            </ion-input>
+          </ion-item>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNOS Y SÍNTOMAS -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">🔍 Signos y Síntomas Clínicos</div>
+      <div class="rpt-section-content">
+        <ion-label position="stacked" class="rpt-label" style="display: block; margin-bottom: 5px;">Lista de
+          Síntomas</ion-label>
+        <div *ngFor="let s of data.symptoms; let i = index; trackBy: trackByIndex" class="rpt-edit-dynamic-item"
+          style="padding-left: 0;">
+          <ion-input [name]="'symptom_' + i" [value]="data.symptoms[i]"
+            (ionInput)="data.symptoms[i] = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: Vómitos..."
+            class="rpt-edit-input-inline" style="flex: 1;">
+          </ion-input>
+          <ion-button fill="clear" color="danger" (click)="data.symptoms.splice(i, 1)" class="rpt-edit-dynamic-btn">
+            <ion-icon name="close-outline"></ion-icon>
+          </ion-button>
+        </div>
+        <div class="rpt-edit-dynamic-add" style="padding-left: 0;">
+          <ion-button fill="outline" size="small" (click)="data.symptoms.push('')">+ Añadir Síntoma</ion-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANTECEDENTES CLÍNICOS -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📚 Antecedentes Clínicos</div>
+      <div class="rpt-section-content">
+        <div class="rpt-info-grid rpt-info-grid--full">
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Antecedentes Patológicos</ion-label>
+            <ion-textarea name="antecedentes" [value]="data.antecedentes"
+              (ionInput)="data.antecedentes = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+              placeholder="Ej: No presenta enfermedades previas..." class="rpt-edit-input">
+            </ion-textarea>
+          </ion-item>
+
+          <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+            <ion-label position="stacked" class="rpt-label">Examen Físico</ion-label>
+            <ion-textarea name="examen_fisico" [value]="data.examen_fisico"
+              (ionInput)="data.examen_fisico = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+              placeholder="Ej: Mucosas rosadas, TRC < 2 seg..." class="rpt-edit-input">
+            </ion-textarea>
+          </ion-item>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIAGNÓSTICO -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">🔬 Diagnóstico</div>
+      <div class="rpt-section-content">
+        <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+          <ion-label position="stacked" class="rpt-label">Diagnóstico Principal</ion-label>
+          <ion-input name="diagnosis" [value]="data.diagnosis" (ionInput)="data.diagnosis = ($event.detail.value ?? '')"
+            fill="outline" placeholder="Ej: Gastroenteritis leve..." class="rpt-edit-input">
+          </ion-input>
+        </ion-item>
+      </div>
+    </div>
+
+    <!-- TRATAMIENTO -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">💊 Plan Terapéutico y Medicación</div>
+      <div class="rpt-section-content">
+        <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+          <ion-label position="stacked" class="rpt-label">Tratamiento Indicado</ion-label>
+          <ion-textarea name="treatment" [value]="data.treatment"
+            (ionInput)="data.treatment = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+            placeholder="Ej: Administrar 1 pastilla cada 12 horas..." class="rpt-edit-input">
+          </ion-textarea>
+        </ion-item>
+      </div>
+    </div>
+
+    <!-- RECOMENDACIONES -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">💡 Recomendaciones para el Propietario</div>
+      <div class="rpt-section-content">
+        <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+          <ion-label position="stacked" class="rpt-label">Recomendaciones Adicionales</ion-label>
+          <ion-textarea name="recomendaciones" [value]="data.recomendaciones"
+            (ionInput)="data.recomendaciones = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+            placeholder="Ej: Dieta blanda los próximos 3 días..." class="rpt-edit-input">
+          </ion-textarea>
+        </ion-item>
+      </div>
+    </div>
+
+    <!-- NOTAS -->
+    <div class="rpt-section">
+      <div class="rpt-section-title">📝 Notas Adicionales</div>
+      <div class="rpt-section-content">
+        <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+          <ion-label position="stacked" class="rpt-label">Notas</ion-label>
+          <ion-textarea name="notes" [value]="data.notes" (ionInput)="data.notes = ($event.detail.value ?? '')"
+            [autoGrow]="true" fill="outline" placeholder="Ej: Volver a revisión en 7 días..." class="rpt-edit-input">
+          </ion-textarea>
+        </ion-item>
+      </div>
+    </div>
+
+  </div>
 
 </div>

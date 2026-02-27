@@ -1,110 +1,250 @@
-<div class="preview-container">
-    <div class="preview-header" style="flex-direction: column; align-items: flex-start;">
-        <h3 class="preview-title">INFORME DE ADIESTRAMIENTO</h3>
-        <p class="subtitle" style="font-size: 14px; font-weight: 600; color: #888888; margin: 5px 0 0 0;">FECHA
-            IMPRESIÓN: {{ currentDate | date:'dd/MM/yyyy' }}</p>
-    </div>
+<div class="report-wrapper">
 
-    <!-- VISTA PREVIA LECTURA -->
-    <div *ngIf="!isEditing" class="preview-content">
-        <div class="report-section data-section">
-            <p><strong>Fecha de la sesión:</strong> <span class="data-value">{{ data.fecha || '—' }}</span></p>
-        </div>
+    <!-- ===================== VISTA PREVIA ===================== -->
+    <div *ngIf="!isEditing">
 
-        <div class="report-section data-section">
-            <p><strong>Duración:</strong> <span class="data-value">{{ data.duracion || '—' }}</span></p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Objetivos Específicos:</strong></p>
-            <ul class="data-list" style="margin: 0; padding-left: 20px; font-size: 13px; color: #333333;">
-                <li *ngFor="let o of data.objetivos" style="margin-bottom: 4px;">{{ o }}</li>
-                <li *ngIf="!data.objetivos || data.objetivos.length === 0" class="muted">—</li>
-            </ul>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Conductas trabajadas y resultados:</strong> <span class="data-value">{{ data.conductas_resultados
-                    || '—' }}</span></p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Tipo de refuerzo utilizado:</strong> <span class="data-value">{{ data.tipo_refuerzo || '—'
-                    }}</span></p>
-        </div>
-
-        <div class="report-section data-section">
-            <p><strong>Observaciones sobre la actitud del perro:</strong> <span class="data-value">{{
-                    data.observaciones_actitud || '—' }}</span></p>
-        </div>
-    </div>
-
-  <!-- ===================== FORMULARIO DE EDICIÓN ===================== -->
-  <div *ngIf="isEditing" class="edit-form-container">
-        <ion-list lines="none" style="background: transparent;">
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Fecha de la sesión (DD/MM/YYYY)</ion-label>
-                <ion-input name="fecha" [value]="data.fecha" (ionInput)="onFechaInput($event)" fill="outline"
-                    placeholder="Ej: 26/02/2026" pattern="\d{2}/\d{2}/\d{4}" type="text" maxlength="10"
-                    errorText="Formato inválido. Usa DD/MM/YYYY"
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-input>
-            </ion-item>
-
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Duración</ion-label>
-                <ion-input name="duracion" [value]="data.duracion"
-                    (ionInput)="data.duracion = ($event.detail.value ?? '')" fill="outline" placeholder="Ej: 45 minutos"
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-input>
-            </ion-item>
-
-            <h4 class="section-title" style="margin-left: 15px; margin-top: 20px;"><span class="orange-dot">●</span>
-                Objetivos Específicos</h4>
-            <div *ngFor="let o of data.objetivos; let i = index; trackBy: trackByIndex"
-                style="display: flex; align-items: center; margin-bottom: 5px; padding-left: 15px;">
-                <ion-input [name]="'objetivo_' + i" [value]="data.objetivos[i]"
-                    (ionInput)="data.objetivos[i] = ($event.detail.value ?? '')" fill="outline"
-                    placeholder="Ej: Trabajar la llamada con distracciones..."
-                    style="background: white; border-radius: 4px; --padding-start: 10px;">
-                </ion-input>
-                <ion-button fill="clear" color="danger" (click)="data.objetivos.splice(i, 1)" style="margin-left: 5px;">
-                    <ion-icon name="close-outline"></ion-icon>
-                </ion-button>
+        <!-- HEADER -->
+        <div class="rpt-header">
+            <div>
+                <div class="rpt-title">INFORME DE ADIESTRAMIENTO</div>
+                <div class="rpt-brand">🐾 PawSense</div>
             </div>
-            <div style="padding-left: 15px;">
-                <ion-button fill="outline" size="small" (click)="data.objetivos.push('')">+ Añadir Objetivo</ion-button>
+            <div class="rpt-date">
+                <strong>Fecha de Sesión:</strong> {{ data.fechaConsulta || '—' }}<br>
+                <strong>Generado:</strong> {{ today }}
             </div>
+        </div>
 
-            <ion-item style="--background: transparent; margin-top: 20px;">
-                <ion-label position="stacked">Conductas trabajadas y resultados</ion-label>
-                <ion-textarea name="conductas_resultados" [value]="data.conductas_resultados"
-                    (ionInput)="data.conductas_resultados = ($event.detail.value ?? '')" [autoGrow]="true"
-                    fill="outline" placeholder="Ej: Reacción a otros perros, mejoró tras 3 intentos..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
+        <!-- INFORMACIÓN DEL PACIENTE -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">📋 Información del Paciente</div>
+            <div class="rpt-section-content">
+                <div class="rpt-info-grid">
+                    <div class="rpt-info-box">
+                        <div class="rpt-label">Nombre de la Mascota</div>
+                        <div class="rpt-value">{{ data.paciente?.nombre || '—' }}</div>
+                    </div>
+                    <div class="rpt-info-box">
+                        <div class="rpt-label">Especie</div>
+                        <div class="rpt-value">{{ data.paciente?.especie || '—' }}</div>
+                    </div>
+                    <div class="rpt-info-box">
+                        <div class="rpt-label">Edad</div>
+                        <div class="rpt-value">{{ data.paciente?.edad || '—' }}</div>
+                    </div>
+                    <div class="rpt-info-box">
+                        <div class="rpt-label">Raza</div>
+                        <div class="rpt-value">{{ data.paciente?.raza || '—' }}</div>
+                    </div>
+                    <div class="rpt-info-box">
+                        <div class="rpt-label">Peso</div>
+                        <div class="rpt-value">{{ data.paciente?.peso || '—' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Tipo de refuerzo utilizado</ion-label>
-                <ion-textarea name="tipo_refuerzo" [value]="data.tipo_refuerzo"
-                    (ionInput)="data.tipo_refuerzo = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
-                    placeholder="Ej: Refuerzo positivo con premios (salchicha)..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
+        <!-- COMPORTAMIENTO PRINCIPAL -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">🔍 Comportamiento Observado</div>
+            <div class="rpt-section-content">
+                <div class="rpt-highlight-box">
+                    {{ data.behavior_observed || '—' }}
+                </div>
+            </div>
+        </div>
 
-            <ion-item style="--background: transparent;">
-                <ion-label position="stacked">Observaciones / Actitud del perro</ion-label>
-                <ion-textarea name="observaciones_actitud" [value]="data.observaciones_actitud"
-                    (ionInput)="data.observaciones_actitud = ($event.detail.value ?? '')" [autoGrow]="true"
-                    fill="outline" placeholder="Ej: Estuvo muy atento pero se cansó rápido al final..."
-                    style="background: white; border-radius: 4px; margin-top: 5px; --padding-start: 10px;">
-                </ion-textarea>
-            </ion-item>
+        <!-- CORRECCIONES Y TÉCNICAS -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">✨ Correcciones y Técnicas</div>
+            <div class="rpt-section-content">
+                <div *ngIf="data.corrections && data.corrections.length > 0">
+                    <ul class="rpt-text">
+                        <li *ngFor="let c of data.corrections">{{ c }}</li>
+                    </ul>
+                </div>
+                <span *ngIf="!data.corrections || data.corrections.length === 0" class="rpt-empty">—</span>
+            </div>
+        </div>
 
-        </ion-list>
+        <!-- TAREAS EN CASA -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">🏠 Tareas para Casa</div>
+            <div class="rpt-section-content">
+                <div class="rpt-treatment-box">
+                    {{ data.homework || '—' }}
+                </div>
+            </div>
+        </div>
+
+        <!-- RECOMENDACIONES -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">💡 Recomendaciones Adicionales</div>
+            <div class="rpt-section-content">
+                <p class="rpt-text">{{ data.recomendaciones || '—' }}</p>
+            </div>
+        </div>
+
+        <!-- NOTAS DE PROGRESO -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">📈 Notas de Progreso</div>
+            <div class="rpt-section-content">
+                <p class="rpt-text">{{ data.notes || '—' }}</p>
+            </div>
+        </div>
+
+        <!-- FOOTER -->
+        <div class="rpt-footer">
+            <strong>Informe Generado por PawSense</strong><br>
+            Sistema de Inteligencia Artificial para Veterinaria y Adiestramiento Canino
+            <div class="rpt-footer-note">
+                Este informe ha sido generado automáticamente por el sistema PawSense usando tecnología de IA (Gemini).
+            </div>
+        </div>
+
+    </div><!-- /vista previa -->
+
+    <!-- ===================== FORMULARIO DE EDICIÓN ===================== -->
+    <div *ngIf="isEditing" class="edit-form-container">
+
+        <!-- HEADER / FECHA -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">📅 Información Básica</div>
+            <div class="rpt-section-content">
+                <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                    <ion-label position="stacked" class="rpt-label">Fecha de Sesión</ion-label>
+                    <ion-input name="fechaConsulta" [value]="data.fechaConsulta"
+                        (ionInput)="data.fechaConsulta = ($event.detail.value ?? '')" fill="outline"
+                        placeholder="Ej: 2026-02-26" class="rpt-edit-input">
+                    </ion-input>
+                </ion-item>
+            </div>
+        </div>
+
+        <!-- INFORMACIÓN DEL PACIENTE -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">📋 Información del Paciente</div>
+            <div class="rpt-section-content">
+                <div class="rpt-info-grid">
+                    <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                        <ion-label position="stacked" class="rpt-label">Nombre de la Mascota</ion-label>
+                        <ion-input name="paciente_nombre" [value]="data.paciente?.nombre"
+                            (ionInput)="data.paciente.nombre = ($event.detail.value ?? '')" fill="outline"
+                            placeholder="Ej: Max" class="rpt-edit-input">
+                        </ion-input>
+                    </ion-item>
+                    <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                        <ion-label position="stacked" class="rpt-label">Especie</ion-label>
+                        <ion-input name="paciente_especie" [value]="data.paciente?.especie"
+                            (ionInput)="data.paciente.especie = ($event.detail.value ?? '')" fill="outline"
+                            placeholder="Ej: Canino" class="rpt-edit-input">
+                        </ion-input>
+                    </ion-item>
+                    <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                        <ion-label position="stacked" class="rpt-label">Edad</ion-label>
+                        <ion-input name="paciente_edad" [value]="data.paciente?.edad"
+                            (ionInput)="data.paciente.edad = ($event.detail.value ?? '')" fill="outline"
+                            placeholder="Ej: 2 años" class="rpt-edit-input">
+                        </ion-input>
+                    </ion-item>
+                    <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                        <ion-label position="stacked" class="rpt-label">Raza</ion-label>
+                        <ion-input name="paciente_raza" [value]="data.paciente?.raza"
+                            (ionInput)="data.paciente.raza = ($event.detail.value ?? '')" fill="outline"
+                            placeholder="Ej: Pastor Alemán" class="rpt-edit-input">
+                        </ion-input>
+                    </ion-item>
+                    <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                        <ion-label position="stacked" class="rpt-label">Peso</ion-label>
+                        <ion-input name="paciente_peso" [value]="data.paciente?.peso"
+                            (ionInput)="data.paciente.peso = ($event.detail.value ?? '')" fill="outline"
+                            placeholder="Ej: 30 kg" class="rpt-edit-input">
+                        </ion-input>
+                    </ion-item>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPORTAMIENTO PRINCIPAL -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">🔍 Comportamiento Observado</div>
+            <div class="rpt-section-content">
+                <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                    <ion-label position="stacked" class="rpt-label">Descripción</ion-label>
+                    <ion-textarea name="behavior_observed" [value]="data.behavior_observed"
+                        (ionInput)="data.behavior_observed = ($event.detail.value ?? '')" [autoGrow]="true"
+                        fill="outline" placeholder="Ej: Ansiedad por separación, ladridos..." class="rpt-edit-input">
+                    </ion-textarea>
+                </ion-item>
+            </div>
+        </div>
+
+        <!-- CORRECCIONES Y TÉCNICAS -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">✨ Correcciones y Técnicas</div>
+            <div class="rpt-section-content">
+                <ion-label position="stacked" class="rpt-label" style="display: block; margin-bottom: 5px;">Lista de
+                    Correcciones</ion-label>
+                <div *ngFor="let c of data.corrections; let i = index; trackBy: trackByIndex"
+                    class="rpt-edit-dynamic-item" style="padding-left: 0;">
+                    <ion-input [name]="'correction_' + i" [value]="data.corrections[i]"
+                        (ionInput)="data.corrections[i] = ($event.detail.value ?? '')" fill="outline"
+                        placeholder="Ej: Refuerzo positivo..." class="rpt-edit-input-inline" style="flex: 1;">
+                    </ion-input>
+                    <ion-button fill="clear" color="danger" (click)="data.corrections.splice(i, 1)"
+                        class="rpt-edit-dynamic-btn">
+                        <ion-icon name="close-outline"></ion-icon>
+                    </ion-button>
+                </div>
+                <div class="rpt-edit-dynamic-add" style="padding-left: 0;">
+                    <ion-button fill="outline" size="small" (click)="data.corrections.push('')">+ Añadir
+                        Técnica</ion-button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAREAS EN CASA -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">🏠 Tareas para Casa</div>
+            <div class="rpt-section-content">
+                <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                    <ion-label position="stacked" class="rpt-label">Tareas Asignadas</ion-label>
+                    <ion-textarea name="homework" [value]="data.homework"
+                        (ionInput)="data.homework = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+                        placeholder="Ej: Practicar llamada 10 min diarios..." class="rpt-edit-input">
+                    </ion-textarea>
+                </ion-item>
+            </div>
+        </div>
+
+        <!-- RECOMENDACIONES -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">💡 Recomendaciones Adicionales</div>
+            <div class="rpt-section-content">
+                <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                    <ion-label position="stacked" class="rpt-label">Recomendaciones</ion-label>
+                    <ion-textarea name="recomendaciones" [value]="data.recomendaciones"
+                        (ionInput)="data.recomendaciones = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+                        placeholder="Ej: Evitar castigos físicos..." class="rpt-edit-input">
+                    </ion-textarea>
+                </ion-item>
+            </div>
+        </div>
+
+        <!-- NOTAS DE PROGRESO -->
+        <div class="rpt-section">
+            <div class="rpt-section-title">📈 Notas de Progreso</div>
+            <div class="rpt-section-content">
+                <ion-item class="rpt-edit-item" lines="none" style="--padding-start:0; --inner-padding-end:0;">
+                    <ion-label position="stacked" class="rpt-label">Notas Adicionales sobre el Progreso</ion-label>
+                    <ion-textarea name="notes" [value]="data.notes"
+                        (ionInput)="data.notes = ($event.detail.value ?? '')" [autoGrow]="true" fill="outline"
+                        placeholder="Ej: Buena evolución general..." class="rpt-edit-input">
+                    </ion-textarea>
+                </ion-item>
+            </div>
+        </div>
+
     </div>
 
 </div>

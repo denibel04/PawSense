@@ -1,20 +1,36 @@
-import os
-import json
 import asyncio
-import logging
-from datetime import datetime
-from typing import AsyncGenerator, Dict, Any, Optional
-from pathlib import Path
-import tempfile
 import base64
-from google import genai
-from google.genai import types
-from app.core.config import settings
+import json
+import logging
+import os
+import sys
+import tempfile
+import threading
+from datetime import datetime
+from pathlib import Path
+from typing import Any, AsyncGenerator, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
-# Inicializar cliente Gemini
-client = genai.Client(api_key=settings.GOOGLE_API_KEY)
+class ReportGenerationError(Exception):
+    """Excepción base para errores en la generación de reportes."""
+    pass
+
+class DataExtractionError(ReportGenerationError):
+    """Error al extraer o validar datos de la transcripción/audio."""
+    pass
+
+class HTMLGenerationError(ReportGenerationError):
+    """Error al generar el HTML a partir de la plantilla y los datos."""
+    pass
+
+class TemplateNotFoundError(HTMLGenerationError):
+    """La plantilla HTML requerida no existe."""
+    pass
+
+class PDFGenerationError(ReportGenerationError):
+    """Error al convertir el HTML a PDF usando Playwright."""
+    pass
 
 class ReportService:
     """
@@ -65,66 +81,6 @@ class ReportService:
     }
 
     @staticmethod
-    async def extract_data_with_gemini(
-        transcript: str,
-        report_type: str = "veterinario"
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Envía la transcripción a Gemini y extrae datos estructurados.
-        Usa yield para reportar progreso en tiempo real.
-        """
-        yield {"status": "Extracción", "message": "Conectando con Gemini..."}
-
-        if report_type == "veterinario":
-            schema = _get_veterinary_schema()
-            prompt = _build_veterinary_prompt(transcript)
-        else:
-            schema = _get_training_schema()
-            prompt = _build_training_prompt(transcript)
-
-        try:
-            yield {"status": "Extracción", "message": "Procesando transcripción..."}
-
-            response = await asyncio.to_thread(
-                lambda: client.models.generate_content(
-                    model='gemini-2.5-flash',
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
-                        response_mime_type="application/json",
-                        response_schema=schema,
-                    ),
-                )
-            )
-
-            yield {"status": "Extracción", "message": "Validando respuesta..."}
-
-            raw_response = response.text
-            logger.info(f"Respuesta Gemini: {raw_response[:500]}...")
-
-            # Validar JSON
-            extracted_data = json.loads(raw_response)
-            
-            # Validar campos requeridos
-            _validate_extracted_data(extracted_data, report_type)
-            
-            yield {"status": "Extracción", "data": extracted_data, "completed": True}
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"Error al parsear JSON de Gemini: {e}")
-            yield {
-                "status": "error",
-                "message": f"Error al procesar respuesta de Gemini: {str(e)}"
-            }
-            raise ValueError(f"Respuesta inválida de Gemini: {str(e)}")
-        except Exception as e:
-            logger.error(f"Error en extract_data_with_gemini: {e}")
-            yield {
-                "status": "error",
-                "message": f"Error en extracción: {str(e)}"
-            }
-            raise
-
-    @staticmethod
     async def generate_html_report(
         extracted_data: Dict[str, Any],
         report_type: str = "veterinario"
@@ -143,7 +99,7 @@ class ReportService:
                 template_file = template_path / "adiestramiento.html"
 
             if not template_file.exists():
-                raise FileNotFoundError(f"Plantilla no encontrada: {template_file}")
+                raise TemplateNotFoundError(f"Plantilla no encontrada: {template_file}")
 
             with open(template_file, 'r', encoding='utf-8') as f:
                 template = f.read()
@@ -170,9 +126,13 @@ class ReportService:
             }
 
         except Exception as e:
-            logger.error(f"Error generando HTML: {e}")
-            yield {"status": "error", "message": f"Error en generación HTML: {str(e)}"}
-            raise
+            if isinstance(e, ReportGenerationError):
+                logger.error(f"Error en plantilla: {e}")
+                yield {"status": "error", "message": str(e), "error": True}
+                raise
+            logger.error(f"Error generando HTML: {e}", exc_info=True)
+            yield {"status": "error", "message": f"Error inesperado en generación HTML: {str(e)}", "error": True}
+            raise HTMLGenerationError(f"Error inesperado en html: {str(e)}") from e
 
     @staticmethod
     async def generate_pdf_report(
@@ -204,21 +164,16 @@ class ReportService:
                 tmp_file.write(html_content)
                 tmp_html_path = tmp_file.name
 
-            yield {"status": "Informe Final", "message": "Inicializando renderizador..."}
-
-            # Ejecutar en hilo separado con su propio event loop (fix para Windows)
-            # asyncio.to_thread lanza la función en ThreadPoolExecutor.
-            # Dentro del hilo, asyncio.run() crea un ProactorEventLoop (compatible con subprocesos).
-            pdf_bytes = await asyncio.to_thread(
-                _run_playwright_sync,
-                tmp_html_path,
-                filename
-            )
-
             yield {"status": "Informe Final", "message": "Renderizando documento..."}
 
+            # Enviar trabajo de renderizado al navegador global persistente
+            pdf_bytes = await asyncio.to_thread(
+                PlaywrightPDFGenerator.generate_pdf_sync,
+                tmp_html_path
+            )
+
             if pdf_bytes is None:
-                raise RuntimeError("Playwright no devolvió contenido PDF")
+                raise PDFGenerationError("Playwright devolvió contenido PDF nulo")
 
             # Guardar PDF en disco
             with open(filename, 'wb') as f:
@@ -242,24 +197,37 @@ class ReportService:
                 "message": "PDF no disponible (playwright no instalado). Ejecuta: playwright install",
                 "pdfPath": None,
                 "htmlOnly": True,
-                "completed": True
+                "completed": True,
+                "error": True
+            }
+        except RuntimeError as e:
+            logger.error(f"Error de ejecución generando PDF: {e}", exc_info=True)
+            yield {
+                "status": "Informe Final",
+                "message": "PDF no disponible debido a error de ejecución",
+                "pdfPath": None,
+                "htmlOnly": True,
+                "completed": True,
+                "error": True,
+                "errorMessage": str(e)
             }
         except Exception as e:
-            logger.error(f"Error generando PDF: {type(e).__name__}: {e}")
+            logger.error(f"Error general generando PDF: {type(e).__name__}: {e}", exc_info=True)
             yield {
                 "status": "Informe Final",
                 "message": "PDF no disponible (reporte en HTML)",
                 "pdfPath": None,
                 "htmlOnly": True,
                 "completed": True,
-                "error": str(e)
+                "error": True,
+                "errorMessage": str(e)
             }
         finally:
             if tmp_html_path and os.path.exists(tmp_html_path):
                 try:
                     os.unlink(tmp_html_path)
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"No se pudo eliminar archivo temporal {tmp_html_path}: {e}")
 
     @staticmethod
     def _replace_placeholders(
@@ -286,218 +254,114 @@ class ReportService:
 
         return html
 
-    @staticmethod
-    async def full_pipeline(
-        transcript: str,
-        report_type: str = "veterinario"
-    ) -> AsyncGenerator[Dict[str, Any], None]:
-        """
-        Pipeline completo: Extracción → HTML → PDF con progreso en tiempo real.
-        """
-        try:
-            # Fase 1: Extracción con Gemini
-            extracted_data = None
-            async for progress in ReportService.extract_data_with_gemini(transcript, report_type):
-                yield progress
-                if progress.get("completed"):
-                    extracted_data = progress.get("data")
-
-            if not extracted_data:
-                raise ValueError("No se pudo extraer datos del reporte")
-
-            # Fase 2: Generar HTML
-            html_content = None
-            async for progress in ReportService.generate_html_report(extracted_data, report_type):
-                yield progress
-                if progress.get("completed"):
-                    html_content = progress.get("html")
-
-            if not html_content:
-                raise ValueError("No se pudo generar HTML")
-
-            # Fase 3: Generar PDF
-            pdf_filename = f"report_{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_base64 = None
-            async for progress in ReportService.generate_pdf_report(html_content, report_type, pdf_filename):
-                # Capturar el pdfBase64 del yield intermedio
-                if progress.get("pdfBase64"):
-                    pdf_base64 = progress.get("pdfBase64")
-                yield progress
-
-            # Respuesta final
-            yield {
-                "status": "completed",
-                "message": "Reporte generado exitosamente",
-                "extractedData": extracted_data,
-                "htmlReport": html_content,
-                "pdfPath": pdf_filename,
-                "pdfBase64": pdf_base64
-            }
-
-        except Exception as e:
-            logger.error(f"Error en pipeline completo: {e}")
-            yield {
-                "status": "error",
-                "message": f"Error en generación de reporte: {str(e)}"
-            }
-            raise
-
 
 # ============================================================================
 # Funciones auxiliares
 # ============================================================================
 
-def _run_playwright_sync(html_path: str, filename: str) -> bytes:
+class PlaywrightPDFGenerator:
     """
-    Ejecuta Playwright de forma SÍNCRONA en un hilo separado.
-    
-    Llama a asyncio.run() que crea un event loop NUEVO (ProactorEventLoop en Windows),
-    independiente del SelectorEventLoop de uvicorn. Esto resuelve el NotImplementedError
-    que ocurre cuando Playwright intenta crear subprocesos desde el loop de uvicorn.
+    Gestiona una instancia persistente del navegador de Playwright en un hilo
+    separado para una generación de PDF ultrarrápida. Evita tener que iniciar
+    y cerrar el motor Chromium en cada petición.
     """
-    import sys
+    _thread = None
+    _loop = None
+    _browser = None
+    _playwright = None
 
-    async def _playwright_task() -> bytes:
-        from playwright.async_api import async_playwright
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
-            try:
-                page = await browser.new_page()
-                try:
-                    await page.goto(
-                        f'file:///{os.path.abspath(html_path).replace(os.sep, "/")}',
-                        wait_until='networkidle',
-                        timeout=30000
-                    )
-                    pdf_bytes = await page.pdf(
-                        format='A4',
-                        margin={'top': '0.5in', 'right': '0.5in',
-                                'bottom': '0.5in', 'left': '0.5in'},
-                        print_background=True
-                    )
-                    return pdf_bytes
-                finally:
-                    await page.close()
-            finally:
-                await browser.close()
-
-    # En Windows, forzar ProactorEventLoop para el loop nuevo
-    if sys.platform == 'win32':
-        loop = asyncio.ProactorEventLoop()
-        asyncio.set_event_loop(loop)
+    @classmethod
+    def start(cls):
+        if cls._thread is not None:
+            return
+        
+        # Crear un loop exclusivo para Playwright (ProactorEventLoop requerido en Windows)
+        if sys.platform == 'win32':
+            cls._loop = asyncio.ProactorEventLoop()
+        else:
+            cls._loop = asyncio.new_event_loop()
+            
+        cls._thread = threading.Thread(target=cls._run_loop, daemon=True)
+        cls._thread.start()
+        
+        # Esperar a que el navegador se inicialice
+        future = asyncio.run_coroutine_threadsafe(cls._init_browser(), cls._loop)
         try:
-            return loop.run_until_complete(_playwright_task())
+            future.result(timeout=15)
+        except Exception as e:
+            logger.error(f"Error inicializando Playwright persistente: {e}")
+
+    @classmethod
+    def _run_loop(cls):
+        try:
+            asyncio.set_event_loop(cls._loop)
+            cls._loop.run_forever()
+        except Exception as e:
+            logger.error(f"Event loop persistente detenido de forma inesperada: {e}")
+
+    @classmethod
+    async def _init_browser(cls):
+        try:
+            from playwright.async_api import async_playwright
+            cls._playwright = await async_playwright().start()
+            cls._browser = await cls._playwright.chromium.launch(headless=True)
+            logger.info("Navegador persistente de Playwright inicializado.")
+        except ImportError:
+            logger.warning("No se pudo iniciar el navegador persistente porque Playwright no está instalado. Ejecute: pip install playwright && playwright install")
+            raise
+        except Exception as e:
+            logger.error(f"Error en _init_browser: {e}")
+            raise
+
+    @classmethod
+    def stop(cls):
+        if cls._loop and cls._loop.is_running():
+            future = asyncio.run_coroutine_threadsafe(cls._close_browser(), cls._loop)
+            try:
+                future.result(timeout=5)
+            except Exception:
+                pass
+            cls._loop.call_soon_threadsafe(cls._loop.stop)
+            if cls._thread:
+                cls._thread.join(timeout=5)
+
+    @classmethod
+    async def _close_browser(cls):
+        if cls._browser:
+            await cls._browser.close()
+        if cls._playwright:
+            await cls._playwright.stop()
+        logger.info("Navegador persistente de Playwright cerrado.")
+
+    @classmethod
+    def generate_pdf_sync(cls, html_path: str) -> bytes:
+        if not cls._loop or not cls._loop.is_running():
+            raise RuntimeError("El navegador persistente no está corriendo. ¿Se llamó a PlaywrightPDFGenerator.start()?")
+        
+        future = asyncio.run_coroutine_threadsafe(
+            cls._generate_pdf_async(html_path), 
+            cls._loop
+        )
+        return future.result()
+
+    @classmethod
+    async def _generate_pdf_async(cls, html_path: str) -> bytes:
+        if not cls._browser:
+            raise RuntimeError("Browser persistente no inicializado.")
+        
+        page = await cls._browser.new_page()
+        try:
+            val = f'file:///{os.path.abspath(html_path).replace(os.sep, "/")}'
+            await page.goto(val, wait_until='load', timeout=30000)
+            
+            pdf_bytes = await page.pdf(
+                format='A4',
+                margin={'top': '0.5in', 'right': '0.5in', 'bottom': '0.5in', 'left': '0.5in'},
+                print_background=True
+            )
+            return pdf_bytes
         finally:
-            loop.close()
-    else:
-        return asyncio.run(_playwright_task())
-
-
-def _get_veterinary_schema():
-    """Retorna el schema Pydantic para reporte veterinario."""
-    from pydantic import BaseModel, Field
-    from typing import List
-
-    class PacienteSchema(BaseModel):
-        nombre: str = Field(description="Nombre del paciente (perro/gato)", default="No especificado")
-        especie: str = Field(description="Especie (perro, gato, etc.)", default="perro")
-        edad: str = Field(description="Edad del paciente", default="No especificada")
-        raza: str = Field(description="Raza del paciente", default="No especificada")
-        peso: str = Field(description="Peso del paciente en Kg", default="No especificado")
-        genero: str = Field(description="Sexo (macho/hembra)", default="No especificado")
-
-    class VeterinaryReportSchema(BaseModel):
-        tipoInforme: str = Field(default="veterinaria")
-        paciente: PacienteSchema
-        sintomas: List[str] = Field(description="Lista de síntomas reportados", default=[])
-        diagnostico: str = Field(description="Diagnóstico preliminar o definitivo", default="No especificado")
-        tratamiento: str = Field(description="Tratamiento recomendado", default="Ninguno")
-        recomendaciones: str = Field(description="Recomendaciones para el propietario", default="")
-        notas: str = Field(description="Notas adicionales", default="")
-        fechaConsulta: str = Field(description="Fecha de la consulta", default=datetime.now().isoformat())
-        antecedentes_patologicos: str = Field(description="Antecedentes patológicos", default="")
-        antecedentes_no_patologicos: str = Field(description="Antecedentes no patológicos", default="")
-        examen_fisico: str = Field(description="Resultados del examen físico", default="")
-
-    return VeterinaryReportSchema
-
-
-def _get_training_schema():
-    """Retorna el schema Pydantic para reporte de adiestramiento."""
-    from pydantic import BaseModel, Field
-    from typing import List
-
-    class PacienteSchema(BaseModel):
-        nombre: str = Field(description="Nombre del perro", default="No especificado")
-        especie: str = Field(default="perro")
-        edad: str = Field(description="Edad del perro", default="No especificada")
-        raza: str = Field(description="Raza del perro", default="No especificada")
-        peso: str = Field(description="Peso del perro", default="No especificado")
-        genero: str = Field(description="Sexo del perro", default="No especificado")
-
-    class TrainingReportSchema(BaseModel):
-        tipoInforme: str = Field(default="adiestramiento")
-        paciente: PacienteSchema
-        comportamiento_observado: str = Field(description="Comportamiento principal observado durante la sesión", default="")
-        correcciones: List[str] = Field(description="Correcciones, técnicas o comandos aplicados", default=[])
-        tareas_casa: str = Field(description="Tareas o ejercicios para practicar en casa", default="Ninguna")
-        recomendaciones: str = Field(description="Recomendaciones adicionales", default="")
-        notas: str = Field(description="Notas generales sobre el progreso", default="")
-        fechaConsulta: str = Field(description="Fecha de la sesión", default=datetime.now().isoformat())
-
-    return TrainingReportSchema
-
-
-def _build_veterinary_prompt(transcript: str) -> str:
-    """Construye el prompt para Gemini - Veterinario."""
-    return f"""Eres un asistente veterinario experto. A partir de la transcripción de una consulta veterinaria, \
-extrae y estructura la información en un JSON que incluya:
-
-INFORMACIÓN CRÍTICA (DEBE llenar):
-- tipoInforme: siempre "veterinaria"
-- paciente: objeto con nombre, especie, edad, raza, peso, genero (extrae del contexto)
-- sintomas: lista de síntomas clínicos mencionados (array de strings)
-- diagnostico: diagnóstico provisional o definitivo
-- tratamiento: medicamentos, dosis, procedimientos indicados
-- recomendaciones: consejos para el propietario sobre cuidados posteriores
-- notas: observaciones adicionales
-- fechaConsulta: fecha actual en ISO format
-
-INFORMACIÓN SECUNDARIA (completa si está disponible):
-- antecedentes_patologicos: enfermedades previas o complicaciones
-- antecedentes_no_patologicos: vacunaciones, cirugías previas, hábitos
-- examen_fisico: hallazgos del examen físico realizado
-
-Si algún campo no se menciona explícitamente, usa valores por defecto apropiados ("No especificado", arrays vacíos, etc).
-NO devuelvas texto explicativo, SOLO JSON válido.
-
-Transcripción de la consulta:
-\"\"\"{transcript}\"\"\"
-"""
-
-
-def _build_training_prompt(transcript: str) -> str:
-    """Construye el prompt para Gemini - Adiestramiento."""
-    return f"""Eres un experto certificado en adiestramiento canino. A partir de la transcripción de una sesión de entrenamiento, \
-extrae y estructura la información en un JSON que incluya:
-
-INFORMACIÓN CRÍTICA (DEBE llenar):
-- tipoInforme: siempre "adiestramiento"
-- paciente: objeto con nombre, especie, edad, raza, peso, genero (extrae del contexto)
-- comportamiento_observado: el comportamiento principal del perro durante la sesión
-- correcciones: lista de técnicas, comandos o correcciones aplicadas (array de strings)
-- tareas_casa: ejercicios específicos que el propietario debe practicar en casa
-- recomendaciones: consejos para mejorar el entrenamiento
-- notas: observaciones sobre el progreso o actitud del perro
-- fechaConsulta: fecha actual en ISO format
-
-Si algún campo no se menciona explícitamente, usa valores por defecto apropiados.
-NO devuelvas texto explicativo, SOLO JSON válido.
-
-Transcripción de la sesión:
-\"\"\"{transcript}\"\"\"
-"""
-
+            await page.close()
 
 def _validate_extracted_data(data: Dict[str, Any], report_type: str) -> None:
     """Valida que los datos extraídos contienen los campos requeridos."""
@@ -512,16 +376,16 @@ def _validate_extracted_data(data: Dict[str, Any], report_type: str) -> None:
 
     for field in required_fields:
         if field not in data:
-            raise ValueError(f"Campo requerido faltante en respuesta: {field}")
+            raise DataExtractionError(f"Campo requerido faltante en respuesta: {field}")
 
     if not isinstance(data.get("paciente"), dict):
-        raise ValueError("'paciente' debe ser un objeto")
+        raise DataExtractionError("'paciente' debe ser un objeto")
 
     paciente = data["paciente"]
     required_paciente_fields = ["nombre", "especie", "edad", "raza", "peso"]
     for field in required_paciente_fields:
         if field not in paciente:
-            raise ValueError(f"Campo requerido en 'paciente': {field}")
+            raise DataExtractionError(f"Campo requerido en 'paciente': {field}")
 
 
 def _get_nested_value(data: Dict[str, Any], path: str) -> Any:

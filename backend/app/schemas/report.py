@@ -1,19 +1,40 @@
 from pydantic import BaseModel, Field
-from typing import List
+from typing import List, Dict, Any
+from datetime import datetime
+
+class GeneratePdfRequest(BaseModel):
+    data: Dict[str, Any]
+    report_type: str = "veterinario"
+
+class PacienteSchema(BaseModel):
+    nombre: str = Field(description="Nombre del paciente (perro/gato)", default="No especificado")
+    especie: str = Field(description="Especie (perro, gato, etc.)", default="perro")
+    edad: str = Field(description="Edad del paciente", default="No especificada")
+    raza: str = Field(description="Raza del paciente", default="No especificada")
+    peso: str = Field(description="Peso del paciente en Kg", default="No especificado")
+    genero: str = Field(description="Sexo (macho/hembra)", default="No especificado")
 
 class ClinicalReportSchema(BaseModel):
-    resena: str = Field(description="Reseña del paciente", default="")
-    anamnesis: str = Field(description="Anamnesis e historia clínica", default="")
-    exploracion_fisica: str = Field(description="Exploración física general", default="")
-    exploracion_especial: str = Field(description="Exploración específica u oftalmológica", default="")
-    diagnostico: str = Field(description="Diagnóstico presuntivo", default="")
-    tratamiento: List[str] = Field(description="Tratamiento pautado", default=[])
-    recomendaciones: List[str] = Field(description="Recomendaciones y revisión", default=[])
+    tipoInforme: str = Field(default="veterinaria")
+    transcripcion_original: str = Field(description="Transcripción o resumen textual completo del audio analizado", default="")
+    paciente: PacienteSchema
+    sintomas: List[str] = Field(description="Lista de síntomas reportados", default=[])
+    diagnostico: str = Field(description="Diagnóstico preliminar o definitivo", default="No especificado")
+    tratamiento: str = Field(description="Tratamiento recomendado", default="Ninguno")
+    recomendaciones: str = Field(description="Recomendaciones para el propietario", default="")
+    notas: str = Field(description="Notas adicionales", default="")
+    fechaConsulta: str = Field(description="Fecha de la consulta", default_factory=lambda: datetime.now().isoformat())
+    antecedentes_patologicos: str = Field(description="Antecedentes patológicos", default="")
+    antecedentes_no_patologicos: str = Field(description="Antecedentes no patológicos", default="")
+    examen_fisico: str = Field(description="Resultados del examen físico", default="")
 
 class TrainingReportSchema(BaseModel):
-    fecha: str = Field(description="Fecha de la sesión en formato dd/mm/yyyy", default="", pattern=r"^(?:(?:0[1-9]|[12]\d|3[01])/(?:0[1-9]|1[0-2])/\d{4})?$")
-    duracion: str = Field(description="Duración de la sesión", default="")
-    objetivos: List[str] = Field(description="Objetivos específicos de la sesión", default=[])
-    conductas_resultados: str = Field(description="Conductas trabajadas y sus resultados", default="")
-    tipo_refuerzo: str = Field(description="Tipo de refuerzo utilizado", default="")
-    observaciones_actitud: str = Field(description="Observaciones generales o actitud del perro", default="")
+    tipoInforme: str = Field(default="adiestramiento")
+    transcripcion_original: str = Field(description="Transcripción o resumen textual completo del audio analizado", default="")
+    paciente: PacienteSchema
+    comportamiento_observado: str = Field(description="Comportamiento principal observado durante la sesión", default="")
+    correcciones: List[str] = Field(description="Correcciones, técnicas o comandos aplicados", default=[])
+    tareas_casa: str = Field(description="Tareas o ejercicios para practicar en casa", default="Ninguna")
+    recomendaciones: str = Field(description="Recomendaciones adicionales", default="")
+    notas: str = Field(description="Notas generales sobre el progreso", default="")
+    fechaConsulta: str = Field(description="Fecha de la sesión", default_factory=lambda: datetime.now().isoformat())

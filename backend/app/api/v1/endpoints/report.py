@@ -2,8 +2,9 @@ from fastapi import APIRouter, BackgroundTasks, UploadFile, File, Form, HTTPExce
 from fastapi.responses import FileResponse, StreamingResponse
 import json
 import logging
-from app.services.audio_service import transcribe_audio
+from app.services.audio_service import analyze_audio_with_gemini
 from app.services.report_service import ReportService
+from app.schemas.report import GeneratePdfRequest
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -14,8 +15,8 @@ async def generate_report_from_audio(
     report_type: str = Form("veterinario")  # "veterinario" o "adiestramiento"
 ):
     """
-    Recibe un archivo de audio, lo transcribe con Whisper y usa 
-    Gemini para extraer JSON estructurado con SSE para progreso en tiempo real.
+    Recibe un archivo de audio y usa Gemini directamente para extraer JSON estructurado 
+    con SSE para progreso en tiempo real, saltándose Whisper.
     
     Retorna Server-Sent Events con actualizaciones de progreso.
     """
@@ -28,9 +29,13 @@ async def generate_report_from_audio(
     if file_ext not in allowed_extensions:
         raise HTTPException(status_code=400, detail="Extensión de audio no soportada.")
         
-    if file.content_type and not file.content_type.startswith("audio/"):
-        if file.content_type not in ["application/octet-stream", "video/mp4", "video/webm"]:
+    mime_type = file.content_type
+    if mime_type and not mime_type.startswith("audio/"):
+        if mime_type not in ["application/octet-stream", "video/mp4", "video/webm"]:
             raise HTTPException(status_code=400, detail="El tipo MIME del archivo no corresponde a audio.")
+    
+    if not mime_type or mime_type == "application/octet-stream":
+        mime_type = "audio/webm" # Default safe fallback
     
     async def event_generator():
         try:
@@ -38,79 +43,75 @@ async def generate_report_from_audio(
             logger.info(f"Recibiendo archivo: {file.filename}")
             file_bytes = await file.read()
             
-            # 2. Transcribir audio
-            logger.info(f"Transcribiendo audio para reporte tipo: {report_type}")
-            yield f"data: {json.dumps({'status': 'Transcripción', 'message': 'Procesando audio...', 'percent': 10})}\n\n"
+            # 2. Analizar audio directamente con Gemini
+            logger.info(f"Analizando audio directamente para reporte tipo: {report_type}")
+            yield f"data: {json.dumps({'status': 'Análisis IA', 'message': 'Subiendo y analizando audio con Gemini...', 'percent': 20})}\n\n"
             
-            transcript = await transcribe_audio(file_bytes)
+            extracted_data = await analyze_audio_with_gemini(file_bytes, report_type, mime_type)
             
-            if not transcript.strip():
-                error_msg = {"status": "error", "message": "No se pudo transcribir el audio o estaba vacío", "error": True}
+            if not extracted_data:
+                error_msg = {"status": "error", "message": "No se pudo analizar el audio o la respuesta fue vacía", "error": True}
                 yield f"data: {json.dumps(error_msg)}\n\n"
                 return
             
-            logger.info(f"Transcripción completada ({len(transcript)} caracteres)")
-            logger.debug(f"Transcripción: {transcript[:200]}...")
-            yield f"data: {json.dumps({'status': 'Transcripción', 'message': 'Transcripción completada', 'percent': 25})}\n\n"
+            logger.info(f"Análisis IA completado")
             
-            # 3. Pipeline completo con ReportService (Extracción → HTML → PDF)
-            logger.info("Iniciando pipeline de generación de reporte")
+            # Send completion event for extraction phase
+            completion_event = {
+                'status': 'Extracción', 
+                'message': 'Datos extraídos exitosamente', 
+                'percent': 50,
+                'extractedData': extracted_data,
+                'transcript': extracted_data.get('transcripcion_original', '')
+            }
+            yield f"data: {json.dumps(completion_event)}\n\n"
             
-            last_extracted_data = None
+            # 3. Generar HTML del reporte a partir de los datos extraídos
+            logger.info("Iniciando generación de reporte HTML a partir de datos de IA")
             
-            async for progress in ReportService.full_pipeline(transcript, report_type):
-                # Serializar y enviar progreso
+            html_content = None
+            async for progress in ReportService.generate_html_report(extracted_data, report_type):
+                # Serializar y enviar progreso de generación HTML
                 if progress.get("status") == "error":
-                    logger.error(f"Error en pipeline: {progress.get('message')}")
+                    logger.error(f"Error en generación HTML: {progress.get('message')}")
                     yield f"data: {json.dumps(progress)}\n\n"
                     return
-                
-                # Actualizar porcentaje según fase
-                if progress.get("status") == "Extracción":
-                    percent = 35
-                    # Guardar datos extraídos si están disponibles
-                    if progress.get("data"):
-                        last_extracted_data = progress.get("data")
-                elif progress.get("status") == "Revisión":
-                    percent = 60
-                elif progress.get("status") == "Informe Final":
-                    percent = 80
-                elif progress.get("status") == "completed":
-                    percent = 100
-                else:
-                    percent = 50
-                
-                progress["percent"] = percent
-                
-                # Construir evento para enviar al cliente
+                    
+                # Conservamos los eventos para compatibilidad con el frontend
                 progress_event = {
                     "status": progress.get("status"),
                     "message": progress.get("message"),
-                    "percent": percent
+                    "percent": 60 if progress.get("status") == "Revisión" else 75,
+                    "extractedData": extracted_data # Siempre pasar los datos
                 }
                 
-                # Incluir datos extraídos cuando estén disponibles
-                if progress.get("data"):
-                    progress_event["extractedData"] = progress.get("data")
-                elif last_extracted_data and progress.get("status") in ["Revisión", "Informe Final"]:
-                    progress_event["extractedData"] = last_extracted_data
+                if progress.get("completed"):
+                    html_content = progress.get("html")
                 
-                # Enviar datos completos solo al final
-                if progress.get("status") == "completed":
-                    progress_event.update({
-                        "completed": True,
-                        "extractedData": progress.get("extractedData") or last_extracted_data,
-                        "htmlReport": progress.get("htmlReport", "")[:500] + "..." if progress.get("htmlReport") else None,
-                        "pdfPath": progress.get("pdfPath"),
-                        "pdfBase64": progress.get("pdfBase64")
-                    })
-                
-                logger.debug(f"Enviando evento: {progress_event.get('status')} ({progress_event.get('percent')}%)")
+                logger.debug(f"Enviando evento HTML: {progress_event.get('status')} ({progress_event.get('percent')}%)")
                 yield f"data: {json.dumps(progress_event)}\n\n"
+            
+            # Enviar el evento de completado (simulando que el informe final está listo
+            # aunque el PDF se genere bajo demanda)
+            final_event = {
+                "status": "completed",
+                "message": "Reporte generado",
+                "extractedData": extracted_data,
+                "htmlReport": html_content,
+                "pdfPath": None,
+                "pdfBase64": None,
+                "percent": 100,
+                "completed": True
+            }
+            logger.debug(f"Enviando evento final (100%)")
+            yield f"data: {json.dumps(final_event)}\n\n"
                 
         except Exception as e:
             logger.error(f"Error en generate_report_from_audio: {e}", exc_info=True)
-            error_response = {"status": "error", "message": str(e), "error": True}
+            if isinstance(e, HTTPException):
+                error_response = {"status": "error", "message": e.detail, "statusCode": e.status_code, "error": True}
+            else:
+                error_response = {"status": "error", "message": str(e), "statusCode": 500, "error": True}
             yield f"data: {json.dumps(error_response)}\n\n"
 
     return StreamingResponse(
@@ -126,27 +127,34 @@ async def generate_report_from_audio(
         }
     )
 
-@router.post("/generate/pdf")
-async def generate_pdf(breed_prediction: dict, user_notes: str = None):
-    """
-    Generar un informe PDF completo.
-    
-    TODO: Victor
-    1. Recibir los datos de la predicción (Top-3 razas).
-    2. (Opcional) Llamar a un agente IA para generar un resumen narrativo ("Este perro parece ser un Golden... requiere estos cuidados...").
-    3. Usar `reportlab` o `fpdf` para crear un PDF.
-       - Incluir foto del perro (si se subió).
-       - Gráfico de barras con los porcentajes de raza.
-       - Texto con recomendaciones.
-    4. Guardar PDF temporalmente.
-    5. Retornar URL de descarga.
-    """
-    return {"download_url": "/api/v1/report/download/12345.pdf"}
 
-@router.get("/download/{report_id}")
-async def download_report(report_id: str):
+
+@router.post("/generate/pdf")
+async def generate_pdf(request: GeneratePdfRequest):
     """
-    Descargar el PDF generado.
+    Generar un informe PDF completo a partir de los datos pasados desde el frontend.
     """
-    # Buscar el archivo y retornarlo con FileResponse
-    return {"message": "File download logic here"}
+    try:
+        # Generar HTML
+        html_content = None
+        async for progress in ReportService.generate_html_report(request.data, request.report_type):
+            if progress.get("completed"):
+                html_content = progress.get("html")
+        
+        if not html_content:
+            raise HTTPException(status_code=500, detail="No se pudo generar el HTML")
+            
+        # Generar PDF
+        pdf_base64 = None
+        async for progress in ReportService.generate_pdf_report(html_content, request.report_type):
+            if progress.get("completed"):
+                pdf_base64 = progress.get("pdfBase64")
+                
+        if not pdf_base64:
+            raise HTTPException(status_code=500, detail="No se pudo generar el PDF")
+            
+        return {"pdfBase64": pdf_base64}
+        
+    except Exception as e:
+        logger.error(f"Error en generate_pdf: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))

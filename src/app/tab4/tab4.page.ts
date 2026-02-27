@@ -158,6 +158,11 @@ export class Tab4Page {
     if (this.recognition) {
       try { this.recognition.stop(); } catch (e) { }
     }
+    try {
+      await VoiceRecorder.stopRecording();
+    } catch (e) {
+      console.error('Error stopping voice recorder on restart', e);
+    }
     this.transcriptText = '';
     this.finalTranscript = '';
     this.audioBase64 = null;
@@ -277,31 +282,30 @@ export class Tab4Page {
 
     const reportType: 'veterinario' | 'adiestramiento' = this.selectedSegment === 'adiestramiento' ? 'adiestramiento' : 'veterinario';
 
-    console.log(`[DEBUG] Iniciando generación de reporte tipo: ${reportType}`);
-    console.log(`[DEBUG] Archivo: ${filename}, Tamaño: ${file.size} bytes`);
-
     this.reportService.generateReportFromAudio(file, filename, reportType).subscribe({
       next: (event) => {
-        console.log(`[DEBUG] SSE Event recibido:`, event);
-
         // Actualizar progreso según estado
         switch (event.status) {
           case 'Transcripción':
             this.progress.transcription = 'process';
+            if (event.transcript) {
+              this.transcriptText = event.transcript;
+            }
             break;
 
           case 'Extracción':
             this.progress.transcription = 'done';
             this.progress.clinicalExtraction = 'process';
+            // Forcefully set the transcript to the clean one returned by Gemini
+            if (event.transcript) {
+              this.transcriptText = event.transcript;
+            }
             // Si hay datos extraídos, mostrarlos
             if (event.extractedData) {
-              console.log(`[DEBUG] Datos extraídos recibidos:`, event.extractedData);
               if (reportType === 'veterinario') {
                 this.clinicalData = this.transformVeterinaryData(event.extractedData);
-                console.log(`[DEBUG] clinicalData transformado:`, this.clinicalData);
               } else {
                 this.trainingData = this.transformTrainingData(event.extractedData);
-                console.log(`[DEBUG] trainingData transformado:`, this.trainingData);
               }
             } else {
               console.warn(`[WARN] No hay extractedData en evento de Extracción`);
@@ -324,26 +328,23 @@ export class Tab4Page {
             this.progress.revision = 'done';
             this.progress.finalReport = 'done';
             this.audioProcessing = false;
+            // Forcefully set the transcript to the clean one returned by Gemini
+            if (event.transcript) {
+              this.transcriptText = event.transcript;
+            }
 
             // Mostrar datos finales
             if (event.extractedData) {
-              console.log(`[DEBUG] Datos finales extraídos:`, event.extractedData);
               if (reportType === 'veterinario') {
                 this.clinicalData = this.transformVeterinaryData(event.extractedData);
-                console.log(`[DEBUG] clinicalData final:`, this.clinicalData);
               } else {
                 this.trainingData = this.transformTrainingData(event.extractedData);
-                console.log(`[DEBUG] trainingData final:`, this.trainingData);
               }
             }
 
             // Guardar PDF base64 para descarga
             if (event.pdfBase64) {
               this.pdfBase64 = event.pdfBase64;
-              console.log(`[DEBUG] PDF recibido (base64), tamaño:`, event.pdfBase64.length);
-            }
-            if (event.pdfPath) {
-              console.log(`[DEBUG] PDF generado en:`, event.pdfPath);
             }
             break;
 
@@ -369,7 +370,6 @@ export class Tab4Page {
         this.cdr.detectChanges();
       },
       complete: () => {
-        console.log('[DEBUG] Generación de reporte completada');
         this.audioProcessing = false;
         this.cdr.detectChanges();
       }
@@ -380,8 +380,6 @@ export class Tab4Page {
    * Transforma datos extraídos de Gemini al formato esperado por clinical-report component
    */
   private transformVeterinaryData(data: any): any {
-    console.log('[DEBUG] Transformando datos veterinarios:', data);
-    
     // El backend retorna 'sintomas' (array), 'diagnostico', 'tratamiento', etc.
     const transformed = {
       symptoms: data.sintomas || [],  // Cambio clave: es 'sintomas' (no 'signos')
@@ -394,8 +392,7 @@ export class Tab4Page {
       recomendaciones: data.recomendaciones || '',
       fechaConsulta: data.fechaConsulta || ''
     };
-    
-    console.log('[DEBUG] Datos transformados:', transformed);
+
     return transformed;
   }
 
@@ -403,8 +400,6 @@ export class Tab4Page {
    * Transforma datos extraídos de Gemini al formato esperado por training-report component
    */
   private transformTrainingData(data: any): any {
-    console.log('[DEBUG] Transformando datos de adiestramiento:', data);
-    
     // El backend retorna los campos directamente del schema
     const transformed = {
       behavior_observed: data.comportamiento_observado || '',
@@ -415,20 +410,76 @@ export class Tab4Page {
       recomendaciones: data.recomendaciones || '',
       fechaConsulta: data.fechaConsulta || ''
     };
-    
-    console.log('[DEBUG] Datos transformados:', transformed);
+
     return transformed;
   }
 
-  downloadReport() {
-    if (!this.pdfBase64) {
-      console.warn('[WARN] No hay PDF disponible para descargar');
+  /**
+   * Transforma el modelo UI de vuelta al formato JSON que espera el backend
+   */
+  private untransformVeterinaryData(): any {
+    const data = this.clinicalData || {};
+    return {
+      tipoInforme: 'veterinaria',
+      sintomas: data.symptoms || [],
+      sintomas_formateados: Array.isArray(data.symptoms) ? data.symptoms.join(', ') : data.symptoms,
+      diagnostico: data.diagnosis || '',
+      tratamiento: data.treatment || '',
+      notas: data.notes || '',
+      paciente: data.paciente || {},
+      antecedentes_patologicos: data.antecedentes || '',
+      antecedentes_no_patologicos: '',
+      examen_fisico: data.examen_fisico || '',
+      recomendaciones: data.recomendaciones || '',
+      fechaConsulta: data.fechaConsulta || new Date().toISOString()
+    };
+  }
+
+  /**
+   * Transforma el modelo UI de vuelta al formato JSON que espera el backend
+   */
+  private untransformTrainingData(): any {
+    const data = this.trainingData || {};
+    return {
+      tipoInforme: 'adiestramiento',
+      comportamiento_observado: data.behavior_observed || '',
+      correcciones: Array.isArray(data.corrections) ? data.corrections : [],
+      correcciones_formateadas: Array.isArray(data.corrections) ? data.corrections.join(', ') : data.corrections,
+      tareas_casa: data.homework ? data.homework.split(',').map((t: string) => t.trim()) : [],
+      notas: data.notes || '',
+      paciente: data.paciente || {},
+      recomendaciones: data.recomendaciones || '',
+      fechaConsulta: data.fechaConsulta || new Date().toISOString()
+    };
+  }
+
+  async downloadReport() {
+    // Si la extracción no ha terminado, no podemos generar PDF
+    if (this.progress.finalReport !== 'done') {
+      const alert = await this.alertController.create({
+        header: 'Reporte incompleto',
+        message: 'Por favor, espera a que termine el procesamiento del reporte.',
+        buttons: ['OK']
+      });
+      await alert.present();
       return;
     }
 
+    const reportType = this.selectedSegment === 'veterinario' ? 'veterinario' : 'adiestramiento';
+    const reportData = reportType === 'veterinario' ? this.untransformVeterinaryData() : this.untransformTrainingData();
+
     try {
+      this.audioProcessing = true; // Usar el mismo flag para mostrar "procesando" y bloquear UI
+
+      const response = await this.reportService.generatePdfFromData(reportData, reportType).toPromise();
+
+      const pdfBase64 = response?.pdfBase64;
+      if (!pdfBase64) {
+        throw new Error('No se recibió el PDF del servidor.');
+      }
+
       // Convertir base64 a blob
-      const byteCharacters = atob(this.pdfBase64);
+      const byteCharacters = atob(pdfBase64);
       const byteNumbers = new Array(byteCharacters.length);
       for (let i = 0; i < byteCharacters.length; i++) {
         byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -440,20 +491,22 @@ export class Tab4Page {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `PawSense_${this.selectedSegment}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.download = `PawSense_${reportType}_${new Date().toISOString().slice(0, 10)}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-
-      console.log('[DEBUG] PDF descargado exitosamente');
     } catch (error) {
-      console.error('[ERROR] Error al descargar PDF:', error);
+      console.error('[ERROR] Error al generar/descargar PDF:', error);
+      const alert = await this.alertController.create({
+        header: 'Error al generar PDF',
+        message: 'Ocurrió un error al generar el documento PDF. Intenta de nuevo.',
+        buttons: ['OK']
+      });
+      await alert.present();
+    } finally {
+      this.audioProcessing = false;
     }
-  }
-
-  downloadOldReport(id: number) {
-    // TODO: Integrar con historial de reportes
   }
 }
 
