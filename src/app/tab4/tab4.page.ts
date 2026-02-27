@@ -20,7 +20,7 @@ import { ReportService } from '../core/services/report.service';
   standalone: true,
   imports: [
     CommonModule,
-    IonHeader, IonToolbar, IonContent,
+    IonHeader, IonToolbar, IonContent, IonTitle,
     IonList, IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonTextarea,

@@ -1,8 +1,8 @@
 import { Component, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
-  IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
-  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, IonIcon,
+  IonLabel, IonLoading,
+  IonIcon,
   IonSegment, IonSegmentButton, ToastController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -19,8 +19,8 @@ import { camera, stopCircle, playCircle, cameraOutline, cloudUploadOutline, spar
   standalone: true,
   imports: [
     IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
-    IonItem, IonLabel, IonCard, IonCardContent, IonLoading,
-    IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, IonIcon,
+    IonLabel, IonLoading,
+    IonIcon,
     IonSegment, IonSegmentButton,
     CommonModule,
     FormsModule
