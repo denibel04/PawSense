@@ -114,6 +114,10 @@ class PredictionService:
                     coords = map(int, box.xyxy[0].cpu().numpy())
                     crop = self.aplicar_padding(img_rgb, coords)
                     break
+                else:
+                     # 🔴 VALIDACIÓN CRÍTICA: Si no hay crop, no hay perro detectado
+                     raise ValueError("No se ha detectado ningún perro en la imagen. Por favor, intenta con otra foto.")
+
         
         # 2. PREPARACIÓN MOBILE (preprocess_input)
         img_mob = cv2.resize(crop, self.img_size)

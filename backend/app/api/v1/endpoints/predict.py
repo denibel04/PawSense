@@ -36,10 +36,15 @@ async def predict_breed(image_file: UploadFile = File(...)):
         results = prediction_service.predict_all_architectures(temp_file_path)
 
         return results
+    
+    except ValueError as e:
+        # Si es un error de "No se detectó perro", mandamos un 400 (Bad Request)
+        raise HTTPException(status_code=400, detail=str(e))
 
     except Exception as e:
         print(f"❌ Error en el endpoint de predicción: {e}")
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+    
 
     finally:
         # 5. Limpieza de archivos temporales
