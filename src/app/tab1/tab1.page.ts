@@ -11,6 +11,7 @@ import { addIcons } from 'ionicons';
 import {
   cloudUploadOutline, sparklesOutline, paw, alertCircleOutline
 } from 'ionicons/icons';
+import { HeaderComponent } from '../components/header/header.component';
 
 @Component({
   selector: 'app-tab1',
@@ -21,7 +22,7 @@ import {
     CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, 
     IonContent, IonButton, IonLabel, IonLoading, IonIcon, 
     IonCard, IonCardContent, IonGrid, IonRow, IonCol, 
-    IonProgressBar, IonBadge
+    IonProgressBar, IonBadge, HeaderComponent
   ],
 })
 export class Tab1Page {

@@ -9,6 +9,7 @@ import {
 import { addIcons } from 'ionicons';
 import { send, paw } from 'ionicons/icons';
 import { ChatService } from '../core/services/chat.service';
+import { HeaderComponent } from '../components/header/header.component';
 
 @Component({
   selector: 'app-tab3',
@@ -20,7 +21,8 @@ import { ChatService } from '../core/services/chat.service';
     FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonItem, IonLabel, IonFooter, 
-    IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect
+    IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect, 
+    HeaderComponent
   ],
 })
 export class Tab3Page implements OnInit {

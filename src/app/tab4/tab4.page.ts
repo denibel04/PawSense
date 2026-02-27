@@ -13,6 +13,8 @@ import { TrainingReportComponent } from './training-report/training-report.compo
 import { ClinicalReportComponent } from './clinical-report/clinical-report.component';
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { ReportService } from '../core/services/report.service';
+import { HeaderComponent } from '../components/header/header.component';
+
 @Component({
   selector: 'app-tab4',
   templateUrl: './tab4.page.html',
@@ -24,7 +26,8 @@ import { ReportService } from '../core/services/report.service';
     IonList, IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonTextarea,
-    TrainingReportComponent, ClinicalReportComponent
+    TrainingReportComponent, ClinicalReportComponent,
+    HeaderComponent
   ]
 })
 export class Tab4Page {

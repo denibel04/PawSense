@@ -7,13 +7,14 @@ import { CommonModule } from '@angular/common';
 import { API_CONFIG } from '../core/constants/api.constants';
 import { addIcons } from 'ionicons';
 import { camera, stopCircle, playCircle, cameraOutline, paw } from 'ionicons/icons';
+import { HeaderComponent } from '../components/header/header.component';
 
 @Component({
   selector: 'app-tab2',
   templateUrl: 'tab2.page.html',
   styleUrls: ['tab2.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonLabel]
+  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonIcon, IonLabel, HeaderComponent]
 })
 export class Tab2Page implements OnDestroy {
   @ViewChild('videoElement') videoElement!: ElementRef<HTMLVideoElement>;
