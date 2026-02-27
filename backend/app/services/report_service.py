@@ -349,15 +349,25 @@ class PlaywrightPDFGenerator:
         if not cls._browser:
             raise RuntimeError("Browser persistente no inicializado.")
         
-        page = await cls._browser.new_page()
+        page = await cls._browser.new_page(
+            viewport={'width': 1280, 'height': 900}
+        )
         try:
             val = f'file:///{os.path.abspath(html_path).replace(os.sep, "/")}'
-            await page.goto(val, wait_until='load', timeout=30000)
+            await page.goto(val, wait_until='networkidle', timeout=30000)
+            # Small delay to ensure JS (date generation) has executed
+            await page.wait_for_timeout(300)
             
             pdf_bytes = await page.pdf(
                 format='A4',
-                margin={'top': '0.5in', 'right': '0.5in', 'bottom': '0.5in', 'left': '0.5in'},
-                print_background=True
+                margin={
+                    'top': '5mm',
+                    'right': '5mm',
+                    'bottom': '5mm',
+                    'left': '5mm'
+                },
+                print_background=True,
+                scale=0.55
             )
             return pdf_bytes
         finally:
