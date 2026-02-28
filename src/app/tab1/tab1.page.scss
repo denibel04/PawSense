@@ -188,17 +188,34 @@
     object-fit: cover;
   }
 }
+/* Contenedor que limita el área visual */
+.preview-container {
+  width: 100%;
+  max-width: 400px;      
+  height: 300px;         
+  margin: 0 auto;     
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;    
+  border-radius: 16px;
+  background: #f4f4f4; 
+  border: 1px solid #e0e0e0;
+}
 
-.preview-container-v2 {
-  margin-top: 24px;
-  border-radius: 20px;
-  overflow: hidden;
+.preview-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;    
+  display: block;
+}
 
-  img,
-  video {
-    width: 100%;
-    border-radius: 20px;
-  }
+/* Ajuste opcional para el botón quitar para que esté pegado al media */
+ion-button[color="danger"] {
+  --padding-top: 0;
+  --padding-bottom: 0;
+  margin-top: 8px;
+  font-size: 0.85rem;
 }
 
 /* Buttons */
