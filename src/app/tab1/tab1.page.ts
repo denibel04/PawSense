@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
-  IonLabel, IonLoading, IonIcon, IonCard, IonCardContent, 
+  IonLabel, IonLoading, IonIcon, IonCard, IonCardContent,
   IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, ToastController, IonSpinner
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -13,16 +13,15 @@ import {
 } from 'ionicons/icons';
 import { HeaderComponent } from '../shared/components/header/header.component';
 
-
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
   styleUrls: ['tab1.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle, 
-    IonContent, IonButton, IonLabel, IonLoading, IonIcon, 
-    IonCard, IonCardContent, IonGrid, IonRow, IonCol, 
+    CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle,
+    IonContent, IonButton, IonLabel, IonLoading, IonIcon,
+    IonCard, IonCardContent, IonGrid, IonRow, IonCol,
     IonProgressBar, IonBadge, HeaderComponent, IonSpinner
   ],
 })
@@ -40,62 +39,76 @@ export class Tab1Page {
     });
   }
 
+  /**
+   * Gestiona la selección de archivos, detectando si es imagen estática,
+   * un GIF animado o un video.
+   */
   onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      this.selectedFile = file;
-      this.predictionResult = null;
-      
-      if (file.type.startsWith('image/')) {
-        this.fileType = 'image';
-        this.videoPreview = null;
-        const reader = new FileReader();
-        reader.onload = () => this.imagePreview = reader.result as string;
-        reader.readAsDataURL(file);
-      } else {
-        this.fileType = 'video';
-        this.imagePreview = null;
-        this.videoPreview = URL.createObjectURL(file);
-      }
+    if (!file) return;
+
+    this.selectedFile = file;
+    this.predictionResult = null;
+
+    // CASO 1: Es un GIF o un Video (Los tratamos como flujo de frames)
+    if (file.type === 'image/gif' || file.type.startsWith('video/')) {
+      this.fileType = 'video';
+      this.imagePreview = null;
+      this.videoPreview = URL.createObjectURL(file);
+    }
+    // CASO 2: Es una imagen estática (JPG, PNG, WebP...)
+    else if (file.type.startsWith('image/')) {
+      this.fileType = 'image';
+      this.videoPreview = null;
+      const reader = new FileReader();
+      reader.onload = () => this.imagePreview = reader.result as string;
+      reader.readAsDataURL(file);
     }
   }
 
+  /**
+   * Sube el archivo al endpoint correspondiente y procesa la respuesta triple.
+   */
   uploadAndPredict() {
     if (!this.selectedFile) return;
 
     this.isLoading = true;
     this.predictionResult = null;
 
+    // Elegimos el servicio según el tipo detectado
     const call = this.fileType === 'video'
       ? this.dogService.predictVideo(this.selectedFile)
       : this.dogService.predictBreed(this.selectedFile);
 
     call.subscribe({
       next: (response: any) => {
-        if (!response || response.error) {
+        console.log('Respuesta cruda del servidor:', response);
+
+        if (!response || response.success === false) {
           this.isLoading = false;
-          this.presentErrorToast(response?.error || 'No se detectó ningún perro');
+          this.presentErrorToast(response?.message || 'No se detectó ningún perro');
           return;
         }
 
         try {
-          if (this.fileType === 'image' && response.mobile) {
+          // PROCESAMIENTO PARA IMÁGENES ESTÁTICAS
+          if (this.fileType === 'image') {
             const models = [
-              { data: response.mobile[0], name: 'MobileNetV2' },
-              { data: response.pytorch[0], name: 'PyTorch' },
-              { data: response.keras[0], name: 'Keras V1' }
+              { data: response.mobile?.[0], name: 'MobileNetV2' },
+              { data: response.pytorch?.[0], name: 'PyTorch' },
+              { data: response.keras?.[0], name: 'Keras V1' }
             ];
 
             const topModel = models.reduce((prev, current) => {
-              const currentConf = parseFloat(current.data?.confidence) || 0;
-              const prevConf = parseFloat(prev.data?.confidence) || 0;
+              const currentConf = current.data?.confidence || 0;
+              const prevConf = prev.data?.confidence || 0;
               return (currentConf > prevConf) ? current : prev;
             });
 
             this.predictionResult = {
               winner: {
                 breed: topModel.data?.breed || 'Desconocido',
-                confidence: (topModel.data?.confidence || 0) + '%',
+                confidence: topModel.data?.confidence + '%',
                 source: topModel.name
               },
               details: {
@@ -104,26 +117,36 @@ export class Tab1Page {
                 keras: response.keras || []
               }
             };
-          } else if (this.fileType === 'video') {
+          }
+          // PROCESAMIENTO PARA VIDEOS / GIFS
+          else {
+            // Buscamos el ganador promediado (usamos Keras como referencia principal)
+            const videoWinner = response.keras && response.keras.length > 0
+              ? response.keras[0]
+              : { breed: 'Desconocido', confidence: 0 };
+
             this.predictionResult = {
               winner: {
-                breed: response.winner?.breed || 'Desconocido',
-                confidence: response.winner?.confidence || '0%',
-                source: 'Análisis de Video'
+                breed: videoWinner.breed,
+                confidence: videoWinner.confidence + '%',
+                source: 'Análisis Multiframe (Promedio)'
               },
-              summary: response.summary,
               details: {
-                pytorch: response.details?.pytorch || []
+                pytorch: response.pytorch || [],
+                mobile: response.mobile || [],
+                keras: response.keras || []
               }
             };
           }
         } catch (e) {
+          console.error('Error parseando resultados:', e);
           this.presentErrorToast("Error al procesar los datos de la IA");
         }
         this.isLoading = false;
       },
       error: (err) => {
         this.isLoading = false;
+        console.error('Error en la petición:', err);
         const msg = err.error?.detail || 'Error de conexión con el servidor';
         this.presentErrorToast(msg);
       }
@@ -139,5 +162,12 @@ export class Tab1Page {
       icon: 'alert-circle-outline'
     });
     toast.present();
+  }
+
+  clearPreview() {
+    this.selectedFile = null;
+    this.predictionResult = null;
+    this.imagePreview = null;
+    this.videoPreview = null;
   }
 }

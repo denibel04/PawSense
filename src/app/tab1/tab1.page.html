@@ -15,15 +15,19 @@
           <p>Elige una donde se aprecien bien sus rasgos para mejores resultados.</p>
         </label>
 
-        <div *ngIf="imagePreview" class="preview-container-v2 animate-scale">
-          <img [src]="imagePreview" alt="Preview">
-          <ion-button fill="clear" (click)="imagePreview = null" color="danger">Quitar</ion-button>
-        </div>
+        <div class="preview-container" *ngIf="imagePreview || videoPreview">
 
-        <div *ngIf="videoPreview" class="preview-container-v2 animate-scale">
-          <video [src]="videoPreview" controls></video>
-          <ion-button fill="clear" (click)="videoPreview = null" color="danger">Quitar</ion-button>
+          <img *ngIf="imagePreview && fileType === 'image'" [src]="imagePreview" class="preview-media">
+
+          <img *ngIf="videoPreview && selectedFile?.type === 'image/gif'" [src]="videoPreview" class="preview-media">
+
+          <video *ngIf="videoPreview && selectedFile?.type !== 'image/gif'" [src]="videoPreview" autoplay loop muted
+            playsinline class="preview-media">
+          </video>
+         
+
         </div>
+         <ion-button  *ngIf="imagePreview || videoPreview" fill="clear" (click)="clearPreview()" color="danger">Quitar</ion-button>
       </div>
 
       <ion-button *ngIf="selectedFile" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"

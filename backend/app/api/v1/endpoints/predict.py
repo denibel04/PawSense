@@ -142,9 +142,6 @@ async def predict_video(file: UploadFile = File(...)):
 
 @router.websocket("/ws")
 async def websocket_predict(websocket: WebSocket):
-    """
-    WebSocket para predicción en tiempo real (Cámara en vivo).
-    """
     await websocket.accept()
     if not prediction_service.model_loaded:
         prediction_service.load_model()
@@ -157,10 +154,19 @@ async def websocket_predict(websocket: WebSocket):
             image = Image.open(io.BytesIO(image_data))
             frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
             
-            predictions = prediction_service.predict_breed_from_image_array(frame)
-            if predictions:
-                top_3 = [{"breed": p.breed, "confidence": f"{p.confidence * 100:.1f}%"} for p in predictions[:3]]
-                await websocket.send_text(json.dumps({"winner": top_3[0], "top3": top_3, "found": True}))
+            result_dict = prediction_service.predict_breed_from_image_array(frame)
+            
+            if result_dict["success"]:
+                # Tomamos keras como referencia para el stream en vivo
+                top_3 = result_dict["keras"] 
+                # Nota: get_top_predictions ya devuelve diccionarios con "breed" y "confidence"
+                # y ya vienen multiplicados por 100 y redondeados.
+                
+                await websocket.send_text(json.dumps({
+                    "winner": top_3[0], 
+                    "top3": top_3, 
+                    "found": True
+                }))
             else:
                 await websocket.send_text(json.dumps({"found": False}))
     except WebSocketDisconnect:

@@ -112,10 +112,6 @@ class PredictionService:
         return img[ny1:ny2, nx1:nx2]
 
     def _get_processed_inputs(self, image_path: str = None, image_array: np.ndarray = None):
-        """
-        Preprocesa la imagen para las 3 arquitecturas.
-        Si no detecta un perro, devuelve (None, None, None).
-        """
         if image_path:
             img_bgr = cv2.imread(image_path)
         else:
@@ -128,20 +124,32 @@ class PredictionService:
         
         # 1. Detección YOLOv8m
         results = self.yolo(img_rgb, verbose=False)
-        crop = None 
         
+        crop = None 
+        dog_found = False  # Nuestra variable de control
+
         for r in results:
             for box in r.boxes:
-                # Clase 16 es 'dog' en el dataset COCO
-                if int(box.cls) == 16: 
-                    coords = map(int, box.xyxy[0].cpu().numpy())
-                    # Aplicamos el padding del 10% que definiste en el cuaderno
-                    crop = self.aplicar_padding(img_rgb, coords)
-                    break
-                else:
-                    crop = None
-                    return None, None, None
+                # Obtenemos la confianza del modelo (0.0 a 1.0)
+                confidence = float(box.conf[0].cpu().numpy())
+                class_id = int(box.cls)
 
+                # FILTRO CRÍTICO: Clase 16 Y confianza mayor al 60% (0.6)
+                if class_id == 16 and confidence > 0.1: 
+                    coords = list(map(int, box.xyxy[0].cpu().numpy()))
+                    crop = self.aplicar_padding(img_rgb, coords)
+                    dog_found = True
+                    print(f"✅ Perro detectado con {confidence:.2%} de seguridad")
+                    break 
+            if dog_found: 
+                break
+
+        # Si después de revisar todo, no encontramos un perro, abortamos
+        if dog_found is False:
+            print("⚠️ YOLO analizó la imagen pero NO encontró ningún perro.")
+            return None, None, None
+
+        # --- A partir de aquí solo llegamos si dog_found es True ---
 
         # 2. Preparar inputs para MobileNetV2 (355 razas)
         img_mob = cv2.resize(crop, self.img_size)
@@ -151,11 +159,8 @@ class PredictionService:
         
         # 3. Preparar inputs para Keras V1 y PyTorch (120 razas)
         img_pil = Image.fromarray(crop).resize(self.img_size)
-        
-        # Input Keras
         in_v1 = tf.expand_dims(tf.keras.preprocessing.image.img_to_array(img_pil), 0)
         
-        # Input PyTorch con normalización ImageNet
         pt_trans = transforms.Compose([
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
