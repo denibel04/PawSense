@@ -1,20 +1,34 @@
-<ion-header class="ion-no-border dashboard-header">
-  <ion-toolbar>
-    <ion-title>
-      <div class="logo">
-        <ion-icon name="paw" color="primary"></ion-icon>
-        <span>PawSense</span>
+<app-header></app-header>
+
+<ion-content class="dashboard-content">
+  <div class="main-container-v2">
+    
+    <div class="visor-card-v2" [class.active]="isRealTime">
+      <video #videoElement autoplay playsinline [hidden]="!isRealTime"></video>
+      <canvas #canvasElement style="display: none;"></canvas>
+
+      <div *ngIf="isRealTime" class="realtime-overlay-v2">
+        <div *ngIf="realTimeResult" class="top-predictions-v2">
+          <div *ngFor="let res of realTimeResult; let i = index" class="prediction-pill" [class.primary]="i === 0">
+            {{ i === 0 ? '🏆' : i+1 }} {{ res.breed }} ({{ res.confidence }})
+          </div>
+        </div>
+        <div *ngIf="!realTimeResult" class="scanning-pill">
+          🔍 Escaneando...
+        </div>
       </div>
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
 
-<ion-content>
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Tab 2</ion-title>
-    </ion-toolbar>
-  </ion-header>
+      <div *ngIf="!isRealTime" class="camera-placeholder">
+        <ion-icon name="camera-outline" class="placeholder-icon"></ion-icon>
+        <p>Activa la cámara para identificar perros en tiempo real</p>
+      </div>
+    </div>
 
-  <app-explore-container name="Tab 2 page"></app-explore-container>
+    <ion-button expand="block" (click)="toggleRealTime()" class="btn-modern-v2"
+      [color]="isRealTime ? 'danger' : 'primary'">
+      <ion-icon slot="start" [name]="isRealTime ? 'stop-circle' : 'play-circle'"></ion-icon>
+      {{ isRealTime ? 'Detener Cámara' : 'Iniciar Escaneo' }}
+    </ion-button>
+
+  </div>
 </ion-content>

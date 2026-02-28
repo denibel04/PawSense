@@ -1,87 +1,43 @@
-<ion-header class="ion-no-border dashboard-header">
-  <ion-toolbar>
-    <ion-title>
-      <!-- Brand Title (logo) -->
-      <div class="logo">
-        <ion-icon name="paw" color="primary"></ion-icon>
-        <span>PawSense</span>
-      </div>
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
+<app-header></app-header>
 
 <ion-content class="dashboard-content">
   <div class="main-container-v2">
 
-    <!-- Switch de Modos -->
-    <ion-segment [(ngModel)]="activeSegment" mode="ios" class="segment-modern">
-      <ion-segment-button value="visor">
-        <ion-label>Cámara Pro</ion-label>
-      </ion-segment-button>
-      <ion-segment-button value="analizador">
-        <ion-label>Analizador</ion-label>
-      </ion-segment-button>
-    </ion-segment>
-
-    <!-- SECCIÓN 1: VISOR TIEMPO REAL -->
-    <div *ngIf="activeSegment === 'visor'" class="section-container animate-fade">
-      <div class="visor-card-v2" [class.active]="isRealTime">
-        <video #videoElement autoplay playsinline [hidden]="!isRealTime"></video>
-        <canvas #canvasElement style="display: none;"></canvas>
-
-        <div *ngIf="isRealTime" class="realtime-overlay-v2">
-          <div *ngIf="realTimeResult" class="top-predictions-v2">
-            <div *ngFor="let res of realTimeResult; let i = index" class="prediction-pill" [class.primary]="i === 0">
-              {{ i === 0 ? '🏆' : i+1 }} {{ res.breed }} ({{ res.confidence }})
-            </div>
-          </div>
-          <div *ngIf="!realTimeResult" class="scanning-pill">
-            🔍 Escaneando...
-          </div>
-        </div>
-
-        <div *ngIf="!isRealTime" class="camera-placeholder">
-          <ion-icon name="camera-outline" class="placeholder-icon"></ion-icon>
-          <p>Activa la cámara para identificar perros en vivo</p>
-        </div>
-      </div>
-
-      <ion-button expand="block" (click)="toggleRealTime()" class="btn-modern-v2"
-        [color]="isRealTime ? 'danger' : 'primary'">
-        <ion-icon slot="start" [name]="isRealTime ? 'stop-circle' : 'play-circle'"></ion-icon>
-        {{ isRealTime ? 'Apagar Cámara' : 'Empezar Escaneo Vivo' }}
-      </ion-button>
-    </div>
-
-    <!-- SECCIÓN 2: ANALIZADOR DE ARCHIVOS -->
-    <div *ngIf="activeSegment === 'analizador'" class="section-container animate-fade">
+    <div class="section-container animate-fade">
       <div class="upload-card-v2">
-        <div class="upload-zone">
-          <ion-icon name="cloud-upload-outline" class="upload-icon"></ion-icon>
-          <h3>Sube una Foto o Video</h3>
-          <p>Analizaremos con precisión la raza de tu mascota</p>
-          <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*">
-        </div>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" id="fileInput" hidden>
 
-        <div *ngIf="imagePreview && !isRealTime" class="preview-container-v2">
-          <img [src]="imagePreview" alt="Preview">
-        </div>
+        <label for="fileInput" class="upload-zone" *ngIf="!imagePreview && !videoPreview">
+          <div class="icon-circle">
+            <ion-icon name="cloud-upload" class="upload-icon"></ion-icon>
+          </div>
+          <h3>Sube una foto o vídeo</h3>
+          <p>Elige una donde se aprecien bien sus rasgos para mejores resultados.</p>
+        </label>
 
-        <div *ngIf="videoPreview && !isRealTime" class="preview-container-v2">
-          <video [src]="videoPreview" controls></video>
+        <div class="preview-container" *ngIf="imagePreview || videoPreview">
+
+          <img *ngIf="imagePreview && fileType === 'image'" [src]="imagePreview" class="preview-media">
+
+          <img *ngIf="videoPreview && selectedFile?.type === 'image/gif'" [src]="videoPreview" class="preview-media">
+
+          <video *ngIf="videoPreview && selectedFile?.type !== 'image/gif'" [src]="videoPreview" autoplay loop muted
+            playsinline class="preview-media">
+          </video>
+         
+
         </div>
+         <ion-button  *ngIf="imagePreview || videoPreview" fill="clear" (click)="clearPreview()" color="danger">Quitar</ion-button>
       </div>
 
-      <ion-button *ngIf="selectedFile && !isRealTime" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"
-        class="btn-modern-v2 gradient-btn">
-        <ion-loading *ngIf="isLoading" slot="start"></ion-loading>
-        <ion-icon slot="start" name="sparkles-outline"></ion-icon>
+      <ion-button *ngIf="selectedFile" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"
+        class="btn-modern-v2 gradient-btn ion-margin-top">
+        <ion-spinner *ngIf="isLoading" slot="start" name="crescent"></ion-spinner>
+        <ion-icon *ngIf="!isLoading" slot="start" name="sparkles-outline"></ion-icon>
         {{ isLoading ? 'Analizando...' : 'Lanzar Análisis Pro' }}
       </ion-button>
     </div>
 
-    <!-- RESULTADOS (Comunes para ambos) -->
     <div *ngIf="predictionResult" class="result-card-v2 animate-slide-up">
       <div class="result-header-v2">
         <div class="winner-avatar">🐕</div>

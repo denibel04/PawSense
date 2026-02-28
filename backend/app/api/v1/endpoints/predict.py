@@ -1,10 +1,18 @@
-from fastapi import APIRouter, File, UploadFile, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, File, UploadFile, HTTPException, WebSocket, WebSocketDisconnect
+from typing import List, Dict
+import os
+import uuid
+import shutil
 import json
 import base64
 import io
-from PIL import Image
-import numpy as np
 import datetime
+import numpy as np
+import cv2
+import tempfile
+from PIL import Image
+from collections import Counter
+from app.services.prediction_service import prediction_service
 
 router = APIRouter()
 
@@ -12,217 +20,154 @@ router = APIRouter()
 async def predict_breed(file: UploadFile = File(...)):
     """
     ENDPOINT PARA IMÁGENES:
-    Detectar perro y predecir raza usando los modelos YOLOv8 (vía HTTP).
+    Devuelve la predicción de raza comparando 3 arquitecturas:
+    MobileNetV2, Keras V1 y PyTorch (YOLOv8).
     """
-    from app.services.prediction_service import prediction_service
-    import os
-    import tempfile
-    import shutil
-
     if not prediction_service.model_loaded:
         prediction_service.load_model()
 
+    # 1. Validar formato de imagen
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in [".jpg", ".jpeg", ".png", ".webp", ".bmp"]:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="El archivo no es una imagen válida (.jpg, .png, .webp, .bmp)")
+        raise HTTPException(status_code=400, detail="El archivo no es una imagen válida")
 
+    # 2. Crear ruta temporal
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp:
         shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
 
     try:
-        # --- MEJORA: Guardar imagen permanentemente ---
+        # --- MEJORA: Guardar imagen permanentemente para el historial ---
         static_uploads_path = os.path.join("static", "uploads", "images")
         os.makedirs(static_uploads_path, exist_ok=True)
         permanent_path = os.path.join(static_uploads_path, file.filename)
         shutil.copy2(tmp_path, permanent_path)
 
-        predictions = prediction_service.predict_breed_from_image(tmp_path)
-        if not predictions:
-            return {
-                "winner": {"breed": "No se detectó perro", "confidence": "0%", "source": "N/A"},
-                "details": {"pytorch": [], "tensorflow": []},
-                "image_url": f"/static/uploads/images/{file.filename}"
-            }
-        top_pred = predictions[0]
-        formatted_pytorch = [{"breed": p.breed, "probability": p.confidence} for p in predictions[:3]]
-        return {
-            "winner": {
-                "breed": top_pred.breed,
-                "confidence": f"{top_pred.confidence * 100:.1f}%",
-                "source": "YOLOv8 (PyTorch)"
-            },
-            "details": {"pytorch": formatted_pytorch, "tensorflow": []},
-            "image_url": f"/static/uploads/images/{file.filename}"
-        }
+        # 3. Llamar al servicio que gestiona todas las arquitecturas (Tu lógica)
+        results = prediction_service.predict_all_architectures(tmp_path)
+        
+        # Añadimos la URL de la imagen al resultado para el frontend
+        results["image_url"] = f"/static/uploads/images/{file.filename}"
+
+        return results
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        print(f"❌ Error en el endpoint de predicción: {e}")
+        raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
 @router.post("/video")
 async def predict_video(file: UploadFile = File(...)):
-    """
-    Analizar un video: extraer frames y predecir la raza predominante.
-    """
-    from app.services.prediction_service import prediction_service
-    import os
-    import tempfile
-    import shutil
-    import cv2
-    from collections import Counter
-
     if not prediction_service.model_loaded:
         prediction_service.load_model()
 
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in [".mp4", ".mov", ".avi", ".gif"]:
-        from fastapi import HTTPException
-        raise HTTPException(status_code=400, detail="El archivo no es un video o GIF válido (.mp4, .mov, .avi, .gif)")
+        raise HTTPException(status_code=400, detail="Formato de video no válido")
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp:
         shutil.copyfileobj(file.file, tmp)
         tmp_path = tmp.name
 
+    cap = None
     try:
-        # --- MEJORA: Guardar video permanentemente ---
+        # Guardar video permanentemente
         static_videos_path = os.path.join("static", "uploads", "videos", "raw")
         os.makedirs(static_videos_path, exist_ok=True)
         permanent_video_path = os.path.join(static_videos_path, file.filename)
         shutil.copy2(tmp_path, permanent_video_path)
 
-        # --- MEJORA: Preparar carpeta de frames ---
-        video_basename = os.path.splitext(file.filename)[0]
-        frames_dir = os.path.join("static", "uploads", "videos", "frames", video_basename)
-        os.makedirs(frames_dir, exist_ok=True)
-
         cap = cv2.VideoCapture(tmp_path)
-        if not cap.isOpened():
-            return {"error": "No se pudo abrir el vídeo"}
-
-        # --- VALIDACIÓN DE FRAUDE: Detectar si es una imagen disfrazada de video ---
-        num_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-        ret, frame_check = cap.read()
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        step = int(fps) 
         
-        # Si tiene 1 frame o menos, o no se puede leer el primero, es probablemente una imagen
-        if num_frames <= 1 or not ret:
-            cap.release()
-            if os.path.exists(tmp_path):
-                os.remove(tmp_path)
-            from fastapi import HTTPException
-            raise HTTPException(
-                status_code=400, 
-                detail="Detección de fraude: Has intentado subir una imagen como si fuera un vídeo."
-            )
-        
-        # Reiniciar el video para el procesamiento
-        cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-
-        fps = cap.get(cv2.CAP_PROP_FPS)
-        if fps <= 0: fps = 30
-        
-        # Analizar 1 frame por segundo para no saturar
-        step = int(fps)
-        count = 0
-        all_predictions = []
+        # Diccionarios para acumular confianzas por modelo { "Raza": suma_confianzas }
+        stats = {
+            "mobile": {},
+            "keras": {},
+            "pytorch": {}
+        }
+        frames_analizados = 0
 
         while True:
             ret, frame = cap.read()
             if not ret: break
-
-            if count % step == 0:
-                # Guardar el frame extraído
-                frame_filename = f"frame_{count//step}.jpg"
-                frame_path = os.path.join(frames_dir, frame_filename)
-                cv2.imwrite(frame_path, frame)
-
-                # Predecir sobre este frame
+            
+            if int(cap.get(cv2.CAP_PROP_POS_FRAMES)) % step == 0:
                 preds = prediction_service.predict_breed_from_image_array(frame)
-                if preds:
-                    all_predictions.append(preds[0].breed)
-            count += 1
-        
+                
+                if preds["success"]:
+                    frames_analizados += 1
+                    # Acumulamos resultados de las 3 arquitecturas
+                    for arch in ["mobile", "keras", "pytorch"]:
+                        for p in preds[arch]:
+                            breed = p["breed"]
+                            conf = p["confidence"]
+                            stats[arch][breed] = stats[arch].get(breed, 0) + conf
+            
         cap.release()
+        cap = None
 
-        if not all_predictions:
-            return {
-                "winner": {"breed": "No se detectó perro en el video", "confidence": "0%", "source": "N/A"},
-                "video_url": f"/static/uploads/videos/raw/{file.filename}"
-            }
+        if frames_analizados == 0:
+            return {"success": False, "message": "No se detectó perro en el video"}
 
-        # Calcular la raza más frecuente
-        most_common_breed, frequency = Counter(all_predictions).most_common(1)[0]
-        confidence_avg = (frequency / len(all_predictions)) * 100
+        # Función para promediar y formatear el Top 3
+        def get_top_averages(arch_stats, n_frames):
+            # Convertimos suma en promedio y ordenamos
+            avg_list = [
+                {"breed": b, "confidence": round(total / n_frames, 2)}
+                for b, total in arch_stats.items()
+            ]
+            return sorted(avg_list, key=lambda x: x["confidence"], reverse=True)[:3]
 
         return {
-            "winner": {
-                "breed": most_common_breed,
-                "confidence": f"{confidence_avg:.1f}% (Frecuencia)",
-                "source": "YOLOv8 Video Analysis"
-            },
-            "summary": {
-                "total_frames_analyzed": len(all_predictions),
-                "frequency": frequency
-            },
+            "success": True,
+            "mobile": get_top_averages(stats["mobile"], frames_analizados),
+            "keras": get_top_averages(stats["keras"], frames_analizados),
+            "pytorch": get_top_averages(stats["pytorch"], frames_analizados),
             "video_url": f"/static/uploads/videos/raw/{file.filename}"
         }
 
+    except Exception as e:
+        print(f"❌ Error en predict_video: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
+        if cap: cap.release()
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
 
 @router.websocket("/ws")
 async def websocket_predict(websocket: WebSocket):
-    """
-    WebSocket para predicción en tiempo real.
-    Recibe frames en base64 y devuelve predicciones.
-    """
-    from app.services.prediction_service import prediction_service
-    import cv2
-
     await websocket.accept()
-    
     if not prediction_service.model_loaded:
         prediction_service.load_model()
 
     try:
         while True:
-            # Recibir datos (esperamos un string base64)
             data = await websocket.receive_text()
+            header, encoded = data.split(",", 1)
+            image_data = base64.b64decode(encoded)
+            image = Image.open(io.BytesIO(image_data))
+            frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
             
-            # Decodificar imagen
-            try:
-                header, encoded = data.split(",", 1)
-                image_data = base64.b64decode(encoded)
-                image = Image.open(io.BytesIO(image_data))
-                frame = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            result_dict = prediction_service.predict_breed_from_image_array(frame)
+            
+            if result_dict["success"]:
+                # Tomamos keras como referencia para el stream en vivo
+                top_3 = result_dict["keras"] 
+                # Nota: get_top_predictions ya devuelve diccionarios con "breed" y "confidence"
+                # y ya vienen multiplicados por 100 y redondeados.
                 
-                # Predecir
-                predictions = prediction_service.predict_breed_from_image_array(frame)
-                
-                with open("ws_debug.log", "a") as f:
-                    f.write(f"{datetime.datetime.now()}: Frame procesado. Found: {len(predictions) > 0}\n")
-
-                if predictions:
-                    # Enviamos el Top 3
-                    top_3 = [
-                        {"breed": p.breed, "confidence": f"{p.confidence * 100:.1f}%"}
-                        for p in predictions[:3]
-                    ]
-                    
-                    with open("ws_debug.log", "a") as f:
-                        f.write(f"{datetime.datetime.now()}: Perro: {top_3[0]['breed']} ({top_3[0]['confidence']})\n")
-                    response = {
-                        "winner": top_3[0],
-                        "top3": top_3,
-                        "found": True
-                    }
-                else:
-                    response = {"found": False}
-                
-                await websocket.send_text(json.dumps(response))
-            except Exception as e:
-                await websocket.send_text(json.dumps({"error": str(e)}))
-
+                await websocket.send_text(json.dumps({
+                    "winner": top_3[0], 
+                    "top3": top_3, 
+                    "found": True
+                }))
+            else:
+                await websocket.send_text(json.dumps({"found": False}))
     except WebSocketDisconnect:
         print("WebSocket desconectado")

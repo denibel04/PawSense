@@ -19,21 +19,12 @@
   justify-content: space-between;
   align-items: center;
   padding: 1rem 2rem;
-  background: var(--ion-background-color);
+  background: #ffffff;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 1.5rem;
-    font-weight: bold;
-    color: var(--ion-color-primary);
-    font-family: 'Tondo', sans-serif; /* Custom Font */
-
-    ion-icon {
-      font-size: 1.8rem;
-    }
+  .logo-img {
+  width: 32px;
+  height: auto;
   }
 
   .desktop-nav {
@@ -129,10 +120,11 @@
   }
 }
 
-/* Features Section */
+/* Features Section (Actualizado con diseño inspirado en la imagen) */
 .features-section {
   padding: 4rem 1.5rem;
-  background: var(--ion-background-color);
+  // Mantenemos el fondo base de la sección, las cards sobresaldrán
+  background: var(--ion-background-color); 
   text-align: center;
 
   .section-title {
@@ -150,38 +142,63 @@
     }
   }
 
+  ion-col {
+    display: flex; 
+  }
+
   .feature-card {
-    padding: 2rem;
-    border-radius: 16px;
-    background: var(--ion-card-background, #f9f9f9);
-    transition: transform 0.3s ease;
+    margin:0 1rem ; // Margen vertical para dar espacio entre las cards
+    padding: 1rem 1rem;
+    border-radius: 24px; // Bordes más redondeados como en la imagen
+    
+    background: rgba(var(--ion-color-primary-rgb), 0.15); 
+    border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2); 
+    
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%;
     margin-bottom: 1rem;
+    width: 100%; // Ocupa todo el ancho de la columna
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 
     &:hover {
       transform: translateY(-5px);
+      // Añadimos una sombra suave al hacer hover para resaltar el efecto
+      box-shadow: 0 10px 25px rgba(var(--ion-color-primary-rgb), 0.15);
     }
 
-    .icon-box {
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      background: rgba(var(--ion-color-primary-rgb), 0.1); /* Fallback */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 1.5rem;
-
-      ion-icon {
-        font-size: 2rem;
+    // --- ESTILO DEL CONTENEDOR DEL ICONO ---
+      .icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: #ffffff; 
+        /* Fallback */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0.5rem;
+        
+        
+      
+    }
+    ion-icon {
+      font-size: 2rem;
       }
-    }
 
     h3 {
-      font-size: 1.25rem;
+      font-size: 1.4rem; 
       font-weight: bold;
-      margin-bottom: 0.5rem;
+      color: #1a1a1a; 
+      margin-bottom: 0.75rem;
       font-family: 'Tondo', sans-serif;
+    }
+
+    p {
+      color: var(--ion-color-medium);
+      line-height: 1.5;
+      margin-bottom: 0;
     }
   }
 }

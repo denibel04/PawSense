@@ -12,6 +12,7 @@ import { send, paw, documentTextOutline } from 'ionicons/icons';
 import { ChatService, ChatReportSSEEvent } from '../core/services/chat.service';
 import { ReportSharedService } from '../core/services/report-shared.service';
 import { Router } from '@angular/router';
+import { HeaderComponent } from '../shared/components/header/header.component';
 
 interface ChatMessage {
   role: string;
@@ -20,6 +21,7 @@ interface ChatMessage {
   reportType?: string;
   reportProgress?: number;
 }
+
 
 @Component({
   selector: 'app-tab3',
@@ -32,7 +34,8 @@ interface ChatMessage {
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonItem, IonLabel, IonFooter, IonButton,
     IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect,
-    IonProgressBar
+    IonProgressBar,
+    HeaderComponent
   ],
 })
 export class Tab3Page implements OnInit {

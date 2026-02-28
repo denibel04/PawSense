@@ -14,6 +14,8 @@ import { ClinicalReportComponent } from './clinical-report/clinical-report.compo
 import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { ReportService } from '../core/services/report.service';
 import { ReportSharedService } from '../core/services/report-shared.service';
+import { HeaderComponent } from '../shared/components/header/header.component';
+
 @Component({
   selector: 'app-tab4',
   templateUrl: './tab4.page.html',
@@ -25,7 +27,8 @@ import { ReportSharedService } from '../core/services/report-shared.service';
     IonList, IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonTextarea,
-    TrainingReportComponent, ClinicalReportComponent
+    TrainingReportComponent, ClinicalReportComponent,
+    HeaderComponent
   ]
 })
 export class Tab4Page implements ViewWillEnter {
