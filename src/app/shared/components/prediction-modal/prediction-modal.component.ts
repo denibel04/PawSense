@@ -6,7 +6,7 @@ import {
 } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { closeCircleOutline, trophyOutline, analyticsOutline } from 'ionicons/icons';
-import { ChatService } from 'src/app/core/services/chat.service';
+import { DogService } from 'src/app/core/services/dog.service';
 
 @Component({
   selector: 'app-prediction-modal',
@@ -25,7 +25,7 @@ export class PredictionModalComponent implements OnInit {
 
   constructor(
     private modalCtrl: ModalController,
-    private chatService: ChatService
+    private dogService: DogService
   ) {
     addIcons({ closeCircleOutline, trophyOutline, analyticsOutline });
   }
@@ -64,20 +64,17 @@ export class PredictionModalComponent implements OnInit {
     }
   }
 
-  private async loadBreedInfo(nombreIngles: string) {
+  private async loadBreedInfo(breedName: string) {
     this.loadingInfo = true;
-    this.chatService.getBreedInfo(nombreIngles).subscribe({
+    this.dogService.getPredictionDetails(breedName).subscribe({ 
       next: (res) => {
-        this.breedInfo = res;
+        this.breedInfo = res.found ? res : null;
+        console.log('Información de raza recibida:', this.breedInfo); 
         this.loadingInfo = false;
-        console.log('Información extra recibida:', res);
       },
-      error: (err) => {
-        console.error('Error al traer info extra', err);
-        this.loadingInfo = false;
-      }
+      error: () => this.loadingInfo = false
     });
-  }
+}
 
   close() {
     this.modalCtrl.dismiss();

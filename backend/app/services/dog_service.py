@@ -74,3 +74,40 @@ class DogService:
         except Exception as e:
             # Otros errores
             raise TheDogAPIError(f"Error inesperado consultando TheDogAPI: {str(e)}")
+    
+    async def get_detailed_breed_info(self, breed_name: str) -> Optional[Dict[str, Any]]:
+        """
+        Versión extendida que extrae descripción, historia e imagen.
+        """
+        if not self.api_key:
+            raise TheDogAPIError("THE_DOG_API_KEY no configurada")
+        
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                url = f"{self.base_url}/breeds/search"
+                headers = {"x-api-key": self.api_key}
+                params = {"q": breed_name}
+                
+                response = await client.get(url, headers=headers, params=params)
+                response.raise_for_status()
+                data = response.json()
+                
+                if not data:
+                    return None
+                
+                breed = data[0]
+                
+                # Aquí está el truco: añadimos los campos que faltaban
+                return {
+                    "found": True,
+                    "name": breed.get("name"),
+                    "description": breed.get("description"),
+                    "history": breed.get("history"),
+                    "temperament": breed.get("temperament"),
+                    "life_span": breed.get("life_span"),
+                    "image_url": f"https://cdn2.thedogapi.com/images/{breed.get('reference_image_id')}.jpg" if breed.get('reference_image_id') else None,
+                    "height_metric": breed.get("height", {}).get("metric"),
+                    "weight_metric": breed.get("weight", {}).get("metric"),
+                }
+        except Exception as e:
+            raise TheDogAPIError(f"Error en detalle: {str(e)}")

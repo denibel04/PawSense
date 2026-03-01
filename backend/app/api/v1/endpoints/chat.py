@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Query, HTTPException, status, Depends
 from fastapi.responses import StreamingResponse
-from app.schemas.chat import ChatRequest, DogInfoResponse, ChatReportRequest
+from app.schemas.chat import ChatRequest, DogInfoResponse, ChatReportRequest, PredictionBreedDetails
 from app.services.dog_service import DogService, TheDogAPIError
 from app.services.chat_service import ChatService
 from app.services.agent_service import get_prompt_and_schema
@@ -92,6 +92,27 @@ async def get_dog_info(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Error inesperado: {str(e)}"
         )
+   
+@router.get("/prediction-details", response_model=PredictionBreedDetails)
+async def get_prediction_details(
+    breed_name: str = Query(..., description="Nombre limpio para el modal"),
+    dog_service: DogService = Depends(get_dog_service)
+):
+    """
+    Endpoint para el Modal de Predicción.
+    Devuelve información extendida incluyendo imagen y descripción.
+    """   
+    try:
+        breed_info = await dog_service.get_detailed_breed_info(breed_name)
+        
+        if not breed_info:
+            return PredictionBreedDetails(found=False, name=breed_name)
+
+        return PredictionBreedDetails(**breed_info)
+        
+    except Exception as e:
+        logger.error(f"Error en /prediction-details: {e}")
+        raise HTTPException(status_code=502, detail="Error obteniendo detalles")
 
 @router.post("/ask")
 async def ask_chatbot(

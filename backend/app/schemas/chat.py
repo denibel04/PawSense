@@ -27,3 +27,16 @@ class DogInfoResponse(BaseModel):
     breed_group: Optional[str] = None
     origin: Optional[str] = None
     message: Optional[str] = None
+
+
+class PredictionBreedDetails(BaseModel):
+    """ Schema for detailed breed information returned to the frontend after prediction. """
+    found: bool
+    name: str
+    description: Optional[str] = None
+    temperament: Optional[str] = None
+    life_span: Optional[str] = None
+    image_url: Optional[str] = None  
+    history: Optional[str] = None
+    weight_metric: Optional[str] = None
+    height_metric: Optional[str] = None

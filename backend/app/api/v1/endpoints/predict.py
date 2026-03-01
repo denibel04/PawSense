@@ -171,3 +171,4 @@ async def websocket_predict(websocket: WebSocket):
                 await websocket.send_text(json.dumps({"found": False}))
     except WebSocketDisconnect:
         print("WebSocket desconectado")
+
