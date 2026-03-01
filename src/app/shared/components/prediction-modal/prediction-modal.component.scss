@@ -1,0 +1,97 @@
+.result-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.winner-card {
+  background: #fdf8f3; // Tono crema suave
+  border-radius: 28px;
+  padding: 32px 20px;
+  text-align: center;
+  border: 1px solid #f3e9df;
+
+  .badge-winner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #fef3c7;
+    color: #92400e;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .dog-emoji { font-size: 4rem; display: block; margin-bottom: 10px; }
+
+  h1 { 
+    margin: 0; 
+    font-size: 2rem; 
+    font-weight: 800; 
+    color: #1e293b;
+    letter-spacing: -0.5px;
+  }
+
+  .confidence-badge {
+    margin-top: 8px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #10b981;
+  }
+
+  .source-info {
+    margin-top: 10px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  color: #1e293b;
+  h3 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+  ion-icon { font-size: 1.4rem; color: #6366f1; }
+}
+
+.model-block {
+  margin-bottom: 20px;
+  .model-tag {
+    font-size: 0.7rem;
+    color: #6366f1;
+    font-weight: 800;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+}
+
+.prediction-row {
+  margin-bottom: 12px;
+  .row-text {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+  }
+  .progress-container {
+    height: 8px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    overflow: hidden;
+    .progress-fill {
+      height: 100%;
+      background: #cbd5e1;
+      border-radius: 10px;
+      transition: width 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+      &.is-top { background: #6366f1; }
+    }
+  }
+}

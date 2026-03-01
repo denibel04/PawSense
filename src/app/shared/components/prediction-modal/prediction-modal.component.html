@@ -1,0 +1,53 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Resultado del análisis</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="close()" color="medium">
+        <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="result-container" *ngIf="winner">
+    
+    <div class="winner-card animate-slide-up">
+      <div class="badge-winner">
+        <ion-icon name="trophy-outline"></ion-icon>
+        <span>Mejor coincidencia</span>
+      </div>
+      <span class="dog-emoji">🐕</span>
+      <h1>{{ winner.breed_es }}</h1>
+      <div class="confidence-badge">
+        {{ winner.confidence.toFixed(1) }}% de confianza
+      </div>
+      <p class="source-info">Detectado vía {{ winner.source }}</p>
+    </div>
+
+    <div class="details-section animate-fade">
+      <div class="section-title">
+        <ion-icon name="analytics-outline"></ion-icon>
+        <h3>Probabilidades por IA</h3>
+      </div>
+
+      <div *ngFor="let modelKey of ['pytorch', 'keras', 'mobile']" class="model-block">
+        <h4 class="model-tag">{{ modelKey | uppercase }}</h4>
+        
+        <div *ngFor="let item of data[modelKey]" class="prediction-row">
+          <div class="row-text">
+            <span class="breed-name">{{ item.breed_es }}</span>
+            <span class="probability">{{ (item.confidence ).toFixed(1) }}%</span>
+          </div>
+          <div class="progress-container">
+            <div class="progress-fill" 
+                 [style.width.%]="item.confidence "
+                 [class.is-top]="item.breed_es === winner.breed_es">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

@@ -2,17 +2,24 @@
 
 <ion-content class="dashboard-content">
   <div class="main-container-v2">
+    <div class="header-title-v2 animate-fade">
+      <div class="title-with-icon">
+        <h1>Identifica cualquier raza <ion-icon name="sparkles" class="title-sparkle"></ion-icon></h1>
+        
+      </div>
+      <p>Toma una foto de tu peludito para saber más.</p>
+    </div>
 
     <div class="section-container animate-fade">
       <div class="upload-card-v2">
         <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" id="fileInput" hidden>
 
-        <label for="fileInput" class="upload-zone" *ngIf="!imagePreview && !videoPreview">
+        <label for="fileInput" class="upload-zone">
           <div class="icon-circle">
             <ion-icon name="cloud-upload" class="upload-icon"></ion-icon>
           </div>
           <h3>Sube una foto o vídeo</h3>
-          <p>Elige una donde se aprecien bien sus rasgos para mejores resultados.</p>
+          <p>Elige una donde se aprecien bien los rasgos para mejores resultados.</p>
         </label>
 
         <div class="preview-container" *ngIf="imagePreview || videoPreview">
@@ -27,50 +34,25 @@
          
 
         </div>
-         <ion-button  *ngIf="imagePreview || videoPreview" fill="clear" (click)="clearPreview()" color="danger">Quitar</ion-button>
+         <ion-button 
+          *ngIf="imagePreview || videoPreview" 
+          shape="round" 
+           expand="block" 
+           class="btn-modern-v2 ion-margin-top"
+          fill="outline"
+          (click)="clearPreview()" 
+          color="danger" >
+          <ion-icon slot="start" name="trash"></ion-icon>
+          Quitar
+        </ion-button>
       </div>
 
       <ion-button *ngIf="selectedFile" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"
         class="btn-modern-v2 gradient-btn ion-margin-top">
         <ion-spinner *ngIf="isLoading" slot="start" name="crescent"></ion-spinner>
         <ion-icon *ngIf="!isLoading" slot="start" name="sparkles-outline"></ion-icon>
-        {{ isLoading ? 'Analizando...' : 'Lanzar Análisis Pro' }}
+        {{ isLoading ? 'Analizando...' : 'Analizar' }}
       </ion-button>
-    </div>
-
-    <div *ngIf="predictionResult" class="result-card-v2 animate-slide-up">
-      <div class="result-header-v2">
-        <div class="winner-avatar">🐕</div>
-        <div class="winner-info">
-          <h2>{{ predictionResult.winner.breed }}</h2>
-          <p>{{ predictionResult.winner.confidence }} de confianza</p>
-        </div>
-      </div>
-
-      <div class="ion-padding">
-        <div *ngIf="predictionResult.summary" class="video-stats-v2">
-          <div class="stat-item">
-            <span class="stat-val">{{ predictionResult.summary.total_frames_analyzed }}</span>
-            <span class="stat-label">Clips</span>
-          </div>
-          <div class="stat-item">
-            <span class="stat-val">{{ predictionResult.summary.frequency }}</span>
-            <span class="stat-label">Coincidencias</span>
-          </div>
-        </div>
-
-        <div *ngIf="predictionResult.details" class="details-list-v2">
-          <div *ngFor="let item of predictionResult.details.pytorch; let i = index" class="detail-row">
-            <div class="row-header">
-              <span>{{ item.breed }}</span>
-              <span class="perc">{{ (item.probability * 100).toFixed(1) }}%</span>
-            </div>
-            <div class="progress-bar-v2">
-              <div class="progress-fill" [style.width.%]="item.probability * 100" [class.winner]="i === 0"></div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
   </div>

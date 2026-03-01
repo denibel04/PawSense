@@ -113,7 +113,7 @@ async def predict_video(file: UploadFile = File(...)):
         cap = None
 
         if frames_analizados == 0:
-            return {"success": False, "message": "No se detectó perro en el video"}
+            return {"success": False, "message": "No se ha detectado ningún perro en el video. Por favor, intenta con otro video."}
 
         # Función para promediar y formatear el Top 3
         def get_top_averages(arch_stats, n_frames):

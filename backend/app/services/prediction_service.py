@@ -15,7 +15,8 @@ import math
 
 @dataclass
 class PredictionResult:
-    breed: str
+    breed_en: str
+    breed_es: str
     confidence: float
 
 
@@ -40,6 +41,9 @@ class PredictionService:
 
         self.breed_labels_355 = []
         self.breed_labels_120 = []
+
+        self.translation_355 = {}
+        self.translation_120 = {}
 
         if not self.use_mock:
             self.load_model()
@@ -76,15 +80,15 @@ class PredictionService:
             self.model_pytorch.load_state_dict(torch.load(pth_path, map_location=device))
             self.model_pytorch.eval()
 
-            # Labels 355
+            # Labels 355 (MobileNet)
             with open(os.path.join(self.DATA_DIR, "breed_names_mobile_es.json"), 'r', encoding='utf-8') as f:
-                data355 = json.load(f)
-                self.breed_labels_355 = list(data355.values()) if isinstance(data355, dict) else data355
+                self.translation_355 = json.load(f)
+                self.breed_labels_355 = list(self.translation_355.keys())
 
-            # Labels 120
+            # Labels 120 (Keras/PyTorch)
             with open(os.path.join(self.DATA_DIR, "breed_names_es.json"), 'r', encoding='utf-8') as f:
-                data120 = json.load(f)
-                self.breed_labels_120 = list(data120.values()) if isinstance(data120, dict) else data120
+                self.translation_120 = json.load(f)
+                self.breed_labels_120 = list(self.translation_120.keys())
 
             self.model_loaded = True
             print("Triple AI loaded successfully")
@@ -232,11 +236,19 @@ class PredictionService:
                 preds = torch.nn.functional.softmax(outputs, dim=1)[0].cpu().numpy()
         else:
             preds = model.predict(preprocessed_image, verbose=0)[0]
+        
+        translation_dict = self.translation_355 if len(labels) > 200 else self.translation_120
 
         results = []
         for i, prob in enumerate(preds):
-            name = labels[i] if i < len(labels) else f"Unknown ({i})"
-            results.append(PredictionResult(name, float(prob)))
+            name_en = labels[i] if i < len(labels) else f"Unknown"
+            name_es = translation_dict.get(name_en, name_en)
+            
+            results.append(PredictionResult(
+                breed_en=name_en, 
+                breed_es=name_es, 
+                confidence=float(prob)
+            ))
 
         return sorted(results, key=lambda x: x.confidence, reverse=True)
 
@@ -287,17 +299,15 @@ class PredictionService:
 
     def get_top_predictions(self, predictions, top_n=3):
         top_res = []
-
         for pred in predictions[:top_n]:
             conf = pred.confidence
-            if math.isnan(conf) or math.isinf(conf):
-                conf = 0.0
+            if math.isnan(conf) or math.isinf(conf): conf = 0.0
 
             top_res.append({
-                "breed": pred.breed,
+                "breed_en": pred.breed_en, # ParaA llamadas a The Dog API
+                "breed_es": pred.breed_es, # Para mostrar en la UI
                 "confidence": round(float(conf) * 100, 2)
             })
-
         return top_res
 
 
