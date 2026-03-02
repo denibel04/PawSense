@@ -63,11 +63,23 @@
 }
 
 .rpt-brand {
-    font-size: 14px;
-    font-weight: 600;
-    font-family: 'Tondo-Modified';
-    color: var(--pawsense-orange, #FF9F43);
+    display: flex;
+    align-items: center;
+    gap: 6px;
     margin-top: 4px;
+
+    .rpt-brand-logo {
+        height: 30px;
+        width: 30px;
+        object-fit: contain;
+    }
+
+    .rpt-brand-text {
+        font-size: 18px;
+        font-weight: 700;
+        font-family: 'Tondo-Modified', 'Segoe UI', sans-serif;
+        color: var(--pawsense-orange, #FF9F43);
+    }
 }
 
 .rpt-date {

@@ -73,7 +73,16 @@ export class Tab3Page implements OnInit {
       { role: 'assistant', content: '¡Hola! Soy tu asistente canino. ¿En qué puedo ayudarte hoy? También puedo generar informes veterinarios o de adiestramiento basados en nuestra conversación. ¡Solo pídemelo!' }
     ];
 
-    // Subscribe to query params to receive breed predictions from prediction modal
+    // Listen to background updates from the prediction modal (implicit passing without click)
+    this.chatService.predictionContext$.subscribe(top3 => {
+      if (top3 && top3.length > 0) {
+        this.hasPrediction = true;
+        this.predictedBreed = top3[0].breed_es || top3[0].breed_en || '';
+        this.buildContextFromPredictions(top3);
+      }
+    });
+
+    // Subscribe to query params to receive breed predictions from prediction modal when Ask AI is clicked
     this.route.queryParams.subscribe(params => {
       if (params['top3']) {
         try {
@@ -82,6 +91,8 @@ export class Tab3Page implements OnInit {
             this.hasPrediction = true;
             this.predictedBreed = top3[0].breed_es || top3[0].breed_en || '';
             this.buildContextFromPredictions(top3);
+            // Auto-send a prompt asking about the predicted breeds
+            this.autoAskAboutBreeds(top3);
           }
         } catch (e) {
           console.error('Error parsing top3 predictions:', e);
@@ -119,6 +130,30 @@ export class Tab3Page implements OnInit {
     context += '\nLa raza principal predicha es la #1. Las razas #2 y #3 son alternativas posibles con menor probabilidad. Responde las preguntas del usuario teniendo en cuenta estas probabilidades.';
 
     this.contextData = context;
+  }
+
+  /**
+   * Automatically sends a prompt to the chatbot asking about the characteristics
+   * of the predicted dog breeds when navigating from the prediction modal.
+   */
+  private autoAskAboutBreeds(top3: any[]) {
+    const mainBreed = top3[0]?.breed_es || top3[0]?.breed_en || 'la raza detectada';
+    const otherBreeds = top3.slice(1)
+      .map(p => p.breed_es || p.breed_en)
+      .filter(Boolean);
+
+    let prompt = `Acabo de escanear a mi perro y la predicción indica que es un ${mainBreed}`;
+    if (otherBreeds.length > 0) {
+      prompt += ` (también podría ser ${otherBreeds.join(' o ')})`;
+    }
+    prompt += `. ¿Puedes contarme las características principales de ${otherBreeds.length > 0 ? 'estas razas' : 'esta raza'}? Me interesa saber sobre su temperamento, cuidados, alimentación y ejercicio recomendado.`;
+
+    // Set the message and trigger send
+    this.newMessage = prompt;
+    // Small delay to ensure context is ready and UI is rendered
+    setTimeout(() => {
+      this.sendMessage();
+    }, 300);
   }
 
   getInitialContext(breed: string) {

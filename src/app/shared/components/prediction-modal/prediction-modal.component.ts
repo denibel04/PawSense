@@ -6,6 +6,7 @@ import {
 } from '@ionic/angular/standalone';
 import { closeCircleOutline, trophyOutline, analyticsOutline } from 'ionicons/icons';
 import { DogService } from 'src/app/core/services/dog.service';
+import { ChatService } from 'src/app/core/services/chat.service';
 import { addIcons } from 'ionicons';
 import * as allIcons from 'ionicons/icons';
 import { TEMPERAMENT_MAP } from './temperament-map';
@@ -32,6 +33,7 @@ export class PredictionModalComponent implements OnInit {
   constructor(
     private modalCtrl: ModalController,
     private dogService: DogService,
+    private chatService: ChatService,
     private router: Router
   ) {
     addIcons(allIcons);
@@ -58,7 +60,7 @@ export class PredictionModalComponent implements OnInit {
     let bestArch = archResults[0];
     for (const arch of archResults) {
       if (arch.predictions.length > 0 &&
-          arch.predictions[0].confidence > (bestArch.predictions[0]?.confidence || 0)) {
+        arch.predictions[0].confidence > (bestArch.predictions[0]?.confidence || 0)) {
         bestArch = arch;
       }
     }
@@ -84,10 +86,17 @@ export class PredictionModalComponent implements OnInit {
     this.allBreedsInfo = new Array(allPredictions.length).fill(null);
     let completed = 0;
 
+    const checkCompleteAndShare = () => {
+      completed++;
+      if (completed === allPredictions.length) {
+        this.loadingInfo = false;
+        this.sharePredictionContext();
+      }
+    };
+
     allPredictions.forEach((pred, index) => {
       if (!pred?.breed_en) {
-        completed++;
-        if (completed === allPredictions.length) this.loadingInfo = false;
+        checkCompleteAndShare();
         return;
       }
       const cleanName = this.sanitizeBreedName(pred.breed_en);
@@ -101,15 +110,26 @@ export class PredictionModalComponent implements OnInit {
               this.processTemperaments(this.breedInfo.temperament);
             }
           }
-          completed++;
-          if (completed === allPredictions.length) this.loadingInfo = false;
+          checkCompleteAndShare();
         },
-        error: () => {
-          completed++;
-          if (completed === allPredictions.length) this.loadingInfo = false;
-        }
+        error: () => checkCompleteAndShare()
       });
     });
+  }
+
+  /**
+   * Submits the prediction context implicitly without user interaction.
+   * Allows the Chat to know the subject even if the modal is dismissed.
+   */
+  private sharePredictionContext() {
+    const allPredictions = [this.winner, ...this.runnerUps];
+    const top3 = allPredictions.map((pred, i) => ({
+      breed_en: pred?.breed_en || '',
+      breed_es: pred?.breed_es || '',
+      confidence: pred?.confidence || 0,
+      apiInfo: this.allBreedsInfo[i] || null
+    }));
+    this.chatService.updatePredictionContext(top3);
   }
 
   close() {
