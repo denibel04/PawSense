@@ -136,3 +136,6 @@ cython_debug/
 
 # Ignoring api images and video
 static/uploads
+
+# Ignoring .env.example
+.env.example
