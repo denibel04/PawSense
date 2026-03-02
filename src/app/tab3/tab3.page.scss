@@ -1,4 +1,3 @@
-
 .chat-container {
     display: flex;
     flex-direction: column;
@@ -28,7 +27,7 @@
 
     // Assistant Bubble Style
     .assistant & {
-        background-color: var(--ion-color-light);
+        background-color: white;
         color: var(--ion-text-color);
         border-bottom-left-radius: 4px; // Slight styling accent
     }

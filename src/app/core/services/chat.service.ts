@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_CONFIG } from '../constants/api.constants';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 export interface ChatReportSSEEvent {
     status: 'Análisis IA' | 'Extracción' | 'Revisión' | 'Informe Final' | 'completed' | 'error';
@@ -20,7 +20,14 @@ export interface ChatReportSSEEvent {
 })
 export class ChatService {
 
+    private predictionContextSubject = new BehaviorSubject<any[] | null>(null);
+    predictionContext$ = this.predictionContextSubject.asObservable();
+
     constructor(private http: HttpClient) { }
+
+    updatePredictionContext(top3: any[]) {
+        this.predictionContextSubject.next(top3);
+    }
 
     getBreedInfo(breedName: string): Observable<any> {
         return this.http.get(`${API_CONFIG.localBaseUrl}${API_CONFIG.endpoints.chatInfo}?breed_name=${breedName}`);

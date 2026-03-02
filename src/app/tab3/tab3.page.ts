@@ -73,7 +73,16 @@ export class Tab3Page implements OnInit {
       { role: 'assistant', content: '¡Hola! Soy tu asistente canino. ¿En qué puedo ayudarte hoy? También puedo generar informes veterinarios o de adiestramiento basados en nuestra conversación. ¡Solo pídemelo!' }
     ];
 
-    // Subscribe to query params to receive breed predictions from prediction modal
+    // Listen to background updates from the prediction modal (implicit passing without click)
+    this.chatService.predictionContext$.subscribe(top3 => {
+      if (top3 && top3.length > 0) {
+        this.hasPrediction = true;
+        this.predictedBreed = top3[0].breed_es || top3[0].breed_en || '';
+        this.buildContextFromPredictions(top3);
+      }
+    });
+
+    // Subscribe to query params to receive breed predictions from prediction modal when Ask AI is clicked
     this.route.queryParams.subscribe(params => {
       if (params['top3']) {
         try {

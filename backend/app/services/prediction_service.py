@@ -263,9 +263,7 @@ class PredictionService:
         """
         try:
             # Intentamos obtener los inputs procesados
-            in_mob, in_v1, in_pt = self._get_processed_inputs(image_path=image_path)
-            print(in_mob, in_v1, in_pt)
-            
+            in_mob, in_v1, in_pt = self._get_processed_inputs(image_path=image_path) 
             # Si la detección falló (YOLO no vio perro)
             if in_mob is None:
                 return {
