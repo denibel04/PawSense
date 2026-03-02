@@ -287,15 +287,12 @@ class PredictionService:
             }
 
         except Exception as e:
-            print(f"❌ Error crítico en predict_all_architectures: {e}")
-            return {
-                "success": False,
-                "message": f"Error interno del servidor: {str(e)}",
-                "mobile": [], "keras": [], "pytorch": []
-            }
+            print(f"❌ Error en predict_breed_from_image_array: {e}")
+            return {"success": False, "message": str(e), "mobile": [], "keras": [], "pytorch": []}
+            
 
     def _mock_predict(self):
-        return [PredictionResult("Golden Retriever (Mock)", 0.99)]
+        return [PredictionResult("Golden Retriever", "Golden Retriever (Mock)", 0.99)]
 
     def get_top_predictions(self, predictions, top_n=3):
         top_res = []

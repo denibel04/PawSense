@@ -281,3 +281,8 @@ ion-toolbar {
         --padding-end: 2rem;
     }
 }
+
+ion-modal {
+  --border-radius: 20px; // Ajusta el radio a tu gusto
+  --overflow: hidden;    // Asegura que el contenido no se salga de las esquinas
+}

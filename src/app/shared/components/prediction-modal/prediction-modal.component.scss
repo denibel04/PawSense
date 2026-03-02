@@ -1,97 +1,158 @@
-.result-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
 
-.winner-card {
-  background: #fdf8f3; // Tono crema suave
-  border-radius: 28px;
-  padding: 32px 20px;
-  text-align: center;
-  border: 1px solid #f3e9df;
+.custom-modal {
+  --background: #ffffff;
 
-  .badge-winner {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #fef3c7;
-    color: #92400e;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    margin-bottom: 12px;
-  }
-
-  .dog-emoji { font-size: 4rem; display: block; margin-bottom: 10px; }
-
-  h1 { 
-    margin: 0; 
-    font-size: 2rem; 
-    font-weight: 800; 
-    color: #1e293b;
-    letter-spacing: -0.5px;
-  }
-
-  .confidence-badge {
-    margin-top: 8px;
-    font-size: 1.2rem;
-    font-weight: 700;
-    color: #10b981;
-  }
-
-  .source-info {
-    margin-top: 10px;
-    font-size: 0.7rem;
-    color: #94a3b8;
-    text-transform: uppercase;
-  }
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: #1e293b;
-  h3 { margin: 0; font-size: 1.1rem; font-weight: 800; }
-  ion-icon { font-size: 1.4rem; color: #6366f1; }
-}
-
-.model-block {
-  margin-bottom: 20px;
-  .model-tag {
-    font-size: 0.7rem;
-    color: #6366f1;
-    font-weight: 800;
-    margin-bottom: 10px;
-    letter-spacing: 1px;
-  }
-}
-
-.prediction-row {
-  margin-bottom: 12px;
-  .row-text {
+  .header-section {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #334155;
-  }
-  .progress-container {
-    height: 8px;
-    background: #f1f5f9;
-    border-radius: 10px;
-    overflow: hidden;
-    .progress-fill {
-      height: 100%;
-      background: #cbd5e1;
-      border-radius: 10px;
-      transition: width 0.8s cubic-bezier(0.17, 0.67, 0.83, 0.67);
-      &.is-top { background: #6366f1; }
+    align-items: center;
+    margin-bottom: 20px;
+
+    .breed-name {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0;
+      color: #333;
+    }
+    .tagline {
+      color: #666;
+      font-style: italic;
+      margin: 4px 0 0 0;
     }
   }
+
+  .match-circle {
+    width: 65px;
+    height: 65px;
+    border: 5px solid var(--ion-color-primary);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    .percent { font-weight: 800; font-size: 1.1rem; }
+    .label { font-size: 0.6rem; font-weight: 600; }
+  }
+
+  .temperament-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    
+    .temp-card {
+      min-width: 85px;
+      height: 85px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      border-radius: 15px;
+      background: #f8f9fa;
+      border: 1px solid #eee;
+      
+      ion-icon { font-size: 1.5rem; margin-bottom: 5px; }
+      span { font-size: 0.65rem; font-weight: 700; }
+
+      // Colores dinámicos basados en tu mapeo
+      &.social { ion-icon, span { color: #e91e63; } }
+      &.activity { ion-icon, span { color: #ff9800; } }
+      &.character { ion-icon, span { color: #3f51b5; } }
+    }
+  }
+
+  .about-section {
+    margin-top: 25px;
+    h2 { font-size: 1.2rem; font-weight: 700; border-left: 4px solid var(--ion-color-primary); padding-left: 10px; }
+    .description-text { color: #555; line-height: 1.5; font-size: 0.95rem; }
+  }
+
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 20px 0;
+
+    .info-card {
+      background: #fff8f0; // Color cremita de la imagen
+      padding: 15px;
+      border-radius: 15px;
+      display: flex;
+      flex-direction: column;
+      .card-label { font-size: 0.7rem; color: #8d7b6d; font-weight: 700; }
+      .card-value { font-size: 1.1rem; font-weight: 700; margin-top: 5px; color: #444; }
+    }
+  }
+
+  .ai-button-container {
+    background: #fef3d7;
+    border-radius: 15px;
+    margin-bottom: 15px;
+    
+    .ai-content {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 5px;
+      text-align: left;
+    }
+    .ai-icon-bg {
+      background: #fff;
+      padding: 10px;
+      border-radius: 50%;
+      margin-right: 12px;
+      ion-icon { font-size: 1.4rem; color: var(--ion-color-primary); }
+    }
+    .ai-text {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      strong { font-size: 0.9rem; color: #333; }
+      span { font-size: 0.75rem; color: #666; }
+    }
+  }
+  
+  .share-btn { --border-radius: 15px; margin-top: 10px; font-weight: 700; }
 }
+
+.header-section {
+  position: relative;
+  z-index: 5; // Asegura que el texto esté sobre el degradado
+}
+
+.hero-image-container {
+    position: relative;
+    width: calc(100% + 32px); // Ignora el padding lateral
+    margin: -16px -16px 0 -16px; // Pega la imagen arriba del todo
+    height: 320px; // Altura aumentada para mostrar más imagen
+    overflow: hidden;
+    background-color: #f5f5f5;
+
+    .breed-hero-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%; 
+      display: block;
+    }
+
+    .fade-to-white {
+      position: absolute;
+      bottom: -1px; // Evita líneas de separación
+      left: 0;
+      width: 100%;
+      height: 60%; // El degradado ocupa el 60% inferior de la foto
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 40%,
+        rgba(255, 255, 255, 0.9) 80%,
+        rgba(255, 255, 255, 1) 100%
+      );
+    }
+  }
+
+  .life-span-card {
+    grid-column: span 2; 
+    text-align: left;
+  }

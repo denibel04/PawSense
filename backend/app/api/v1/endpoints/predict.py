@@ -75,7 +75,6 @@ async def predict_video(file: UploadFile = File(...)):
 
     cap = None
     try:
-        # Guardar video permanentemente
         static_videos_path = os.path.join("static", "uploads", "videos", "raw")
         os.makedirs(static_videos_path, exist_ok=True)
         permanent_video_path = os.path.join(static_videos_path, file.filename)
@@ -85,7 +84,8 @@ async def predict_video(file: UploadFile = File(...)):
         fps = cap.get(cv2.CAP_PROP_FPS) or 30
         step = int(fps) 
         
-        # Diccionarios para acumular confianzas por modelo { "Raza": suma_confianzas }
+        # Ahora acumulamos usando una clave única (usaremos breed_en como ID)
+        # stats[arch][breed_en] = { "sum": conf, "es": breed_es }
         stats = {
             "mobile": {},
             "keras": {},
@@ -102,25 +102,33 @@ async def predict_video(file: UploadFile = File(...)):
                 
                 if preds["success"]:
                     frames_analizados += 1
-                    # Acumulamos resultados de las 3 arquitecturas
                     for arch in ["mobile", "keras", "pytorch"]:
                         for p in preds[arch]:
-                            breed = p["breed"]
+                            # --- AQUÍ ESTABA EL ERROR ---
+                            b_en = p["breed_en"]
+                            b_es = p["breed_es"]
                             conf = p["confidence"]
-                            stats[arch][breed] = stats[arch].get(breed, 0) + conf
+                            
+                            if b_en not in stats[arch]:
+                                stats[arch][b_en] = {"sum": 0, "es": b_es}
+                            
+                            stats[arch][b_en]["sum"] += conf
             
         cap.release()
         cap = None
 
         if frames_analizados == 0:
-            return {"success": False, "message": "No se ha detectado ningún perro en el video. Por favor, intenta con otro video."}
+            return {"success": False, "message": "No se detectó perro en el video."}
 
-        # Función para promediar y formatear el Top 3
+        # Función para promediar corregida para devolver ambos nombres
         def get_top_averages(arch_stats, n_frames):
-            # Convertimos suma en promedio y ordenamos
             avg_list = [
-                {"breed": b, "confidence": round(total / n_frames, 2)}
-                for b, total in arch_stats.items()
+                {
+                    "breed_en": b_en, 
+                    "breed_es": info["es"], 
+                    "confidence": round(info["sum"] / n_frames, 2)
+                }
+                for b_en, info in arch_stats.items()
             ]
             return sorted(avg_list, key=lambda x: x["confidence"], reverse=True)[:3]
 

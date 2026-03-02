@@ -1,53 +1,72 @@
-<ion-header class="ion-no-border">
-  <ion-toolbar>
-    <ion-title>Resultado del análisis</ion-title>
-    <ion-buttons slot="end">
-      <ion-button (click)="close()" color="medium">
-        <ion-icon name="close-circle-outline" slot="icon-only"></ion-icon>
-      </ion-button>
-    </ion-buttons>
-  </ion-toolbar>
-</ion-header>
+<ion-content class="ion-padding custom-modal">
 
-<ion-content class="ion-padding">
-  <div class="result-container" *ngIf="winner">
-    
-    <div class="winner-card animate-slide-up">
-      <div class="badge-winner">
-        <ion-icon name="trophy-outline"></ion-icon>
-        <span>Mejor coincidencia</span>
-      </div>
-      <span class="dog-emoji">🐕</span>
-      <h1>{{ winner.breed_es }}</h1>
-      <div class="confidence-badge">
-        {{ winner.confidence.toFixed(1) }}% de confianza
-      </div>
-      <p class="source-info">Detectado vía {{ winner.source }}</p>
-    </div>
-
-    <div class="details-section animate-fade">
-      <div class="section-title">
-        <ion-icon name="analytics-outline"></ion-icon>
-        <h3>Probabilidades por IA</h3>
-      </div>
-
-      <div *ngFor="let modelKey of ['pytorch', 'keras', 'mobile']" class="model-block">
-        <h4 class="model-tag">{{ modelKey | uppercase }}</h4>
-        
-        <div *ngFor="let item of data[modelKey]" class="prediction-row">
-          <div class="row-text">
-            <span class="breed-name">{{ item.breed_es }}</span>
-            <span class="probability">{{ (item.confidence ).toFixed(1) }}%</span>
-          </div>
-          <div class="progress-container">
-            <div class="progress-fill" 
-                 [style.width.%]="item.confidence "
-                 [class.is-top]="item.breed_es === winner.breed_es">
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div class="hero-image-container" *ngIf="breedInfo?.image_url">
+    <img [src]="breedInfo.image_url" class="breed-hero-img" alt="Dog Breed">
+    <div class="fade-to-white"></div>
   </div>
+
+  <div class="header-section" *ngIf="winner">
+    <div class="title-block">
+      <h1 class="breed-name">{{ winner.breed_es }}</h1>
+    </div>
+    <div class="match-circle">
+      <span class="percent">{{ winner.confidence.toFixed(0) }}%</span>
+      <span class="label">MATCH</span>
+    </div>
+  </div>
+
+  <div class="temperament-row" *ngIf="formattedTemps.length > 0">
+    <div *ngFor="let temp of formattedTemps" [class]="'temp-card ' + temp.group">
+      <ion-icon [name]="temp.icon"></ion-icon>
+      <span>{{ temp.esp | uppercase }}</span>
+    </div>
+  </div>
+  <!--
+  <div class="about-section" *ngIf="breedInfo?.description">
+    <h2 class="section-title">Sobre la raza</h2>
+    <p class="description-text">{{ breedInfo.description }}</p>
+  </div>
+ -->
+  <div class="info-grid" *ngIf="breedInfo">
+
+  
+  <div class="info-card">
+    <span class="card-label">RANGO DE PESO</span>
+    <span class="card-value">
+      <span [innerHTML]="formatMetric(breedInfo.weight_metric)"></span> kg
+    </span>
+  </div>
+
+  <div class="info-card">
+    <span class="card-label">RANGO DE ALTURA</span>
+    <span class="card-value">
+      <span [innerHTML]="formatMetric(breedInfo.height_metric)"></span> cm
+    </span>
+  </div>
+
+  <div class="info-card life-span-card" *ngIf="breedInfo.life_span && breedInfo.life_span !== 'None'">
+    <span class="card-label">ESPERANZA DE VIDA</span>
+    <span class="card-value">{{ breedInfo.life_span.replace('-', ' - ') }} años</span>
+  </div>
+
+</div>
+  <div class="ai-button-container">
+    <ion-button expand="block" fill="clear" class="ai-chat-btn">
+      <div class="ai-content">
+        <div class="ai-icon-bg">
+          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        </div>
+        <div class="ai-text">
+          <strong>Pregunta a la IA sobre {{ winner.breed_es }}</strong>
+          <span>Entrenamiento, dieta y cuidados</span>
+        </div>
+        <ion-icon name="open-outline" class="external-icon"></ion-icon>
+      </div>
+    </ion-button>
+  </div>
+
+  <ion-button expand="block" fill="outline" color="medium" class="share-btn">
+    <ion-icon name="share-social-outline" slot="start"></ion-icon>
+    Compartir
+  </ion-button>
 </ion-content>

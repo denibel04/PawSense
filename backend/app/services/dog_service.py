@@ -105,7 +105,7 @@ class DogService:
                     "history": breed.get("history"),
                     "temperament": breed.get("temperament"),
                     "life_span": breed.get("life_span"),
-                    "image_url": f"https://cdn2.thedogapi.com/images/{breed.get('reference_image_id')}.jpg" if breed.get('reference_image_id') else None,
+                    "image_url": breed.get("image", {}).get("url"),
                     "height_metric": breed.get("height", {}).get("metric"),
                     "weight_metric": breed.get("weight", {}).get("metric"),
                 }
