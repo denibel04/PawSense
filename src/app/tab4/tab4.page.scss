@@ -47,8 +47,10 @@ $success-color: #34c759;
     }
 }
 
+
+
 .dashboard-content {
-    --background: #{$light-bg};
+    --background: linear-gradient(to bottom, white, var(--ion-color-secondary));
 
     ion-grid {
         padding: 20px;
