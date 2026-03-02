@@ -11,7 +11,7 @@ import { addIcons } from 'ionicons';
 import { send, paw, documentTextOutline } from 'ionicons/icons';
 import { ChatService, ChatReportSSEEvent } from '../core/services/chat.service';
 import { ReportSharedService } from '../core/services/report-shared.service';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { HeaderComponent } from '../shared/components/header/header.component';
 
 interface ChatMessage {
@@ -52,12 +52,17 @@ export class Tab3Page implements OnInit {
   reportGenerating: boolean = false;
   reportProgress: number = 0;
 
+  // Prediction data
+  predictedBreed: string = '';  // The #1 predicted breed (for reports)
+  hasPrediction: boolean = false;
+
   constructor(
     private chatService: ChatService,
     private reportSharedService: ReportSharedService,
     private changeDetectorRef: ChangeDetectorRef,
     private ngZone: NgZone,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {
     this.cdr = changeDetectorRef;
     addIcons({ send, paw, documentTextOutline });
@@ -68,8 +73,52 @@ export class Tab3Page implements OnInit {
       { role: 'assistant', content: '¡Hola! Soy tu asistente canino. ¿En qué puedo ayudarte hoy? También puedo generar informes veterinarios o de adiestramiento basados en nuestra conversación. ¡Solo pídemelo!' }
     ];
 
-    // Obtener contexto inicial (Hardcoded por ahora, debería venir de la navegación)
-    this.getInitialContext('terrier');
+    // Subscribe to query params to receive breed predictions from prediction modal
+    this.route.queryParams.subscribe(params => {
+      if (params['top3']) {
+        try {
+          const top3 = JSON.parse(params['top3']);
+          if (top3 && top3.length > 0) {
+            this.hasPrediction = true;
+            this.predictedBreed = top3[0].breed_es || top3[0].breed_en || '';
+            this.buildContextFromPredictions(top3);
+          }
+        } catch (e) {
+          console.error('Error parsing top3 predictions:', e);
+        }
+      }
+    });
+  }
+
+  /**
+   * Builds the chat context string from the top 3 breed predictions.
+   * Includes TheDogAPI info for each breed and their confidence percentages.
+   */
+  private buildContextFromPredictions(top3: any[]) {
+    // First line: main breed with 'Raza:' prefix so backend can parse it
+    const mainBreed = top3[0]?.breed_es || top3[0]?.breed_en || '';
+    let context = `Raza: ${mainBreed}\n`;
+    context += 'PREDICCIÓN DE RAZA (modelo de IA):\n';
+
+    top3.forEach((pred, i) => {
+      const rank = i + 1;
+      const breedName = pred.breed_es || pred.breed_en || 'Desconocida';
+      const confidence = pred.confidence?.toFixed(1) || '0';
+      const apiInfo = pred.apiInfo;
+
+      context += `\nRaza #${rank}: ${breedName} (${confidence}% de probabilidad)\n`;
+
+      if (apiInfo && apiInfo.found !== false) {
+        if (apiInfo.temperament) context += `Temperamento: ${apiInfo.temperament}\n`;
+        if (apiInfo.life_span) context += `Esperanza de vida: ${apiInfo.life_span}\n`;
+        if (apiInfo.weight_metric) context += `Peso: ${apiInfo.weight_metric} kg\n`;
+        if (apiInfo.height_metric) context += `Altura: ${apiInfo.height_metric} cm\n`;
+      }
+    });
+
+    context += '\nLa raza principal predicha es la #1. Las razas #2 y #3 son alternativas posibles con menor probabilidad. Responde las preguntas del usuario teniendo en cuenta estas probabilidades.';
+
+    this.contextData = context;
   }
 
   getInitialContext(breed: string) {

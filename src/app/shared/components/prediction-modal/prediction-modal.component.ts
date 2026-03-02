@@ -9,6 +9,7 @@ import { DogService } from 'src/app/core/services/dog.service';
 import { addIcons } from 'ionicons';
 import * as allIcons from 'ionicons/icons';
 import { TEMPERAMENT_MAP } from './temperament-map';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-prediction-modal',
@@ -22,13 +23,16 @@ export class PredictionModalComponent implements OnInit {
   @Input() type: 'image' | 'video' | null = null;
 
   winner: any = null;
+  runnerUps: any[] = [];   // 2nd and 3rd predictions
   breedInfo: any = null;
+  allBreedsInfo: any[] = []; // TheDogAPI info for top 3 breeds
   loadingInfo = false;
   formattedTemps: any[] = [];
 
   constructor(
     private modalCtrl: ModalController,
-    private dogService: DogService
+    private dogService: DogService,
+    private router: Router
   ) {
     addIcons(allIcons);
   }
@@ -36,39 +40,75 @@ export class PredictionModalComponent implements OnInit {
   ngOnInit() {
     if (this.data) {
       this.calculateWinner();
-
     }
 
     if (this.winner && this.winner.breed_en) {
-      const cleanName = this.sanitizeBreedName(this.winner.breed_en);
-      this.loadBreedInfo(cleanName);
+      this.loadAllBreedsInfo();
     }
   }
 
   private calculateWinner() {
-    const candidates = [
-      { ...this.data.pytorch?.[0], source: 'PyTorch' },
-      { ...this.data.keras?.[0], source: 'Keras' },
-      { ...this.data.mobile?.[0], source: 'MobileNetV2' }
+    // Determine which architecture's top-1 has the highest confidence
+    const archResults: { name: string; predictions: any[] }[] = [
+      { name: 'PyTorch', predictions: this.data.pytorch || [] },
+      { name: 'Keras', predictions: this.data.keras || [] },
+      { name: 'MobileNetV2', predictions: this.data.mobile || [] }
     ];
 
-    this.winner = candidates.reduce((prev, curr) =>
-      (curr.confidence > (prev.confidence || 0)) ? curr : prev
-    );
+    let bestArch = archResults[0];
+    for (const arch of archResults) {
+      if (arch.predictions.length > 0 &&
+          arch.predictions[0].confidence > (bestArch.predictions[0]?.confidence || 0)) {
+        bestArch = arch;
+      }
+    }
+
+    // Winner = top-1 of the best architecture
+    if (bestArch.predictions.length > 0) {
+      this.winner = { ...bestArch.predictions[0], source: bestArch.name };
+    }
+
+    // Runner-ups = positions 2 and 3 from the same architecture
+    this.runnerUps = bestArch.predictions
+      .slice(1, 3)
+      .map(p => ({ ...p, source: bestArch.name }));
   }
 
-  private async loadBreedInfo(breedName: string) {
+  /**
+   * Fetches TheDogAPI info for top 3 breeds (winner + runner-ups).
+   * Only the winner's info is displayed in the modal, but all 3 are passed to the chat.
+   */
+  private loadAllBreedsInfo() {
     this.loadingInfo = true;
-    this.dogService.getPredictionDetails(breedName).subscribe({
-      next: (res) => {
-        this.breedInfo = res.found ? res : null;
-        console.log('Información de la raza obtenida:', this.breedInfo);
-        if (this.breedInfo?.temperament) {
-          this.processTemperaments(this.breedInfo.temperament); // Usa la función que hicimos antes
+    const allPredictions = [this.winner, ...this.runnerUps];
+    this.allBreedsInfo = new Array(allPredictions.length).fill(null);
+    let completed = 0;
+
+    allPredictions.forEach((pred, index) => {
+      if (!pred?.breed_en) {
+        completed++;
+        if (completed === allPredictions.length) this.loadingInfo = false;
+        return;
+      }
+      const cleanName = this.sanitizeBreedName(pred.breed_en);
+      this.dogService.getPredictionDetails(cleanName).subscribe({
+        next: (res) => {
+          this.allBreedsInfo[index] = res.found ? res : null;
+          // The winner (index 0) is also used for modal display
+          if (index === 0) {
+            this.breedInfo = res.found ? res : null;
+            if (this.breedInfo?.temperament) {
+              this.processTemperaments(this.breedInfo.temperament);
+            }
+          }
+          completed++;
+          if (completed === allPredictions.length) this.loadingInfo = false;
+        },
+        error: () => {
+          completed++;
+          if (completed === allPredictions.length) this.loadingInfo = false;
         }
-        this.loadingInfo = false;
-      },
-      error: () => this.loadingInfo = false
+      });
     });
   }
 
@@ -121,5 +161,20 @@ export class PredictionModalComponent implements OnInit {
     return val.replace(/(\d+)-(\d+)/, '$1 - $2');
   }
 
-
+  /**
+   * Navigate to the Chat tab (tab3) passing the top 3 predicted breeds with their API info.
+   */
+  async askAI() {
+    const allPredictions = [this.winner, ...this.runnerUps];
+    const top3 = allPredictions.map((pred, i) => ({
+      breed_en: pred?.breed_en || '',
+      breed_es: pred?.breed_es || '',
+      confidence: pred?.confidence || 0,
+      apiInfo: this.allBreedsInfo[i] || null
+    }));
+    await this.modalCtrl.dismiss();
+    this.router.navigate(['/tabs/tab3'], {
+      queryParams: { top3: JSON.stringify(top3) }
+    });
+  }
 }

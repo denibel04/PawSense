@@ -50,8 +50,24 @@
   </div>
 
 </div>
+  <!-- Runner-ups: 2nd and 3rd predictions -->
+  <div class="runner-ups-section" *ngIf="runnerUps.length > 0">
+    <h2 class="section-title">También podría ser...</h2>
+    <div class="runner-ups-list">
+      <div class="runner-up-card" *ngFor="let ru of runnerUps; let i = index">
+        <div class="runner-up-rank">{{ i + 2 }}º</div>
+        <div class="runner-up-info">
+          <span class="runner-up-name">{{ ru.breed_es }}</span>
+        </div>
+        <div class="runner-up-confidence">
+          <span class="ru-percent">{{ ru.confidence.toFixed(1) }}%</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="ai-button-container">
-    <ion-button expand="block" fill="clear" class="ai-chat-btn">
+    <ion-button expand="block" fill="clear" class="ai-chat-btn" (click)="askAI()">
       <div class="ai-content">
         <div class="ai-icon-bg">
           <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
