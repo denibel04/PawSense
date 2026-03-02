@@ -143,23 +143,25 @@ export class PredictionModalComponent implements OnInit {
     });
   }
 
-  formatMetric(val: string | null | undefined): string {
-    if (!val) return 'N/A';
+formatMetric(val: string | null | undefined, unit: string): string {
+  if (!val) return 'N/A';
 
-    // 1. Si viene el formato "Male: 23-24; Female: 21-22"
-    if (val.includes('Male') || val.includes('Female')) {
-      return val
-        .split(';') // Separamos por el punto y coma
-        .map(part => {
-          // Para cada parte (Male/Female), buscamos el rango y ponemos espacios al guion
-          return part.replace(/(\d+)-(\d+)/, '$1 - $2').trim();
-        })
-        .join('<br>'); // Los unimos con un salto de línea
-    }
-
-    // 2. Si es un rango simple "3-4", le ponemos espacios: "3 - 4"
-    return val.replace(/(\d+)-(\d+)/, '$1 - $2');
+  if (val.includes('Male') || val.includes('Female')) {
+    return val
+      .split(';') 
+      .map(part => {
+        let clean = part.replace(/(\d+)-(\d+)/, '$1 - $2').trim();
+        // Reemplazamos etiquetas y añadimos la unidad al final de la línea
+        return clean
+          .replace('Male', 'Macho')
+          .replace('Female', 'Hembra') + ` ${unit}`;
+      })
+      .join('<br>');
   }
+
+  // Si es un rango simple, también le ponemos la unidad
+  return val.replace(/(\d+)-(\d+)/, '$1 - $2') + ` ${unit}`;
+}
 
   /**
    * Navigate to the Chat tab (tab3) passing the top 3 predicted breeds with their API info.

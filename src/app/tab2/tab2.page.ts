@@ -55,7 +55,7 @@ export class Tab2Page implements OnDestroy {
         const data = JSON.parse(event.data);
         if (data.found) {
           this.realTimeResult = data.top3.map((item: any) => ({
-            breed: item.breed,
+            breed: item.breed_es,
             confidence: item.confidence.toString().includes('%') ? item.confidence : item.confidence + '%'
           }));
         }

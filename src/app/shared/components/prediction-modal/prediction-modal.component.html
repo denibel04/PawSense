@@ -33,14 +33,14 @@
   <div class="info-card">
     <span class="card-label">RANGO DE PESO</span>
     <span class="card-value">
-      <span [innerHTML]="formatMetric(breedInfo.weight_metric)"></span> kg
+      <span [innerHTML]="formatMetric(breedInfo.weight_metric, 'kg')"></span>
     </span>
   </div>
 
   <div class="info-card">
     <span class="card-label">RANGO DE ALTURA</span>
     <span class="card-value">
-      <span [innerHTML]="formatMetric(breedInfo.height_metric)"></span> cm
+      <span [innerHTML]="formatMetric(breedInfo.height_metric, 'cm')"></span>
     </span>
   </div>
 
@@ -73,7 +73,7 @@
           <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
         </div>
         <div class="ai-text">
-          <strong>Pregunta a la IA sobre {{ winner.breed_es }}</strong>
+          <strong>Pregunta a la IA sobre los {{ winner.breed_es }}</strong>
           <span>Entrenamiento, dieta y cuidados</span>
         </div>
         <ion-icon name="open-outline" class="external-icon"></ion-icon>
