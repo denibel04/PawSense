@@ -8,32 +8,31 @@
       </div>
     </header>
 
-    <!-- Hero Section -->
+    <!-- Sección Principal -->
     <section class="hero-section">
       <ion-grid>
         <ion-row class="ion-align-items-center">
-          <!-- Text Content -->
+          <!-- Contenido de Texto -->
           <ion-col size="12" size-md="6" class="hero-text">
-            <h1>Caring for your pets, <span class="highlight">implified.</span></h1>
+            <h1>Cuidar de tus mascotas, <span class="highlight">de forma inteligente.</span></h1>
             <p>
-              Track health, chat with AI vets, and keep your furry friends happy directly from your pocket.
+              De la identificación de raza a reportes de salud detallados. Chatea con expertos IA y documenta cada sesión de adiestramiento automáticamente.
             </p>
             <div class="hero-buttons">
               <ion-button size="large" shape="round" (click)="navigateToApp()">
-                Get Started
+                Comenzar
                 <ion-icon slot="end" name="paw"></ion-icon>
               </ion-button>
-              <ion-button fill="clear" size="large" color="dark">
-                Learn More
+              <ion-button fill="clear" size="large" color="dark" (click)="scrollToFeatures()">
+                Saber Más
               </ion-button>
             </div>
           </ion-col>
 
-          <!-- Image Content -->
+          <!-- Imagen -->
           <ion-col size="12" size-md="6" class="hero-image-col">
             <div class="hero-image-wrapper">
-              <!-- Placeholder for the generated image, using a specialized class to handle it -->
-              <img src="assets/landing_image.png" alt="Happy pets" class="hero-img"
+              <img src="assets/landing_image.png" alt="Mascotas felices" class="hero-img"
                 onError="this.src='https://ionicframework.com/docs/img/demos/thumbnail.svg'" />
             </div>
           </ion-col>
@@ -41,49 +40,49 @@
       </ion-grid>
     </section>
 
-    <!-- Features Section -->
-    <section class="features-section">
+    <!-- Sección de Características -->
+    <section class="features-section" id="features-section">
       <div class="section-title">
-        <h2>Why PawSense?</h2>
-        <p>Everything you need for your pet's well-being.</p>
+        <h2>¿Por qué PawSense?</h2>
+        <p>Todo lo que necesitas para el bienestar de tu mascota.</p>
       </div>
 
       <ion-grid>
         <ion-row>
           <ion-col size="12" size-md="4">
-            <div class="feature-card">
+            <div class="feature-card" (click)="navigateTo('/tabs/tab1')" style="cursor: pointer;">
               <div class="icon-box">
-                <ion-icon name="heart" color="danger"></ion-icon>
+                <ion-icon name="search-outline" color="primary"></ion-icon>
               </div>
-              <h3>Health Tracking</h3>
-              <p>Monitor vaccinations, weight, and vet visits in one place.</p>
+              <h3>Analizador de Razas</h3>
+              <p>Identifica la raza de tu perro al instante con inteligencia artificial.</p>
             </div>
           </ion-col>
           <ion-col size="12" size-md="4">
-            <div class="feature-card">
+            <div class="feature-card" (click)="navigateTo('/tabs/tab3')" style="cursor: pointer;">
               <div class="icon-box">
                 <ion-icon name="chatbubble-ellipses" color="tertiary"></ion-icon>
               </div>
-              <h3>AI Vet Chat</h3>
-              <p>Instant answers to your pet questions, powered by advanced AI.</p>
+              <h3>Chat Canino IA</h3>
+              <p>Respuestas instantáneas a tus preguntas sobre mascotas, con IA avanzada.</p>
             </div>
           </ion-col>
           <ion-col size="12" size-md="4">
-            <div class="feature-card">
+            <div class="feature-card" (click)="navigateTo('/tabs/tab4')" style="cursor: pointer;">
               <div class="icon-box">
-                <ion-icon name="shield-checkmark" color="success"></ion-icon>
+                <ion-icon name="document-text" color="success"></ion-icon>
               </div>
-              <h3>Secure Data</h3>
-              <p>Your pet's information is safe and accessible only to you.</p>
+              <h3>Generador de Informes</h3>
+              <p>Informes de adiestramiento y clínicos detallados generados por un agente de IA.</p>
             </div>
           </ion-col>
         </ion-row>
       </ion-grid>
     </section>
 
-    <!-- Footer -->
+    <!-- Pie de Página -->
     <footer>
-      <p>&copy; 2026 PawSense. All rights reserved.</p>
+      <p>&copy; 2026 PawSense. Todos los derechos reservados.</p>
     </footer>
   </div>
 </ion-content>
