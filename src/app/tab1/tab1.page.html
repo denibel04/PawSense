@@ -9,15 +9,17 @@
     </div>
 
     <div class="section-container animate-fade">
-      <div class="upload-card-v2">
+      <div class="upload-card-v2" [class.drag-over]="isDragging">
         <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" id="fileInput" hidden>
 
-        <label for="fileInput" class="upload-zone">
+        <label for="fileInput" class="upload-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
           <div class="icon-circle">
-            <ion-icon name="cloud-upload" class="upload-icon"></ion-icon>
+            <ion-icon [name]="isDragging ? 'cloud-upload' : 'cloud-upload'" class="upload-icon"
+              [class.bounce]="isDragging"></ion-icon>
           </div>
-          <h3>Sube una foto o vídeo</h3>
-          <p>Elige una donde se aprecien bien los rasgos para mejores resultados.</p>
+          <h3>{{ isDragging ? 'Suelta aquí la imagen' : 'Sube una foto o vídeo' }}</h3>
+          <p>{{ isDragging ? '' : 'Elige una donde se aprecien bien los rasgos para mejores resultados.' }}</p>
         </label>
 
         <div class="preview-container" *ngIf="imagePreview || videoPreview">
@@ -29,17 +31,11 @@
           <video *ngIf="videoPreview && selectedFile?.type !== 'image/gif'" [src]="videoPreview" autoplay loop muted
             playsinline class="preview-media">
           </video>
-         
+
 
         </div>
-         <ion-button 
-          *ngIf="imagePreview || videoPreview" 
-          shape="round" 
-           expand="block" 
-           class="btn-modern-v2 ion-margin-top"
-          fill="outline"
-          (click)="clearPreview()" 
-          color="danger" >
+        <ion-button *ngIf="imagePreview || videoPreview" shape="round" expand="block"
+          class="btn-modern-v2 ion-margin-top" fill="outline" (click)="clearPreview()" color="danger">
           <ion-icon slot="start" name="trash"></ion-icon>
           Quitar
         </ion-button>

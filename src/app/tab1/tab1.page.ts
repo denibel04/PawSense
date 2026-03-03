@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
   IonLabel, IonLoading, IonIcon, IonCard, IonCardContent,
-  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, ToastController, 
+  IonGrid, IonRow, IonCol, IonProgressBar, IonBadge, ToastController,
   IonSpinner, ModalController
 } from '@ionic/angular/standalone';
 import { CommonModule } from '@angular/common';
@@ -32,9 +32,10 @@ export class Tab1Page {
   imagePreview: string | null = null;
   videoPreview: string | null = null;
   fileType: 'image' | 'video' | null = null;
+  isDragging = false;
 
   constructor(
-    private dogService: DogService, 
+    private dogService: DogService,
     private toastController: ToastController,
     private modalCtrl: ModalController
   ) {
@@ -48,10 +49,34 @@ export class Tab1Page {
   onFileSelected(event: Event) {
     const file = (event.target as HTMLInputElement).files?.[0];
     if (!file) return;
+    this.processFile(file);
+  }
 
+  onDragOver(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = true;
+  }
+
+  onDragLeave(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+  }
+
+  onDrop(event: DragEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging = false;
+    const file = event.dataTransfer?.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) return;
+    this.processFile(file);
+  }
+
+  private processFile(file: File) {
     this.resetState();
     this.selectedFile = file;
-
     if (this.isMediaVideo(file)) {
       this.handleVideoSelection(file);
     } else {
@@ -94,7 +119,7 @@ export class Tab1Page {
 
   private handleSuccess(response: any) {
     this.isLoading = false;
-    
+
     console.log('Respuesta cruda del servidor:', response);
 
     if (!response || response.success === false) {
@@ -111,7 +136,7 @@ export class Tab1Page {
       componentProps: {
         data: rawResponse,
         type: this.fileType
-      }, 
+      },
       handle: true
     });
 
