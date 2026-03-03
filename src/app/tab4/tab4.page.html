@@ -123,15 +123,18 @@
               </div>
 
               <div class="stepper-step" [class.pending]="progress.clinicalExtraction === 'pending'"
-                [class.process]="progress.clinicalExtraction === 'process'" [class.done]="progress.clinicalExtraction === 'done'">
+                [class.process]="progress.clinicalExtraction === 'process'"
+                [class.done]="progress.clinicalExtraction === 'done'">
                 <div class="stepper-indicator">
                   <div class="stepper-dot"></div>
                   <div class="stepper-line"></div>
                 </div>
                 <div class="stepper-content">
                   <span class="stepper-label">Extracción</span>
-                  <span *ngIf="progress.clinicalExtraction === 'process'" class="stepper-status muted">Generando Reporte</span>
-                  <span *ngIf="progress.clinicalExtraction === 'done'" class="stepper-status done-text">Completado</span>
+                  <span *ngIf="progress.clinicalExtraction === 'process'" class="stepper-status muted">Generando
+                    Reporte</span>
+                  <span *ngIf="progress.clinicalExtraction === 'done'"
+                    class="stepper-status done-text">Completado</span>
                 </div>
               </div>
 
@@ -209,7 +212,7 @@
             <!-- SHARED ACTION BUTTONS -->
             <div class="preview-actions-grid preview-actions">
               <ion-button color="primary" class="primary-action-btn" (click)="downloadReport()"
-                [disabled]="progress.finalReport !== 'done'">
+                [disabled]="!hasAnyData()">
                 <ion-icon slot="start" name="download-outline"></ion-icon>
                 Descargar PDF
               </ion-button>

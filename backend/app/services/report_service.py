@@ -150,8 +150,14 @@ class ReportService:
         """
         yield {"status": "Informe Final", "message": "Generando PDF..."}
 
+        # Aseguramos que el directorio generated_reports existe en la raíz del backend
+        reports_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "generated_reports")
+        os.makedirs(reports_dir, exist_ok=True)
+
         if filename is None:
             filename = f"report_{report_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+            
+        filepath = os.path.join(reports_dir, filename)
 
         tmp_html_path = None
         try:
@@ -179,16 +185,16 @@ class ReportService:
                 raise PDFGenerationError("Playwright devolvió contenido PDF nulo")
 
             # Guardar PDF en disco
-            with open(filename, 'wb') as f:
+            with open(filepath, 'wb') as f:
                 f.write(pdf_bytes)
 
             pdf_base64 = base64.b64encode(pdf_bytes).decode('utf-8')
-            logger.info(f"PDF generado exitosamente: {filename}")
+            logger.info(f"PDF generado exitosamente: {filepath}")
 
             yield {
                 "status": "Informe Final",
                 "message": "PDF generado exitosamente",
-                "pdfPath": filename,
+                "pdfPath": filepath,
                 "pdfBase64": pdf_base64,
                 "completed": True
             }

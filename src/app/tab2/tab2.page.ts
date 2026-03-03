@@ -16,10 +16,9 @@ import { PredictionModalComponent } from '../shared/components/prediction-modal/
   styleUrls: ['tab2.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, IonHeader, IonToolbar,
-    IonTitle, IonContent, IonButton,
-    IonIcon, IonLabel, HeaderComponent,
-    PredictionModalComponent
+    CommonModule,
+    IonContent, IonButton,
+    IonIcon, HeaderComponent,
   ]
 })
 export class Tab2Page implements OnDestroy {

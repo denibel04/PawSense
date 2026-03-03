@@ -31,7 +31,7 @@ interface ChatMessage {
   imports: [
     CommonModule,
     FormsModule,
-    IonHeader, IonToolbar, IonTitle, IonContent,
+    IonToolbar, IonContent,
     IonItem, IonLabel, IonFooter, IonButton,
     IonTextarea, IonIcon, IonButtons, IonSpinner, IonRippleEffect,
     IonProgressBar,
@@ -93,6 +93,14 @@ export class Tab3Page implements OnInit {
             this.buildContextFromPredictions(top3);
             // Auto-send a prompt asking about the predicted breeds
             this.autoAskAboutBreeds(top3);
+
+            // Remove the top3 query parameter from to the URL so we don't send the message again when returning to this tab
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: { top3: null },
+              queryParamsHandling: 'merge',
+              replaceUrl: true
+            });
           }
         } catch (e) {
           console.error('Error parsing top3 predictions:', e);

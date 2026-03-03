@@ -143,14 +143,12 @@ class PredictionService:
                     coords = list(map(int, box.xyxy[0].cpu().numpy()))
                     crop = self.aplicar_padding(img_rgb, coords)
                     dog_found = True
-                    print(f"✅ Perro detectado con {confidence:.2%} de seguridad")
                     break 
             if dog_found: 
                 break
 
         # Si después de revisar todo, no encontramos un perro, abortamos
         if dog_found is False:
-            print("⚠️ YOLO analizó la imagen pero NO encontró ningún perro.")
             return None, None, None
 
         # --- A partir de aquí solo llegamos si dog_found es True ---

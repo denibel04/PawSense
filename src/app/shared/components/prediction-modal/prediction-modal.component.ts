@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
   templateUrl: './prediction-modal.component.html',
   styleUrls: ['./prediction-modal.component.scss'],
   standalone: true,
-  imports: [CommonModule, IonHeader, IonToolbar, IonTitle, IonContent, IonButton, IonButtons, IonIcon]
+  imports: [CommonModule, IonContent, IonButton, IonIcon]
 })
 export class PredictionModalComponent implements OnInit {
   @Input() data: any; // Recibe el JSON bruto del backend

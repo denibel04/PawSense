@@ -23,8 +23,8 @@ import { HeaderComponent } from '../shared/components/header/header.component';
   standalone: true,
   imports: [
     CommonModule,
-    IonHeader, IonToolbar, IonContent, IonTitle,
-    IonList, IonItem, IonLabel, IonIcon, IonButton,
+    IonContent,
+    IonItem, IonLabel, IonIcon, IonButton,
     IonSegment, IonSegmentButton, IonGrid, IonRow, IonCol,
     IonCard, IonCardHeader, IonCardTitle, IonCardContent, IonTextarea,
     TrainingReportComponent, ClinicalReportComponent,
@@ -483,12 +483,43 @@ export class Tab4Page implements ViewWillEnter {
     };
   }
 
+  /**
+   * Comprueba si hay al menos un campo del reporte actual con datos.
+   */
+  hasAnyData(): boolean {
+    if (this.selectedSegment === 'veterinario') {
+      const d = this.clinicalData;
+      if (!d) return false;
+      return !!(
+        (d.symptoms && d.symptoms.length > 0) ||
+        d.diagnosis ||
+        d.treatment ||
+        d.notes ||
+        d.antecedentes ||
+        d.examen_fisico ||
+        d.recomendaciones ||
+        (d.paciente && Object.keys(d.paciente).length > 0)
+      );
+    } else {
+      const d = this.trainingData;
+      if (!d) return false;
+      return !!(
+        d.behavior_observed ||
+        (d.corrections && d.corrections.length > 0) ||
+        d.homework ||
+        d.notes ||
+        d.recomendaciones ||
+        (d.paciente && Object.keys(d.paciente).length > 0)
+      );
+    }
+  }
+
   async downloadReport() {
-    // Si la extracción no ha terminado, no podemos generar PDF
-    if (this.progress.finalReport !== 'done') {
+    // Si la extracción no ha terminado Y no hay datos parciales, no podemos generar PDF
+    if (this.progress.finalReport !== 'done' && !this.hasAnyData()) {
       const alert = await this.alertController.create({
-        header: 'Reporte incompleto',
-        message: 'Por favor, espera a que termine el procesamiento del reporte.',
+        header: 'Reporte vacío',
+        message: 'Por favor, espera a que termine el procesamiento o rellena algún campo antes de descargar.',
         buttons: ['OK']
       });
       await alert.present();

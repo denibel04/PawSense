@@ -21,11 +21,9 @@ import { PredictionModalComponent } from '../shared/components/prediction-modal/
   styleUrls: ['tab1.page.scss'],
   standalone: true,
   imports: [
-    CommonModule, FormsModule, IonHeader, IonToolbar, IonTitle,
-    IonContent, IonButton, IonLabel, IonLoading, IonIcon,
-    IonCard, IonCardContent, IonGrid, IonRow, IonCol,
-    IonProgressBar, IonBadge, HeaderComponent, IonSpinner,
-    PredictionModalComponent
+    CommonModule, FormsModule,
+    IonContent, IonButton, IonIcon,
+    HeaderComponent, IonSpinner,
   ],
 })
 export class Tab1Page {

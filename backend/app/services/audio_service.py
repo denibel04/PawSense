@@ -38,7 +38,6 @@ async def analyze_audio_with_gemini(file_bytes: bytes, report_type: str = "veter
 
         # Ejecutamos en otro hilo
         raw_response = await asyncio.to_thread(_upload_and_analyze)
-        print(f"[AUDIO] Respuesta raw de Gemini:\n{raw_response}")
         result = json.loads(raw_response)
         return result
 
