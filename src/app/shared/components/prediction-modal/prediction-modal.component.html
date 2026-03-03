@@ -1,7 +1,7 @@
 <ion-content class="ion-padding custom-modal">
 
-  <div class="hero-image-container" *ngIf="breedInfo?.image_url">
-    <img [src]="breedInfo.image_url" class="breed-hero-img" alt="Dog Breed">
+  <div class="hero-image-container" *ngIf="breedInfo?.image_url || imagePreview">
+    <img [src]="breedInfo?.image_url || imagePreview" class="breed-hero-img" alt="Dog Breed">
     <div class="fade-to-white"></div>
   </div>
 

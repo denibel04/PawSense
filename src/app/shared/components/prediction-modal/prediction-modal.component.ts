@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButton,
@@ -22,6 +22,7 @@ import { Router } from '@angular/router';
 export class PredictionModalComponent implements OnInit {
   @Input() data: any; // Recibe el JSON bruto del backend
   @Input() type: 'image' | 'video' | null = null;
+  @Input() imagePreview: string | null = null; // Para mostrar la captura local si no hay URL del servidor
 
   winner: any = null;
   runnerUps: any[] = [];   // 2nd and 3rd predictions
@@ -34,18 +35,23 @@ export class PredictionModalComponent implements OnInit {
     private modalCtrl: ModalController,
     private dogService: DogService,
     private chatService: ChatService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {
     addIcons(allIcons);
   }
 
   ngOnInit() {
+    console.log('PredictionModalComponent - Data recibida:', this.data);
     if (this.data) {
       this.calculateWinner();
     }
 
     if (this.winner && this.winner.breed_en) {
+      console.log('PredictionModalComponent - Ganador detectado:', this.winner);
       this.loadAllBreedsInfo();
+    } else {
+      console.warn('PredictionModalComponent - No hay ganador o breed_en no disponible');
     }
   }
 
@@ -68,12 +74,15 @@ export class PredictionModalComponent implements OnInit {
     // Winner = top-1 of the best architecture
     if (bestArch.predictions.length > 0) {
       this.winner = { ...bestArch.predictions[0], source: bestArch.name };
+      console.log('Winner calculated:', this.winner);
     }
 
     // Runner-ups = positions 2 and 3 from the same architecture
     this.runnerUps = bestArch.predictions
-      .slice(1, 3)
+      .slice(1, 4) // Cogemos hasta el 3ero (1, 2, 3)
       .map(p => ({ ...p, source: bestArch.name }));
+
+    console.log('Runner-ups calculated:', this.runnerUps);
   }
 
   /**
@@ -82,7 +91,9 @@ export class PredictionModalComponent implements OnInit {
    */
   private loadAllBreedsInfo() {
     this.loadingInfo = true;
-    const allPredictions = [this.winner, ...this.runnerUps];
+    const allPredictions = [this.winner, ...this.runnerUps].filter(p => !!p);
+    console.log('PredictionModalComponent - Iniciando carga de info para:', allPredictions);
+
     this.allBreedsInfo = new Array(allPredictions.length).fill(null);
     let completed = 0;
 
@@ -90,29 +101,40 @@ export class PredictionModalComponent implements OnInit {
       completed++;
       if (completed === allPredictions.length) {
         this.loadingInfo = false;
+        console.log('PredictionModalComponent - Carga completa de todas las razas:', this.allBreedsInfo);
         this.sharePredictionContext();
       }
     };
 
     allPredictions.forEach((pred, index) => {
       if (!pred?.breed_en) {
+        console.warn(`PredictionModalComponent - Predicción en índice ${index} no tiene breed_en:`, pred);
         checkCompleteAndShare();
         return;
       }
+
       const cleanName = this.sanitizeBreedName(pred.breed_en);
+      console.log(`PredictionModalComponent - Consultando API para: ${cleanName} (original: ${pred.breed_en})`);
+
       this.dogService.getPredictionDetails(cleanName).subscribe({
         next: (res) => {
+          console.log(`PredictionModalComponent - Respuesta API para ${cleanName}:`, res);
           this.allBreedsInfo[index] = res.found ? res : null;
-          // The winner (index 0) is also used for modal display
+
           if (index === 0) {
             this.breedInfo = res.found ? res : null;
             if (this.breedInfo?.temperament) {
               this.processTemperaments(this.breedInfo.temperament);
             }
           }
+          this.cdr.detectChanges();
           checkCompleteAndShare();
         },
-        error: () => checkCompleteAndShare()
+        error: (err) => {
+          console.error(`PredictionModalComponent - Error cargando info para ${cleanName}:`, err);
+          this.cdr.detectChanges();
+          checkCompleteAndShare();
+        }
       });
     });
   }
@@ -163,25 +185,25 @@ export class PredictionModalComponent implements OnInit {
     });
   }
 
-formatMetric(val: string | null | undefined, unit: string): string {
-  if (!val) return 'N/A';
+  formatMetric(val: string | null | undefined, unit: string): string {
+    if (!val) return 'N/A';
 
-  if (val.includes('Male') || val.includes('Female')) {
-    return val
-      .split(';') 
-      .map(part => {
-        let clean = part.replace(/(\d+)-(\d+)/, '$1 - $2').trim();
-        // Reemplazamos etiquetas y añadimos la unidad al final de la línea
-        return clean
-          .replace('Male', 'Macho')
-          .replace('Female', 'Hembra') + ` ${unit}`;
-      })
-      .join('<br>');
+    if (val.includes('Male') || val.includes('Female')) {
+      return val
+        .split(';')
+        .map(part => {
+          let clean = part.replace(/(\d+)-(\d+)/, '$1 - $2').trim();
+          // Reemplazamos etiquetas y añadimos la unidad al final de la línea
+          return clean
+            .replace('Male', 'Macho')
+            .replace('Female', 'Hembra') + ` ${unit}`;
+        })
+        .join('<br>');
+    }
+
+    // Si es un rango simple, también le ponemos la unidad
+    return val.replace(/(\d+)-(\d+)/, '$1 - $2') + ` ${unit}`;
   }
-
-  // Si es un rango simple, también le ponemos la unidad
-  return val.replace(/(\d+)-(\d+)/, '$1 - $2') + ` ${unit}`;
-}
 
   /**
    * Navigate to the Chat tab (tab3) passing the top 3 predicted breeds with their API info.
