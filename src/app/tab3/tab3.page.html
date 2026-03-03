@@ -6,6 +6,10 @@
     <ng-container *ngFor="let msg of messages">
       <!-- Only show if content exists (prevent phantom bubble) -->
       <div *ngIf="msg.content" [class]="'message-wrapper ' + (msg.role === 'user' ? 'user' : 'assistant')">
+        <!-- Avatar IA -->
+        <div *ngIf="msg.role === 'assistant'" class="avatar-ia">
+          <ion-icon name="paw" color="primary"></ion-icon>
+        </div>
         <div class="chat-bubble" [class.report-bubble]="msg.type === 'report-ready' || msg.type === 'report-progress'">
           
           <!-- Report Progress -->
@@ -36,6 +40,9 @@
 
     <!-- Loading Spinner -->
     <div *ngIf="isLoading" class="message-wrapper assistant">
+      <div class="avatar-ia">
+        <ion-icon name="paw" color="primary"></ion-icon>
+      </div>
       <div class="chat-bubble">
         <ion-spinner name="dots"></ion-spinner>
       </div>

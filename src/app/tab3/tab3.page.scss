@@ -22,6 +22,27 @@ ion-content {
     }
 }
 
+/* Avatar IA */
+.avatar-ia {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 8px;
+    margin-top: 4px;
+    align-self: flex-start;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    ion-icon {
+        font-size: 18px;
+    }
+}
+
 .chat-bubble {
     padding: 10px 15px;
     border-radius: 18px;
@@ -29,18 +50,18 @@ ion-content {
     position: relative;
     word-wrap: break-word;
 
-    // Assistant Bubble Style
+    // Assistant Bubble Style - peach color
     .assistant & {
-        background-color: var(--ion-color-light-tint);
-        color: var(--ion-text-color);
-        border-bottom-left-radius: 4px; // Slight styling accent
+        background-color: #fde8d0;
+        color: #1a1a1a;
+        border-bottom-left-radius: 4px;
     }
 
-    // User Bubble Style
+    // User Bubble Style - light gray
     .user & {
-        background-color: var(--pawsense-orange);
-        color: var(--ion-color-primary-contrast);
-        border-bottom-right-radius: 4px; // Slight styling accent
+        background-color: #f0f0f0;
+        color: #1a1a1a;
+        border-bottom-right-radius: 4px;
     }
 
     ion-spinner {

@@ -520,3 +520,133 @@ ion-item[style*="background: rgba(var(--ion-color-warning-rgb"]>ion-label>ion-ic
         width: 100%;
     }
 }
+
+/* ===== VERTICAL STEPPER ===== */
+.stepper-vertical {
+    display: flex;
+    flex-direction: column;
+    padding: 4px 0;
+}
+
+.stepper-step {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+
+    .stepper-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 14px;
+        position: relative;
+
+        .stepper-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--ion-color-medium-tint);
+            border: 2.5px solid var(--ion-color-medium);
+            flex-shrink: 0;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .stepper-line {
+            width: 2.5px;
+            flex-grow: 1;
+            min-height: 28px;
+            background: var(--ion-color-medium-tint);
+            transition: background 0.3s ease;
+        }
+    }
+
+    .stepper-content {
+        display: flex;
+        flex-direction: column;
+        padding-bottom: 18px;
+        padding-top: 0;
+
+        .stepper-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ion-color-medium);
+            line-height: 1;
+            margin-top: -1px;
+        }
+
+        .stepper-status {
+            font-size: 12px;
+            margin-top: 3px;
+            font-weight: 500;
+
+            &.muted {
+                color: var(--ion-color-medium);
+            }
+
+            &.highlight {
+                color: var(--pawsense-orange);
+            }
+
+            &.done-text {
+                color: $success-color;
+            }
+        }
+    }
+
+    /* States */
+    &.done {
+        .stepper-indicator .stepper-dot {
+            background: $success-color;
+            border-color: $success-color;
+        }
+
+        .stepper-indicator .stepper-line {
+            background: $success-color;
+        }
+
+        .stepper-content .stepper-label {
+            color: $success-color;
+        }
+    }
+
+    &.process {
+        .stepper-indicator .stepper-dot {
+            background: var(--pawsense-orange);
+            border-color: var(--pawsense-orange);
+            box-shadow: 0 0 0 4px rgba(var(--ion-color-primary-rgb), 0.15);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .stepper-content .stepper-label {
+            color: var(--pawsense-orange);
+            font-weight: 700;
+        }
+    }
+
+    &.pending {
+        .stepper-indicator .stepper-dot {
+            background: #fff;
+            border-color: var(--ion-color-medium-tint);
+        }
+    }
+
+    /* Last step: no line */
+    &:last-child {
+        .stepper-indicator .stepper-line {
+            display: none;
+        }
+
+        .stepper-content {
+            padding-bottom: 0;
+        }
+    }
+}
+
+@keyframes pulse-dot {
+    0%, 100% {
+        box-shadow: 0 0 0 4px rgba(var(--ion-color-primary-rgb), 0.15);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(var(--ion-color-primary-rgb), 0.08);
+    }
+}

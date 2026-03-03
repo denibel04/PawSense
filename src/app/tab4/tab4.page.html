@@ -107,54 +107,60 @@
             <ion-card-title>Progreso</ion-card-title>
           </ion-card-header>
           <ion-card-content>
-            <ion-list lines="none">
+            <div class="stepper-vertical">
 
-              <ion-item [class.pending]="progress.transcription === 'pending'"
+              <div class="stepper-step" [class.pending]="progress.transcription === 'pending'"
                 [class.process]="progress.transcription === 'process'" [class.done]="progress.transcription === 'done'">
-                <ion-icon slot="start"
-                  [name]="progress.transcription === 'done' ? 'checkmark-circle' : (progress.transcription === 'process' ? 'time-outline' : 'ellipse-outline')"
-                  [color]="progress.transcription === 'done' ? 'success' : (progress.transcription === 'process' ? 'secondary' : 'medium')"></ion-icon>
-                <ion-label>Transcripción <span *ngIf="progress.transcription === 'process'" class="muted">-
-                    Procesando</span><span *ngIf="progress.transcription === 'done'" class="muted">-
-                    Completado</span></ion-label>
-                <ion-icon *ngIf="progress.transcription === 'done'" slot="end" name="checkmark-outline" color="success"
-                  class="check-small"></ion-icon>
-              </ion-item>
+                <div class="stepper-indicator">
+                  <div class="stepper-dot"></div>
+                  <div class="stepper-line"></div>
+                </div>
+                <div class="stepper-content">
+                  <span class="stepper-label">Transcripción</span>
+                  <span *ngIf="progress.transcription === 'process'" class="stepper-status muted">Procesando</span>
+                  <span *ngIf="progress.transcription === 'done'" class="stepper-status done-text">Completado</span>
+                </div>
+              </div>
 
-              <ion-item [class.pending]="progress.clinicalExtraction === 'pending'"
-                [class.process]="progress.clinicalExtraction === 'process'"
-                [class.done]="progress.clinicalExtraction === 'done'">
-                <ion-icon slot="start"
-                  [name]="progress.clinicalExtraction === 'done' ? 'checkmark-circle' : (progress.clinicalExtraction === 'process' ? 'time-outline' : 'ellipse-outline')"
-                  [color]="progress.clinicalExtraction === 'done' ? 'success' : (progress.clinicalExtraction === 'process' ? 'secondary' : 'medium')"></ion-icon>
-                <ion-label>Extracción <span *ngIf="progress.clinicalExtraction === 'process'" class="muted">- Generando
-                    Reporte</span><span *ngIf="progress.clinicalExtraction === 'done'" class="muted">-
-                    Completado</span></ion-label>
-                <ion-icon *ngIf="progress.clinicalExtraction === 'done'" slot="end" name="checkmark-outline"
-                  color="success" class="check-small"></ion-icon>
-              </ion-item>
+              <div class="stepper-step" [class.pending]="progress.clinicalExtraction === 'pending'"
+                [class.process]="progress.clinicalExtraction === 'process'" [class.done]="progress.clinicalExtraction === 'done'">
+                <div class="stepper-indicator">
+                  <div class="stepper-dot"></div>
+                  <div class="stepper-line"></div>
+                </div>
+                <div class="stepper-content">
+                  <span class="stepper-label">Extracción</span>
+                  <span *ngIf="progress.clinicalExtraction === 'process'" class="stepper-status muted">Generando Reporte</span>
+                  <span *ngIf="progress.clinicalExtraction === 'done'" class="stepper-status done-text">Completado</span>
+                </div>
+              </div>
 
-              <ion-item [class.pending]="progress.revision === 'pending'"
+              <div class="stepper-step" [class.pending]="progress.revision === 'pending'"
                 [class.process]="progress.revision === 'process'" [class.done]="progress.revision === 'done'">
-                <ion-icon slot="start"
-                  [name]="progress.revision === 'done' ? 'checkmark-circle' : (progress.revision === 'process' ? 'time-outline' : 'ellipse-outline')"
-                  [color]="progress.revision === 'done' ? 'success' : (progress.revision === 'process' ? 'primary' : 'medium')"></ion-icon>
-                <ion-label>Revisión <span *ngIf="progress.revision === 'process'" class="highlight">- En
-                    proceso</span><span *ngIf="progress.revision === 'done'" class="muted">-
-                    Completado</span></ion-label>
-              </ion-item>
+                <div class="stepper-indicator">
+                  <div class="stepper-dot"></div>
+                  <div class="stepper-line"></div>
+                </div>
+                <div class="stepper-content">
+                  <span class="stepper-label">Revisión</span>
+                  <span *ngIf="progress.revision === 'process'" class="stepper-status highlight">En proceso</span>
+                  <span *ngIf="progress.revision === 'done'" class="stepper-status done-text">Completado</span>
+                </div>
+              </div>
 
-              <ion-item [class.pending]="progress.finalReport === 'pending'"
+              <div class="stepper-step" [class.pending]="progress.finalReport === 'pending'"
                 [class.process]="progress.finalReport === 'process'" [class.done]="progress.finalReport === 'done'">
-                <ion-icon slot="start"
-                  [name]="progress.finalReport === 'done' ? 'checkmark-circle' : (progress.finalReport === 'process' ? 'time-outline' : 'ellipse-outline')"
-                  [color]="progress.finalReport === 'done' ? 'success' : (progress.finalReport === 'process' ? 'medium' : 'medium')"></ion-icon>
-                <ion-label>Informe Final <span *ngIf="progress.finalReport === 'process'" class="muted">- En
-                    proceso</span><span *ngIf="progress.finalReport === 'done'" class="muted">-
-                    Completado</span></ion-label>
-              </ion-item>
+                <div class="stepper-indicator">
+                  <div class="stepper-dot"></div>
+                </div>
+                <div class="stepper-content">
+                  <span class="stepper-label">Informe Final</span>
+                  <span *ngIf="progress.finalReport === 'process'" class="stepper-status muted">En proceso</span>
+                  <span *ngIf="progress.finalReport === 'done'" class="stepper-status done-text">Completado</span>
+                </div>
+              </div>
 
-            </ion-list>
+            </div>
           </ion-card-content>
         </ion-card>
       </ion-col>
