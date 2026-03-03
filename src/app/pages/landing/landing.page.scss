@@ -1,6 +1,6 @@
 /* Custom Font */
 @font-face {
-  font-family: 'Tondo';
+  font-family: 'Tondo-Modified';
   src: url('/assets/fonts/Tondo W01 Bold - Modified.woff') format('woff');
   font-weight: bold;
   font-style: normal;
@@ -23,12 +23,13 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 
   .logo-img {
-  width: 32px;
-  height: auto;
+    width: 32px;
+    height: auto;
   }
 
   .desktop-nav {
-    display: none; /* Hidden on mobile */
+    display: none;
+    /* Hidden on mobile */
     gap: 2rem;
 
     a {
@@ -75,7 +76,7 @@
     opacity: 0.45;
   }
 
-  & > ion-grid {
+  &>ion-grid {
     position: relative;
     z-index: 1;
   }
@@ -88,8 +89,9 @@
       font-size: 2.5rem;
       font-weight: bold;
       margin-bottom: 1rem;
-      font-family: 'Tondo', sans-serif; /* Custom Font */
-      
+      font-family: 'Tondo-Modified', sans-serif;
+      /* Custom Font */
+
       .highlight {
         color: var(--ion-color-primary);
       }
@@ -124,15 +126,23 @@
       max-width: 50%;
       height: auto;
       border-radius: 30px;
-      box-shadow: 0 50px 50px rgba(0,0,0,0.15);
+      box-shadow: 0 50px 50px rgba(0, 0, 0, 0.15);
       animation: float 6s ease-in-out infinite;
     }
   }
 
   @keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-    100% { transform: translateY(0px); }
+    0% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-20px);
+    }
+
+    100% {
+      transform: translateY(0px);
+    }
   }
 
   @media (min-width: 768px) {
@@ -159,36 +169,37 @@
 .features-section {
   padding: 4rem 1.5rem;
   // Mantenemos el fondo base de la sección, las cards sobresaldrán
-  background: var(--ion-background-color); 
+  background: var(--ion-background-color);
   text-align: center;
 
   .section-title {
     margin-bottom: 3rem;
-    
+
     h2 {
       font-size: 2rem;
       font-weight: bold;
       color: var(--ion-text-color);
-      font-family: 'Tondo', sans-serif; /* Custom Font */
+      font-family: 'Tondo-Modified', sans-serif;
+      /* Custom Font */
     }
-    
+
     p {
       color: var(--ion-color-medium);
     }
   }
 
   ion-col {
-    display: flex; 
+    display: flex;
   }
 
   .feature-card {
-    margin:0 1rem ; // Margen vertical para dar espacio entre las cards
+    margin: 0 1rem; // Margen vertical para dar espacio entre las cards
     padding: 1rem 1rem;
     border-radius: 24px; // Bordes más redondeados como en la imagen
-    
-    background: rgba(var(--ion-color-primary-rgb), 0.15); 
-    border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2); 
-    
+
+    background: rgba(var(--ion-color-primary-rgb), 0.15);
+    border: 1px solid rgba(var(--ion-color-primary-rgb), 0.2);
+
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%;
     margin-bottom: 1rem;
@@ -204,28 +215,29 @@
     }
 
     // --- ESTILO DEL CONTENEDOR DEL ICONO ---
-      .icon-box {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #ffffff; 
-        /* Fallback */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0.5rem;
-        
-        
-      
+    .icon-box {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: #ffffff;
+      /* Fallback */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0.5rem;
+
+
+
     }
+
     ion-icon {
       font-size: 2rem;
-      }
+    }
 
     h3 {
-      font-size: 1.4rem; 
+      font-size: 1.4rem;
       font-weight: bold;
-      color: #1a1a1a; 
+      color: #1a1a1a;
       margin-bottom: 0.75rem;
       font-family: 'Tondo', sans-serif;
     }
