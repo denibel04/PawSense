@@ -61,10 +61,23 @@
     transform: scale(1.03);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25),
       0 0 4px rgba(255, 255, 255, 0.15) inset;
+    outline: 3px solid var(--ion-color-success);
+    outline-offset: 6px;
+
+    .camera-placeholder {
+      color: var(--ion-color-success);
+    }
   }
 
   &.active {
-    outline: 3px solid #6366f1; // borde sutil activo
+    outline: 3px solid var(--ion-color-success); // borde sutil activo
+    outline-offset: 6px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3),
+      0 0 6px rgba(255, 255, 255, 0.15) inset;
+  }
+
+  &.active:hover {
+    outline: 3px solid var(--ion-color-danger);
     outline-offset: 6px;
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3),
       0 0 6px rgba(255, 255, 255, 0.15) inset;
