@@ -8,6 +8,7 @@
   .title-with-icon {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
 
     h1 {
@@ -15,6 +16,7 @@
       font-weight: bold;
       color: #1e293b;
       letter-spacing: -0.5px;
+      text-align: center;
     }
 
     .title-sparkle {
@@ -95,10 +97,53 @@
   min-height: 250px;
   border: 2px dashed rgba(var(--ion-color-primary-rgb), 0.3);
   text-align: center;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, background 0.2s ease, padding 0.2s ease;
+  position: relative;
+  overflow: hidden;
 
-  &.drag-over,
-  &:has(.upload-zone.drag-over) {
+  // When an image/video is loaded: no padding, no dashed border
+  &.has-preview {
+    min-height: 350px;
+  }
+
+  // Video: let the card grow to fit the video naturally
+  &.has-video {
+    min-height: unset;
+    height: auto;
+    overflow: visible;
+    padding: 0;
+
+    .preview-container {
+      position: static;
+      inset: unset;
+      overflow: visible;
+      border-radius: 0;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+    }
+
+    .preview-media {
+      width: 100%;
+      height: auto;
+      max-height: 70vh;
+      border-radius: 16px;
+      margin: 0;
+      object-fit: contain;
+    }
+
+    .remove-btn {
+      position: relative;
+      top: unset;
+      right: unset;
+      align-self: center;
+      margin: 10px 0 4px;
+    }
+  }
+
+  &.drag-over {
     border-color: var(--ion-color-primary);
     background: rgba(var(--ion-color-primary-rgb), 0.04);
   }
@@ -178,24 +223,41 @@
 
 /* Contenedor que limita el área visual */
 .preview-container {
-  width: 100%;
-  max-width: 400px;
-  height: 300px;
-  margin: 2rem 0 1rem 0;
+  position: absolute;
+  inset: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  border-radius: 16px;
-  background: #f4f4f4;
-  border: 1px solid #e0e0e0;
+  border-radius: inherit;
+
+  .remove-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    --border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    --padding-start: 0;
+    --padding-end: 0;
+    margin: 0;
+    z-index: 10;
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 1;
+    }
+  }
 }
 
 .preview-media {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: calc(100% - 24px);
+  height: calc(100% - 24px);
+  object-fit: contain;
   display: block;
+  border-radius: 16px;
+  margin: 12px;
 }
 
 /* Ajuste opcional para el botón quitar para que esté pegado al media */

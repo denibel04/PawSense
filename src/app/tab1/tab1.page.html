@@ -4,41 +4,39 @@
   <div class="main-container-v2">
     <div class="header-title-v2 animate-fade">
       <div class="title-with-icon">
-        <h1>Identifica cualquier raza <ion-icon name="sparkles" class="title-sparkle"></ion-icon></h1>
+        <h1><ion-icon name="sparkles" class="title-sparkle"></ion-icon>Identifica cualquier raza <ion-icon
+            name="sparkles" class="title-sparkle"></ion-icon></h1>
       </div>
     </div>
 
     <div class="section-container animate-fade">
-      <div class="upload-card-v2" [class.drag-over]="isDragging">
+      <div class="upload-card-v2" [class.drag-over]="isDragging" [class.has-preview]="imagePreview || videoPreview"
+        [class.has-video]="fileType === 'video'">
         <input type="file" (change)="onFileSelected($event)" accept="image/*,video/*" id="fileInput" hidden>
 
-        <label for="fileInput" class="upload-zone" [class.drag-over]="isDragging" (dragover)="onDragOver($event)"
-          (dragleave)="onDragLeave($event)" (drop)="onDrop($event)">
+        <!-- Upload zone: hidden when a file is loaded -->
+        <label *ngIf="!(imagePreview || videoPreview)" for="fileInput" class="upload-zone"
+          [class.drag-over]="isDragging" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)"
+          (drop)="onDrop($event)">
           <div class="icon-circle">
-            <ion-icon [name]="isDragging ? 'cloud-upload' : 'cloud-upload'" class="upload-icon"
-              [class.bounce]="isDragging"></ion-icon>
+            <ion-icon name="cloud-upload" class="upload-icon" [class.bounce]="isDragging"></ion-icon>
           </div>
           <h3>{{ isDragging ? 'Suelta aquí la imagen' : 'Sube una foto o vídeo' }}</h3>
           <p>{{ isDragging ? '' : 'Elige una donde se aprecien bien los rasgos para mejores resultados.' }}</p>
         </label>
 
+        <!-- Full-bleed preview -->
         <div class="preview-container" *ngIf="imagePreview || videoPreview">
-
           <img *ngIf="imagePreview && fileType === 'image'" [src]="imagePreview" class="preview-media">
-
           <img *ngIf="videoPreview && selectedFile?.type === 'image/gif'" [src]="videoPreview" class="preview-media">
+          <video *ngIf="videoPreview && selectedFile?.type !== 'image/gif'" [src]="videoPreview" autoplay loop controls
+            playsinline class="preview-media"></video>
 
-          <video *ngIf="videoPreview && selectedFile?.type !== 'image/gif'" [src]="videoPreview" autoplay loop muted
-            playsinline class="preview-media">
-          </video>
-
-
+          <!-- Floating remove button -->
+          <ion-button class="remove-btn" shape="round" fill="solid" color="danger" (click)="clearPreview()">
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-button>
         </div>
-        <ion-button *ngIf="imagePreview || videoPreview" shape="round" expand="block"
-          class="btn-modern-v2 ion-margin-top" fill="outline" (click)="clearPreview()" color="danger">
-          <ion-icon slot="start" name="trash"></ion-icon>
-          Quitar
-        </ion-button>
       </div>
 
       <ion-button *ngIf="selectedFile" expand="block" (click)="uploadAndPredict()" [disabled]="isLoading"
