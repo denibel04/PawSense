@@ -11,6 +11,7 @@ import { addIcons } from 'ionicons';
 import * as allIcons from 'ionicons/icons';
 import { TEMPERAMENT_MAP } from './temperament-map';
 import { Router } from '@angular/router';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser'; 
 
 @Component({
   selector: 'app-prediction-modal',
@@ -22,7 +23,7 @@ import { Router } from '@angular/router';
 export class PredictionModalComponent implements OnInit {
   @Input() data: any; // Recibe el JSON bruto del backend
   @Input() type: 'image' | 'video' | null = null;
-  @Input() imagePreview: string | null = null; // Para mostrar la captura local si no hay URL del servidor
+  @Input() imagePreview: any = null; 
 
   winner: any = null;
   runnerUps: any[] = [];   // 2nd and 3rd predictions
@@ -30,13 +31,16 @@ export class PredictionModalComponent implements OnInit {
   allBreedsInfo: any[] = []; // TheDogAPI info for top 3 breeds
   loadingInfo = false;
   formattedTemps: any[] = [];
+  showFallback = false;
+  readonly LOW_CONFIDENCE_THRESHOLD = 30;
 
   constructor(
     private modalCtrl: ModalController,
     private dogService: DogService,
     private chatService: ChatService,
     private router: Router,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private sanitizer: DomSanitizer
   ) {
     addIcons(allIcons);
   }
@@ -53,6 +57,10 @@ export class PredictionModalComponent implements OnInit {
     } else {
       console.warn('PredictionModalComponent - No hay ganador o breed_en no disponible');
     }
+  }
+
+  getSafeUrl(url: string): SafeUrl {
+    return this.sanitizer.bypassSecurityTrustUrl(url);
   }
 
   private calculateWinner() {
@@ -123,6 +131,7 @@ export class PredictionModalComponent implements OnInit {
    */
   private loadAllBreedsInfo() {
     this.loadingInfo = true;
+    this.showFallback = false;
     const allPredictions = [this.winner, ...this.runnerUps].filter(p => !!p);
     console.log('PredictionModalComponent - Iniciando carga de info para:', allPredictions);
 
@@ -168,6 +177,9 @@ export class PredictionModalComponent implements OnInit {
             this.breedInfo = res.found ? res : null;
             if (this.breedInfo?.temperament) {
               this.processTemperaments(this.breedInfo.temperament);
+            }
+            if (!this.breedInfo || !this.breedInfo.image_url) {
+              this.showFallback = true;
             }
           }
           this.cdr.detectChanges();
@@ -265,5 +277,20 @@ export class PredictionModalComponent implements OnInit {
     this.router.navigate(['/tabs/tab3'], {
       queryParams: { top3: JSON.stringify(top3) }
     });
+  }
+
+  get isLowConfidence(): boolean {
+    return this.winner && (this.winner.confidence * (this.winner.confidence < 1 ? 100 : 1)) < this.LOW_CONFIDENCE_THRESHOLD;
+  }
+
+  get topThreeProbable() {
+    const list = [];
+    if (this.winner) {
+      list.push(this.winner);
+    }
+    if (this.runnerUps && this.runnerUps.length > 0) {
+      list.push(...this.runnerUps.slice(0, 2));
+    }
+    return list;
   }
 }

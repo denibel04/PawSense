@@ -6,7 +6,7 @@
 }
 
 .main-container-v2 {
-  padding: 16px;
+  padding: 2rem;
   max-width: 600px;
   margin: 0 auto;
   display: flex;
@@ -41,7 +41,7 @@
 
 /* Visor Section */
 .visor-card-v2 {
-  background: rgba(255, 255, 255, 0.05); // fondo semi-transparente tipo glass
+  background: #ffff; // fondo semi-transparente tipo glass
   backdrop-filter: blur(12px); // efecto desenfoque tipo Apple
   border-radius: 30px;
   aspect-ratio: 1 / 1;

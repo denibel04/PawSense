@@ -1,21 +1,10 @@
+  <ion-button fill="clear" class="close-modal-btn" (click)="close()" shape="round">
+    <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+  </ion-button>
+
 <ion-content class="ion-padding custom-modal">
 
-  <div class="hero-image-container" *ngIf="breedInfo?.image_url || imagePreview">
-    <img [src]="breedInfo?.image_url || imagePreview" class="breed-hero-img" alt="Dog Breed">
-    <div class="fade-to-white"></div>
-  </div>
 
-  <div class="header-section" *ngIf="winner">
-    <div class="title-block">
-      <h1 class="breed-name">{{ winner.breed_es }}</h1>
-    </div>
-    <div class="match-circle">
-      <span class="percent">{{ winner.confidence.toFixed(0) }}%</span>
-      <span class="label">MATCH</span>
-    </div>
-  </div>
-
-  <!-- Fase 2: Cargando Detalles -->
   <div class="loading-details-section" *ngIf="loadingInfo">
     <div class="logo-spinner-container">
       <ion-icon name="paw" class="logo-spinner"></ion-icon>
@@ -23,70 +12,148 @@
     <p>Conectando con la base de datos de razas...</p>
   </div>
 
-  <!-- Fase 2: Datos Completos (solo se muestran cuando loadingInfo es false) -->
-  <div class="details-revealed-section" *ngIf="!loadingInfo" class="animate-fade">
-    <div class="temperament-row" *ngIf="formattedTemps.length > 0">
-      <div *ngFor="let temp of formattedTemps" [class]="'temp-card ' + temp.group">
-        <ion-icon [name]="temp.icon"></ion-icon>
-        <span>{{ temp.esp | uppercase }}</span>
-      </div>
-    </div>
+  <div *ngIf="!loadingInfo" class="animate-fade">
 
-    <div class="info-grid" *ngIf="breedInfo">
-      <div class="info-card">
-        <span class="card-label">RANGO DE PESO</span>
-        <span class="card-value">
-          <span [innerHTML]="formatMetric(breedInfo.weight_metric, 'kg')"></span>
-        </span>
-      </div>
+    <ng-container *ngIf="isLowConfidence; else highConfidenceTemplate">
+      <div class="low-confidence-container">
 
-      <div class="info-card">
-        <span class="card-label">RANGO DE ALTURA</span>
-        <span class="card-value">
-          <span [innerHTML]="formatMetric(breedInfo.height_metric, 'cm')"></span>
-        </span>
-      </div>
+        <div class="alert-banner">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+          <h2>Análisis Incierto</h2>
+          <p>
+            La probabilidad de acierto es muy baja ({{ winner?.confidence.toFixed(0) }}%).
+            Es muy posible que tu perro sea un <strong>cruce de varias razas</strong> o que la foto no tenga suficiente
+            claridad.
+          </p>
+        </div>
 
-      <div class="info-card life-span-card" *ngIf="breedInfo.life_span && breedInfo.life_span !== 'None'">
-        <span class="card-label">ESPERANZA DE VIDA</span>
-        <span class="card-value">{{ breedInfo.life_span.replace('-', ' - ') }} años</span>
-      </div>
-    </div>
+        <div class="tips-card">
+          <span>💡 <strong>Consejo:</strong> Prueba con una foto de frente, bien iluminada y donde se vea claramente el
+            cuerpo del perro.</span>
+        </div>
 
-    <!-- Runner-ups: 2nd and 3rd predictions -->
-    <div class="runner-ups-section" *ngIf="runnerUps.length > 0">
-      <h2 class="section-title">También podría ser...</h2>
-      <div class="runner-ups-list">
-        <div class="runner-up-card" *ngFor="let ru of runnerUps; let i = index">
-          <div class="runner-up-rank">{{ i + 2 }}º</div>
-          <div class="runner-up-info">
-            <span class="runner-up-name">{{ ru.breed_es }}</span>
-          </div>
-          <div class="runner-up-confidence">
-            <span class="ru-percent">{{ ru.confidence.toFixed(1) }}%</span>
+        <h3 class="section-title" style="margin-top: 20px;">Las 3 razas más probables:</h3>
+
+        <div class="runner-ups-list">
+          <div class="runner-up-card animate-fade" *ngFor="let p of topThreeProbable; let i = index">
+
+            <div class="runner-up-rank">{{ i + 1 }}º</div>
+
+            <div class="runner-up-info">
+              <span class="runner-up-name">{{ p?.breed_es }}</span>
+            </div>
+
+            <div class="runner-up-confidence">
+              <span class="ru-percent">
+                {{ (p?.confidence * (p?.confidence < 1 ? 100 : 1)).toFixed(1) }}% </span>
+            </div>
+
           </div>
         </div>
-      </div>
-    </div>
-  </div>
 
-  <div class="ai-button-container">
-    <ion-button expand="block" fill="clear" class="ai-chat-btn" (click)="askAI()">
-      <div class="ai-content">
-        <div class="ai-icon-bg">
-          <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+        <div class="action-footer" style="margin-top: 30px;">
+          <ion-button expand="block" fill="outline" color="dark" (click)="close()" class="retry-btn" shape="round">
+            <ion-icon name="camera-outline" slot="start"></ion-icon>
+            Intentar con otra foto
+          </ion-button>
         </div>
-        <div class="ai-text">
-          <strong>Pregunta a la IA sobre los {{ winner.breed_es }}</strong>
-          <span>Entrenamiento, dieta y cuidados</span>
-        </div>
-        <ion-icon name="open-outline" class="external-icon"></ion-icon>
       </div>
-    </ion-button>
-  </div>
+    </ng-container>
 
-  <ion-button expand="block" fill="outline" color="medium" class="share-btn">
-    <ion-icon name="share-social-outline" slot="start"></ion-icon>
-    Compartir
-  </ion-button>
+    <ng-template #highConfidenceTemplate>
+
+      <div class="hero-image-container">
+        <img *ngIf="breedInfo?.image_url" [src]="breedInfo.image_url" class="breed-hero-img" alt="Official Breed Photo">
+
+        <ng-container *ngIf="!breedInfo?.image_url && imagePreview">
+
+          <img *ngIf="type === 'image'" [src]="imagePreview" class="breed-hero-img user-photo" alt="User Photo">
+
+          <video *ngIf="type === 'video'" [src]="imagePreview" class="breed-hero-img user-photo" autoplay [muted]="true"
+            loop playsinline webkit-playsinline>
+          </video>
+
+        </ng-container>
+
+        <div class="fade-to-white" *ngIf="breedInfo?.image_url || imagePreview"></div>
+      </div>
+
+      <div class="header-section" *ngIf="winner">
+        <div class="title-block">
+          <h1 class="breed-name">{{ winner.breed_es }}</h1>
+        </div>
+        <div class="match-circle">
+          <span class="percent">{{ winner.confidence.toFixed(0) }}%</span>
+          <span class="label">MATCH</span>
+        </div>
+      </div>
+
+      <div class="details-revealed-section">
+
+        <div class="temperament-row" *ngIf="formattedTemps.length > 0">
+          <div *ngFor="let temp of formattedTemps" [class]="'temp-card ' + temp.group">
+            <ion-icon [name]="temp.icon"></ion-icon>
+            <span>{{ temp.esp | uppercase }}</span>
+          </div>
+        </div>
+
+        <div class="info-grid" *ngIf="breedInfo">
+          <div class="info-card">
+            <span class="card-label">RANGO DE PESO</span>
+            <span class="card-value">
+              <span [innerHTML]="formatMetric(breedInfo.weight_metric, 'kg')"></span>
+            </span>
+          </div>
+
+          <div class="info-card">
+            <span class="card-label">RANGO DE ALTURA</span>
+            <span class="card-value">
+              <span [innerHTML]="formatMetric(breedInfo.height_metric, 'cm')"></span>
+            </span>
+          </div>
+
+          <div class="info-card life-span-card" *ngIf="breedInfo.life_span && breedInfo.life_span !== 'None'">
+            <span class="card-label">ESPERANZA DE VIDA</span>
+            <span class="card-value">{{ breedInfo.life_span.replace('-', ' - ') }} años</span>
+          </div>
+        </div>
+
+        <div class="runner-ups-section" *ngIf="runnerUps.length > 0">
+          <h2 class="section-title">También podría ser...</h2>
+          <div class="runner-ups-list">
+            <div class="runner-up-card" *ngFor="let ru of runnerUps; let i = index">
+              <div class="runner-up-rank">{{ i + 2 }}º</div>
+              <div class="runner-up-info">
+                <span class="runner-up-name">{{ ru.breed_es }}</span>
+              </div>
+              <div class="runner-up-confidence">
+                <span class="ru-percent">{{ ru.confidence.toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ai-button-container">
+        <ion-button expand="block" fill="clear" class="ai-chat-btn" (click)="askAI()">
+          <div class="ai-content">
+            <div class="ai-icon-bg">
+              <ion-icon name="chatbubble-ellipses-outline"></ion-icon>
+            </div>
+            <div class="ai-text">
+              <strong>Pregunta a la IA sobre los {{ winner?.breed_es }}</strong>
+              <span>Entrenamiento, dieta y cuidados</span>
+            </div>
+            <ion-icon name="open-outline" class="external-icon"></ion-icon>
+          </div>
+        </ion-button>
+      </div>
+      <!--
+      <ion-button expand="block" fill="outline" color="medium" class="share-btn" (click)="shareResult()">
+        <ion-icon name="share-social-outline" slot="start"></ion-icon>
+        Compartir resultado
+      </ion-button>
+-->
+    </ng-template>
+  </div>
 </ion-content>

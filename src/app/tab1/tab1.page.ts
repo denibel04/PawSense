@@ -135,6 +135,7 @@ export class Tab1Page {
       component: PredictionModalComponent,
       componentProps: {
         data: rawResponse,
+        imagePreview: this.fileType === 'image' ? this.imagePreview : this.videoPreview,
         type: this.fileType
       },
       handle: true
