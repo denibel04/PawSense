@@ -28,11 +28,38 @@ from app.services.chat_utils import (
 logger = logging.getLogger(__name__)
 
 
+# Phrases that indicate the model is redirecting an off-topic question
+_REDIRECTION_INDICATORS = [
+    "como experto en perros",
+    "solo puedo ayudar",
+    "temas caninos",
+    "mi propósito es ayudarte con",
+    "nuestros amigos peludos",
+    "todo lo relacionado con",
+    "sobre perros",
+    "no puedo ayudarte con",
+    "fuera de mi área",
+    "as a dog expert",
+    "only help with dog",
+]
+
+
+def _is_redirection_response(text: str) -> bool:
+    """Detect if the model response is redirecting an off-topic question."""
+    lower = text.lower()
+    return sum(1 for ind in _REDIRECTION_INDICATORS if ind in lower) >= 2
+
+
 def _ensure_sources(text: str, intent: str) -> str:
     """
     If the model response doesn't already contain source URLs,
     append the relevant ones based on intent.
+    Skip sources entirely when the response is just redirecting an off-topic question.
     """
+    # Never append sources to redirection / off-topic responses
+    if _is_redirection_response(text):
+        return text
+
     # Check if ANY whitelist URL is already present
     sources = OFFICIAL_SOURCES.get(intent, [])
     has_sources = any(url in text for url in sources)
@@ -172,8 +199,9 @@ class ChatService:
         if intent in ("medical", "training"):
             priming_text = (
                 "Entendido. Responderé basándome en las fuentes oficiales indicadas. "
-                "Al final de cada respuesta incluiré siempre el bloque de 'Fuentes (para contrastar):' "
-                "con las URLs correspondientes de la whitelist. No usaré markdown."
+                "Al final de cada respuesta informativa sobre perros incluiré el bloque de 'Fuentes (para contrastar):' "
+                "con las URLs correspondientes de la whitelist. No usaré markdown. "
+                "Si la pregunta no es sobre perros, solo redirigiré al usuario amablemente sin incluir fuentes."
             )
         else:
             priming_text = "Entendido. Responderé de forma natural sin markdown."

@@ -125,7 +125,12 @@ def build_system_prompt(context: str = "") -> str:
         "Si te falta información importante, haz una sola pregunta aclaratoria. "
         "Solo responde preguntas sobre perros: razas, cuidados, salud, alimentación, "
         "entrenamiento, comportamiento, temperamento, etc. "
-        "Si es otro tema fuera de perros, explica que solo puedes ayudar con temas caninos."
+        "REGLA ESTRICTA SOBRE TEMAS FUERA DE PERROS: "
+        "Si el usuario pregunta sobre cualquier tema que NO sea de perros (series, películas, política, deportes, "
+        "tecnología, música, recetas, etc.), NO respondas NI comentes NADA sobre ese tema. "
+        "NUNCA des información sobre el tema fuera de perros, ni siquiera parcialmente. "
+        "Simplemente redirige de forma amable diciendo que solo puedes ayudar con temas caninos "
+        "y pregúntale en qué puedes ayudarle sobre su perro. Sin fuentes ni enlaces."
     )
     
     if context and context.strip():
@@ -322,14 +327,20 @@ def detect_intent(question: str, context: str = "") -> str:
     """
     Detecta la intención de la pregunta: medical, training o general.
     
+    Solo analiza la pregunta del usuario (NO el contexto) para clasificar la
+    intención. El contexto contiene datos del perro (raza, etc.) que podrían
+    generar falsos positivos en la detección de intent.
+    
     Args:
         question: La pregunta del usuario.
-        context: Contexto del perro (opcional).
+        context: Contexto del perro (no se usa para clasificación de intent).
     
     Returns:
         "medical" | "training" | "general"
     """
-    search_text = (question + " " + context).lower()
+    # IMPORTANT: Only use the question text for intent detection.
+    # Context (breed info, etc.) would cause false positives.
+    search_text = question.lower()
     
     # Contar matches con keywords médicas y de adiestramiento
     medical_matches = sum(1 for kw in MEDICAL_KEYWORDS if kw in search_text)
@@ -406,7 +417,13 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
         "Ejemplo INCORRECTO: '**Champú de avena** para perros' → Ejemplo CORRECTO: 'Champú de avena para perros'. "
         "Ejemplo INCORRECTO: '* Primer punto\n* Segundo punto' → Ejemplo CORRECTO: 'Primer punto. Segundo punto.' "
         "USA puntuación natural (puntos, signos de exclamación ¡!) para ser amable y humano. "
-        "Mantén respuestas cortas y directas."
+        "Mantén respuestas cortas y directas. "
+        "REGLA ESTRICTA SOBRE TEMAS FUERA DE PERROS: "
+        "Si el usuario pregunta sobre cualquier tema que NO sea de perros (series, películas, política, deportes, "
+        "tecnología, música, recetas, etc.), NO respondas NI comentes NADA sobre ese tema. "
+        "NUNCA des información sobre el tema fuera de perros, ni siquiera parcialmente. "
+        "Simplemente redirige de forma amable diciendo que solo puedes ayudar con temas caninos "
+        "y pregúntale en qué puedes ayudarle sobre su perro. Sin fuentes ni enlaces."
     )
     
     if context and context.strip():
@@ -445,6 +462,8 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
             "'No puedo confirmarlo con fuentes oficiales. Consulta a tu veterinario.'\n"
             "5) SIEMPRE termina tu respuesta con un bloque de fuentes. Esto es OBLIGATORIO, no opcional.\n"
             "   El bloque DEBE aparecer al final de CADA respuesta, sin excepción.\n"
+            "   EXCEPCIÓN: cuando la pregunta NO sea sobre perros y solo estés redirigiendo al usuario "
+            "   hacia temas caninos, NO incluyas fuentes. Solo incluye fuentes en respuestas informativas sobre perros.\n"
             "   Formato EXACTO que debes seguir (sin markdown, sin **, sin viñetas):\n\n"
             "   Fuentes (para contrastar):\n"
             "   AVMA - https://www.avma.org/\n"
@@ -468,6 +487,8 @@ def build_whitelist_system_prompt(intent: str, context: str = "") -> str:
             "'No puedo confirmarlo con fuentes oficiales. Consulta a un educador certificado.'\n"
             "5) SIEMPRE termina tu respuesta con un bloque de fuentes. Esto es OBLIGATORIO, no opcional.\n"
             "   El bloque DEBE aparecer al final de CADA respuesta, sin excepción.\n"
+            "   EXCEPCIÓN: cuando la pregunta NO sea sobre perros y solo estés redirigiendo al usuario "
+            "   hacia temas caninos, NO incluyas fuentes. Solo incluye fuentes en respuestas informativas sobre perros.\n"
             "   Formato EXACTO que debes seguir (sin markdown, sin **, sin viñetas):\n\n"
             "   Fuentes (para contrastar):\n"
             "   AVSAB - https://avsab.org/\n"
