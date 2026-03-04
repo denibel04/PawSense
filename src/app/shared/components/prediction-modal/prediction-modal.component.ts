@@ -56,19 +56,51 @@ export class PredictionModalComponent implements OnInit {
   }
 
   private calculateWinner() {
-    // Determine which architecture's top-1 has the highest confidence
-    const archResults: { name: string; predictions: any[] }[] = [
-      { name: 'PyTorch', predictions: this.data.pytorch || [] },
-      { name: 'Keras', predictions: this.data.keras || [] },
-      { name: 'MobileNetV2', predictions: this.data.mobile || [] }
+    const archResults: { name: string; predictions: any[]; numBreeds: number }[] = [
+      { name: 'PyTorch', predictions: this.data.pytorch || [], numBreeds: 120 },
+      { name: 'Keras', predictions: this.data.keras || [], numBreeds: 120 },
+      { name: 'MobileNetV2', predictions: this.data.mobile || [], numBreeds: 355 }
     ];
 
-    let bestArch = archResults[0];
-    for (const arch of archResults) {
+    const mobile = archResults.find(a => a.name === 'MobileNetV2')!;
+    const narrowModels = archResults.filter(a => a.numBreeds === 120);
+
+    // Paso 1: encontrar el modelo de 120 razas con mayor confianza en su top-1
+    let bestNarrow = narrowModels[0];
+    for (const arch of narrowModels) {
       if (arch.predictions.length > 0 &&
-        arch.predictions[0].confidence > (bestArch.predictions[0]?.confidence || 0)) {
-        bestArch = arch;
+        arch.predictions[0].confidence > (bestNarrow.predictions[0]?.confidence || 0)) {
+        bestNarrow = arch;
       }
+    }
+
+    const mobileTop1 = mobile.predictions[0] || null;
+    const narrowTop1 = bestNarrow.predictions[0] || null;
+
+    let bestArch = mobile; // Por defecto usamos MobileNetV2 (355 razas)
+
+    if (mobileTop1 && narrowTop1) {
+      const samePrediction = mobileTop1.breed_en?.toLowerCase() === narrowTop1.breed_en?.toLowerCase();
+
+      if (samePrediction) {
+        // Todos los modelos coinciden → usar el de mayor confianza (comportamiento original)
+        bestArch = narrowTop1.confidence > mobileTop1.confidence ? bestNarrow : mobile;
+        console.log('Modelos coinciden en raza → mayor confianza gana');
+      } else {
+        // Modelos de 120 y 355 razas NO coinciden
+        // El de 120 razas puede estar "forzando" una raza cercana porque no conoce la correcta
+        // Priorizamos MobileNetV2 (355 razas) si tiene confianza razonable (>25%)
+        if (mobileTop1.confidence > 0.25) {
+          bestArch = mobile;
+          console.log(`Desacuerdo entre modelos: MobileNetV2(355) dice "${mobileTop1.breed_es}" (${(mobileTop1.confidence * 100).toFixed(1)}%) vs ${bestNarrow.name}(120) dice "${narrowTop1.breed_es}" (${(narrowTop1.confidence * 100).toFixed(1)}%). Priorizando modelo con más razas.`);
+        } else {
+          // MobileNetV2 no está seguro de nada → usar el modelo de 120 más confiado
+          bestArch = bestNarrow;
+          console.log('MobileNetV2 con baja confianza → usando modelo 120 razas');
+        }
+      }
+    } else if (narrowTop1 && !mobileTop1) {
+      bestArch = bestNarrow;
     }
 
     // Winner = top-1 of the best architecture
@@ -79,7 +111,7 @@ export class PredictionModalComponent implements OnInit {
 
     // Runner-ups = positions 2 and 3 from the same architecture
     this.runnerUps = bestArch.predictions
-      .slice(1, 4) // Cogemos hasta el 3ero (1, 2, 3)
+      .slice(1, 4)
       .map(p => ({ ...p, source: bestArch.name }));
 
     console.log('Runner-ups calculated:', this.runnerUps);

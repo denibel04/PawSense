@@ -151,22 +151,33 @@ class PredictionService:
                 if class_id in NON_DOG_ANIMALS and confidence > 0.15:
                     other_animals.append((class_id, confidence, coords))
 
-        # Si no hay detección de perro, abortamos
+        # Si no hay detección de perro → intentar fallback
         if best_dog is None:
-            return None, None, None
+            # Si YOLO detectó algún animal con alta confianza (>0.60), es seguro que NO es un perro
+            max_other_conf = max((c for _, c, _ in other_animals), default=0)
+            if max_other_conf > 0.60:
+                print(f"⚠️ Rechazado: YOLO no detectó perro y tiene animal alternativo con confianza={max_other_conf:.3f}")
+                return None, None, None
+            
+            # Fallback: YOLO está confuso (solo detecciones de baja confianza)
+            # Puede ser un perro de apariencia inusual (ej: Puli, Komondor)
+            # Usamos la imagen completa y dejamos que el clasificador de razas decida
+            print(f"🔄 Fallback: YOLO no detectó perro (detecciones alternativas de baja confianza). Probando con imagen completa...")
+            crop = img_rgb  # Usar imagen completa como fallback
 
-        # Si hay un animal no-perro con confianza significativa → posible falso positivo
-        if other_animals:
-            dog_conf = best_dog[0]
-            for animal_cls, animal_conf, animal_coords in other_animals:
-                # Si el otro animal tiene al menos 30% de la confianza del perro, es sospechoso
-                if animal_conf >= dog_conf * 0.3:
-                    print(f"⚠️ Falso positivo filtrado: YOLO dijo perro({dog_conf:.3f}) pero también detectó clase={animal_cls}({animal_conf:.3f})")
-                    return None, None, None
+        else:
+            # Hay detección de perro → verificar que no haya animal competidor
+            if other_animals:
+                dog_conf = best_dog[0]
+                for animal_cls, animal_conf, animal_coords in other_animals:
+                    # Si el otro animal tiene al menos 30% de la confianza del perro, es sospechoso
+                    if animal_conf >= dog_conf * 0.3:
+                        print(f"⚠️ Falso positivo filtrado: YOLO dijo perro({dog_conf:.3f}) pero también detectó clase={animal_cls}({animal_conf:.3f})")
+                        return None, None, None
 
-        crop = self.aplicar_padding(img_rgb, best_dog[1])
+            crop = self.aplicar_padding(img_rgb, best_dog[1])
 
-        # --- A partir de aquí solo llegamos si hay perro confirmado ---
+        # --- A partir de aquí solo llegamos si hay perro confirmado o fallback ---
 
         # 2. Preparar inputs para MobileNetV2 (355 razas)
         img_mob = cv2.resize(crop, self.img_size)
