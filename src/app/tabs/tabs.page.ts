@@ -1,11 +1,11 @@
 import { Component, EnvironmentInjector, inject } from '@angular/core';
 import { IonTabs, IonTabBar, IonTabButton, IonIcon, IonLabel } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { 
-  images, imagesOutline, 
-  camera, cameraOutline, 
-  chatbubble, chatbubbleOutline, 
-  documentText, documentTextOutline 
+import {
+  images, imagesOutline,
+  camera, cameraOutline,
+  chatbubble, chatbubbleOutline,
+  documentText, documentTextOutline
 } from 'ionicons/icons';
 
 @Component({
@@ -18,11 +18,11 @@ export class TabsPage {
   public environmentInjector = inject(EnvironmentInjector);
 
   constructor() {
-    addIcons({ 
-      images, imagesOutline, 
-      camera, cameraOutline, 
-      chatbubble, chatbubbleOutline, 
-      documentText, documentTextOutline 
+    addIcons({
+      images, imagesOutline,
+      camera, cameraOutline,
+      chatbubble, chatbubbleOutline,
+      documentText, documentTextOutline
     });
   }
 }
