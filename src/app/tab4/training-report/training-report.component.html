@@ -13,7 +13,7 @@
                 </div>
             </div>
             <div class="rpt-date">
-                <strong>Fecha de Sesión:</strong> {{ data.fechaConsulta || '—' }}<br>
+                <strong>Fecha de Sesión:</strong> {{ (data.fechaConsulta || '').slice(0, 10) || today }}<br>
                 <strong>Generado:</strong> {{ today }}
             </div>
         </div>

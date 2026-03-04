@@ -8,6 +8,7 @@ from app.services.report_service import ReportService
 from app.core.config import settings
 import logging
 import json
+import re
 import asyncio
 from datetime import datetime
 from google import genai
@@ -208,8 +209,14 @@ async def generate_report_from_chat(request: ChatReportRequest):
                     extracted_data["paciente"]["genero"] = dog_info["genero"]
                 if not extracted_data["paciente"].get("especie"):
                     extracted_data["paciente"]["especie"] = "Perro"
-                if not extracted_data.get("fechaConsulta"):
-                    extracted_data["fechaConsulta"] = datetime.now().isoformat()
+                # Validar fechaConsulta: usar la extraída por Gemini solo si parece una fecha real (YYYY-MM-DD)
+                # Si Gemini no extrajo fecha o tiene formato ISO largo/inválido, usar la fecha actual
+                fecha_extraida = extracted_data.get("fechaConsulta", "")
+                if not fecha_extraida or not re.match(r'^\d{4}-\d{2}-\d{2}', fecha_extraida):
+                    extracted_data["fechaConsulta"] = datetime.now().strftime("%Y-%m-%d")
+                else:
+                    # Normalizar a YYYY-MM-DD (recortar si viene con hora)
+                    extracted_data["fechaConsulta"] = fecha_extraida[:10]
                     
             except Exception as e:
                 logger.error(f"Error extrayendo datos con Gemini: {e}")

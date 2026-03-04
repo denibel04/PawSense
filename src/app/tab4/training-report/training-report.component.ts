@@ -49,7 +49,7 @@ export class TrainingReportComponent implements DoCheck {
                 notes: value.notes ?? '',
                 paciente: value.paciente ?? {},
                 recomendaciones: value.recomendaciones ?? '',
-                fechaConsulta: value.fechaConsulta ?? ''
+                fechaConsulta: (value.fechaConsulta ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
             };
         }
     }

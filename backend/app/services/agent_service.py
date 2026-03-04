@@ -1,5 +1,6 @@
 import os
 import json
+from datetime import datetime
 from google import genai
 from google.genai import types
 from app.schemas.report import ClinicalReportSchema, TrainingReportSchema
@@ -21,7 +22,7 @@ INFORMACIÓN CRÍTICA (DEBE llenar):
 - tratamiento: medicamentos, dosis, procedimientos indicados
 - recomendaciones: consejos para el propietario sobre cuidados posteriores
 - notas: observaciones adicionales
-- fechaConsulta: fecha actual en ISO format
+- fechaConsulta: la fecha de hoy es {datetime.now().strftime('%Y-%m-%d')}. Usa esta fecha a menos que en el contexto se mencione explícitamente otra fecha de consulta.
 
 INFORMACIÓN SECUNDARIA (completa si está disponible):
 - antecedentes_patologicos: enfermedades previas o complicaciones
@@ -49,7 +50,7 @@ INFORMACIÓN CRÍTICA (DEBE llenar):
 - tareas_casa: ejercicios específicos que el propietario debe practicar en casa
 - recomendaciones: consejos para mejorar el entrenamiento
 - notas: observaciones sobre el progreso o actitud del perro
-- fechaConsulta: fecha actual en ISO format
+- fechaConsulta: la fecha de hoy es {datetime.now().strftime('%Y-%m-%d')}. Usa esta fecha a menos que en el contexto se mencione explícitamente otra fecha de sesión.
 
 Si algún campo no se menciona explícitamente, usa valores por defecto apropiados.
 IMPORTANTE FORMATO: Asegúrate de usar mayúsculas y minúsculas correctamente (ej. la primera letra de las oraciones en mayúscula, nombres propios en mayúscula). No escribas todo en minúsculas.

@@ -54,7 +54,7 @@ export class ClinicalReportComponent implements DoCheck {
                 antecedentes: value.antecedentes ?? '',
                 examen_fisico: value.examen_fisico ?? '',
                 recomendaciones: value.recomendaciones ?? '',
-                fechaConsulta: value.fechaConsulta ?? ''
+                fechaConsulta: (value.fechaConsulta ?? '').slice(0, 10) || new Date().toISOString().slice(0, 10)
             };
         }
     }
