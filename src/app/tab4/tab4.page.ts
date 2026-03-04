@@ -420,7 +420,7 @@ export class Tab4Page implements ViewWillEnter {
       antecedentes: data.antecedentes_patologicos || '',
       examen_fisico: data.examen_fisico || '',
       recomendaciones: data.recomendaciones || '',
-      fechaConsulta: data.fechaConsulta || ''
+      fechaConsulta: data.fechaConsulta || new Date().toISOString().slice(0, 10)
     };
 
     return transformed;
@@ -438,7 +438,7 @@ export class Tab4Page implements ViewWillEnter {
       notes: data.notas || data.recomendaciones || '',
       paciente: data.paciente || {},
       recomendaciones: data.recomendaciones || '',
-      fechaConsulta: data.fechaConsulta || ''
+      fechaConsulta: data.fechaConsulta || new Date().toISOString().slice(0, 10)
     };
 
     return transformed;
