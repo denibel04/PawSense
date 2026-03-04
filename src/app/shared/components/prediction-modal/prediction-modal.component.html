@@ -15,52 +15,56 @@
     </div>
   </div>
 
-  <div class="temperament-row" *ngIf="formattedTemps.length > 0">
-    <div *ngFor="let temp of formattedTemps" [class]="'temp-card ' + temp.group">
-      <ion-icon [name]="temp.icon"></ion-icon>
-      <span>{{ temp.esp | uppercase }}</span>
+  <!-- Fase 2: Cargando Detalles -->
+  <div class="loading-details-section" *ngIf="loadingInfo">
+    <div class="logo-spinner-container">
+      <ion-icon name="paw" class="logo-spinner"></ion-icon>
     </div>
-  </div>
-  <!--
-  <div class="about-section" *ngIf="breedInfo?.description">
-    <h2 class="section-title">Sobre la raza</h2>
-    <p class="description-text">{{ breedInfo.description }}</p>
-  </div>
- -->
-  <div class="info-grid" *ngIf="breedInfo">
-
-  
-  <div class="info-card">
-    <span class="card-label">RANGO DE PESO</span>
-    <span class="card-value">
-      <span [innerHTML]="formatMetric(breedInfo.weight_metric, 'kg')"></span>
-    </span>
+    <p>Conectando con la base de datos de razas...</p>
   </div>
 
-  <div class="info-card">
-    <span class="card-label">RANGO DE ALTURA</span>
-    <span class="card-value">
-      <span [innerHTML]="formatMetric(breedInfo.height_metric, 'cm')"></span>
-    </span>
-  </div>
+  <!-- Fase 2: Datos Completos (solo se muestran cuando loadingInfo es false) -->
+  <div class="details-revealed-section" *ngIf="!loadingInfo" class="animate-fade">
+    <div class="temperament-row" *ngIf="formattedTemps.length > 0">
+      <div *ngFor="let temp of formattedTemps" [class]="'temp-card ' + temp.group">
+        <ion-icon [name]="temp.icon"></ion-icon>
+        <span>{{ temp.esp | uppercase }}</span>
+      </div>
+    </div>
 
-  <div class="info-card life-span-card" *ngIf="breedInfo.life_span && breedInfo.life_span !== 'None'">
-    <span class="card-label">ESPERANZA DE VIDA</span>
-    <span class="card-value">{{ breedInfo.life_span.replace('-', ' - ') }} años</span>
-  </div>
+    <div class="info-grid" *ngIf="breedInfo">
+      <div class="info-card">
+        <span class="card-label">RANGO DE PESO</span>
+        <span class="card-value">
+          <span [innerHTML]="formatMetric(breedInfo.weight_metric, 'kg')"></span>
+        </span>
+      </div>
 
-</div>
-  <!-- Runner-ups: 2nd and 3rd predictions -->
-  <div class="runner-ups-section" *ngIf="runnerUps.length > 0">
-    <h2 class="section-title">También podría ser...</h2>
-    <div class="runner-ups-list">
-      <div class="runner-up-card" *ngFor="let ru of runnerUps; let i = index">
-        <div class="runner-up-rank">{{ i + 2 }}º</div>
-        <div class="runner-up-info">
-          <span class="runner-up-name">{{ ru.breed_es }}</span>
-        </div>
-        <div class="runner-up-confidence">
-          <span class="ru-percent">{{ ru.confidence.toFixed(1) }}%</span>
+      <div class="info-card">
+        <span class="card-label">RANGO DE ALTURA</span>
+        <span class="card-value">
+          <span [innerHTML]="formatMetric(breedInfo.height_metric, 'cm')"></span>
+        </span>
+      </div>
+
+      <div class="info-card life-span-card" *ngIf="breedInfo.life_span && breedInfo.life_span !== 'None'">
+        <span class="card-label">ESPERANZA DE VIDA</span>
+        <span class="card-value">{{ breedInfo.life_span.replace('-', ' - ') }} años</span>
+      </div>
+    </div>
+
+    <!-- Runner-ups: 2nd and 3rd predictions -->
+    <div class="runner-ups-section" *ngIf="runnerUps.length > 0">
+      <h2 class="section-title">También podría ser...</h2>
+      <div class="runner-ups-list">
+        <div class="runner-up-card" *ngFor="let ru of runnerUps; let i = index">
+          <div class="runner-up-rank">{{ i + 2 }}º</div>
+          <div class="runner-up-info">
+            <span class="runner-up-name">{{ ru.breed_es }}</span>
+          </div>
+          <div class="runner-up-confidence">
+            <span class="ru-percent">{{ ru.confidence.toFixed(1) }}%</span>
+          </div>
         </div>
       </div>
     </div>

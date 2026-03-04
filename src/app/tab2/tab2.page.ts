@@ -104,8 +104,8 @@ export class Tab2Page implements OnDestroy {
           const bestMatch = data.top3[0];
           const confidence = parseFloat(bestMatch.confidence)
 
-          // Si la confianza es mayor al 80% muestra el popup
-          if (confidence >= 80) {
+          // Si la confianza es mayor al 70% muestra el popup
+          if (confidence >= 70) {
 
             //"Coge los píxeles que hay ahora mismo dibujados en el cuadro del canvas y conviértelos en una foto real con formato JPEG".
             const capturedImage = this.canvasElement.nativeElement.toDataURL('image/jpeg')

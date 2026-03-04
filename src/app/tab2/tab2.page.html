@@ -2,7 +2,7 @@
 
 <ion-content class="dashboard-content">
   <div class="main-container-v2">
-    
+
     <div class="visor-card-v2" [class.active]="isRealTime" (click)="toggleRealTime()">
       <video #videoElement autoplay playsinline [hidden]="!isRealTime"></video>
       <canvas #canvasElement style="display: none;"></canvas>
@@ -14,7 +14,7 @@
           </div>
         </div>
         <div *ngIf="!realTimeResult" class="scanning-pill">
-          🔍 Escaneando...
+          🐾 Escaneando...
         </div>
       </div>
 
