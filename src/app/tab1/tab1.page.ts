@@ -15,6 +15,7 @@ import {
 import { HeaderComponent } from '../shared/components/header/header.component';
 import { PredictionModalComponent } from '../shared/components/prediction-modal/prediction-modal.component';
 
+
 @Component({
   selector: 'app-tab1',
   templateUrl: 'tab1.page.html',
@@ -26,6 +27,7 @@ import { PredictionModalComponent } from '../shared/components/prediction-modal/
     HeaderComponent, IonSpinner,
   ],
 })
+
 export class Tab1Page {
   selectedFile: File | null = null;
   isLoading = false;
@@ -33,6 +35,7 @@ export class Tab1Page {
   videoPreview: string | null = null;
   fileType: 'image' | 'video' | null = null;
   isDragging = false;
+  readonly MAX_FILE_SIZE = 32 * 1024 * 1024; // 32 MB en bytes
 
   constructor(
     private dogService: DogService,
@@ -75,6 +78,13 @@ export class Tab1Page {
   }
 
   private processFile(file: File) {
+    if (file.size > this.MAX_FILE_SIZE) {
+    this.presentErrorToast(
+      `El archivo es demasiado grande (${(file.size / (1024 * 1024)).toFixed(1)} MB). ` +
+      'Por favor, sube un archivo de menos de 32 MB.'
+    );
+    return; 
+  }
     this.resetState();
     this.selectedFile = file;
     if (this.isMediaVideo(file)) {
