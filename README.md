@@ -46,7 +46,16 @@ https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
    - 🩺 **Informe veterinario**: predisposiciones genéticas, recomendaciones de salud y cuidados específicos.  
    - 🐕 **Informe de adiestramiento**: temperamento, técnicas de entrenamiento y pautas de socialización.  
 8. También es posible generar informes a partir de una **grabación de audio**, donde el agente transcribe, extrae la información relevante y produce el documento automáticamente.
- 
+
+### 🎬 Previews
+
+| Preview | Video |
+|---------|-------|
+| 🤖 Chatbot | [Reproducir](https://github.com/user-attachments/assets/fc40cfd2-b669-45ab-ba9c-6ed1a8efa64a) |
+| 🖼 Image Prediction | [Reproducir](https://github.com/user-attachments/assets/50903328-a7ea-42e0-b749-01c82d530881) |
+| 📄 Reports Agent | [Reproducir](https://github.com/user-attachments/assets/500cad2c-506f-4fbe-9bac-e0fb7dc1d528) |
+| 🎬 Video Prediction | [Reproducir](https://github.com/user-attachments/assets/0ede8214-1a7b-46f3-a348-fa5ee8ebc40e) |
+
 <br>
 
 ---
@@ -97,39 +106,13 @@ A continuación se detalla el flujo técnico desde la entrada de datos hasta la 
 
 Para el desarrollo de PawSense se han empleado los siguientes conjuntos de datos, APIs y documentación técnica:
 
-### 💻 Desarrollo Frontend
-* **Angular**: [Manual y Documentación Oficial](https://angular.dev/docs) - Framework principal utilizado para el desarrollo de la interfaz SPA.
-
-### 📊 Datasets
-* **Stanford Dogs Dataset**: [Acceder al sitio oficial](https://www.kaggle.com/datasets/jessicali9530/stanford-dogs-dataset) - Conjunto de 20,580 imágenes de 120 razas de perros.
-* **Dog Breed Identification (Kaggle)**: [Ver Dataset](https://www.kaggle.com/c/dog-breed-identification/data) - Dataset utilizado para el entrenamiento de modelos de clasificación.
-
-### 🌐 APIs y Servicios
-* **TheDogAPI**: [Web Oficial](https://thedogapi.com/)
-    * [Manual de integración (Docs)](https://docs.thedogapi.com/) - Utilizada para obtener metadatos sobre temperamento y características de las razas.
-
-### 🤖 Modelos de Inteligencia Artificial
-* **Google Gemini 2.5 Flash / Lite**: [Documentación de Gemini API](https://ai.google.dev/gemini-api/docs)
-    * Motor de procesamiento para el Chatbot, transcripción de audio y generación de informes inteligentes.
-
-### 📄 Herramientas de Generación
-* **Playwright (HTML a PDF)**: [Manual de Playwright Python](https://playwright.dev/python/docs/api/class-page#page-pdf)
-    * Documentación oficial para la generación de PDFs profesionales a partir de plantillas HTML dinámicas.
-
-<br>
-
----
-
-<br>
-
-## 🎬 Previews
-
-| Preview | Video |
-|---------|-------|
-| 🤖 Chatbot | [Reproducir](https://github.com/user-attachments/assets/fc40cfd2-b669-45ab-ba9c-6ed1a8efa64a) |
-| 🖼 Image Prediction | [Reproducir](https://github.com/user-attachments/assets/50903328-a7ea-42e0-b749-01c82d530881) |
-| 📄 Reports Agent | [Reproducir](https://github.com/user-attachments/assets/500cad2c-506f-4fbe-9bac-e0fb7dc1d528) |
-| 🎬 Video Prediction | [Reproducir](https://github.com/user-attachments/assets/0ede8214-1a7b-46f3-a348-fa5ee8ebc40e) |
+- [Manual y Documentación Oficial Angular](https://angular.dev/docs)
+- [Dataset Standford Dogs](https://www.kaggle.com/datasets/jessicali9530/stanford-dogs-dataset)
+- [Dataset Dog Breed Identification](https://www.kaggle.com/c/dog-breed-identification/data) 
+- [Web Oficial TheDogAPI](https://thedogapi.com/)
+- [Manual de integración TheDogAPI](https://docs.thedogapi.com/)
+- [Documentación de Gemini API](https://ai.google.dev/gemini-api/docs)
+- [Manual de Playwright Python](https://playwright.dev/python/docs/api/class-page#page-pdf)
 
 <br>
 
