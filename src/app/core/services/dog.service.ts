@@ -26,7 +26,7 @@ export class DogService {
   predictVideo(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    return this.api.post(API_CONFIG.endpoints.predict + '/video', formData);
+    return this.api.post(API_CONFIG.endpoints.predict + 'video', formData);
   }
 
   getPredictionDetails(breedName: string): Observable<any> {
