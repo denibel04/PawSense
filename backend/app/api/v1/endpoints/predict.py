@@ -104,13 +104,19 @@ async def predict_video(file: UploadFile = File(...)):
                     frames_analizados += 1
                     for arch in ["mobile", "keras", "pytorch"]:
                         for p in preds[arch]:
-                            # --- AQUÍ ESTABA EL ERROR ---
                             b_en = p["breed_en"]
                             b_es = p["breed_es"]
                             conf = p["confidence"]
+                            api_matched = p.get("matched", False)
+                            api_id = p.get("api_id")
                             
                             if b_en not in stats[arch]:
-                                stats[arch][b_en] = {"sum": 0, "es": b_es}
+                                stats[arch][b_en] = {
+                                    "sum": 0, 
+                                    "es": b_es,
+                                    "matched": api_matched,
+                                    "api_id": api_id
+                                }
                             
                             stats[arch][b_en]["sum"] += conf
             
@@ -126,7 +132,9 @@ async def predict_video(file: UploadFile = File(...)):
                 {
                     "breed_en": b_en, 
                     "breed_es": info["es"], 
-                    "confidence": round(info["sum"] / n_frames, 2)
+                    "confidence": round(info["sum"] / n_frames, 2),
+                    "matched": info["matched"],
+                    "api_id": info["api_id"]
                 }
                 for b_en, info in arch_stats.items()
             ]

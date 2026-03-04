@@ -145,6 +145,17 @@ export class PredictionModalComponent implements OnInit {
         return;
       }
 
+      if (pred.matched === false) {
+        console.log(`PredictionModalComponent - Raza sin correspondencia en API: ${pred.breed_en}. Saltando request.`);
+        // Simular respuesta no encontrada sin llamar a la api
+        this.allBreedsInfo[index] = null;
+        if (index === 0) {
+          this.breedInfo = null;
+        }
+        checkCompleteAndShare();
+        return;
+      }
+
       const cleanName = this.sanitizeBreedName(pred.breed_en);
       console.log(`PredictionModalComponent - Consultando API para: ${cleanName} (original: ${pred.breed_en})`);
 
@@ -181,6 +192,7 @@ export class PredictionModalComponent implements OnInit {
       breed_en: pred?.breed_en || '',
       breed_es: pred?.breed_es || '',
       confidence: pred?.confidence || 0,
+      matched: pred?.matched !== false, // Por defecto true si no viene definido
       apiInfo: this.allBreedsInfo[i] || null
     }));
     this.chatService.updatePredictionContext(top3);
@@ -246,6 +258,7 @@ export class PredictionModalComponent implements OnInit {
       breed_en: pred?.breed_en || '',
       breed_es: pred?.breed_es || '',
       confidence: pred?.confidence || 0,
+      matched: pred?.matched !== false,
       apiInfo: this.allBreedsInfo[i] || null
     }));
     await this.modalCtrl.dismiss();

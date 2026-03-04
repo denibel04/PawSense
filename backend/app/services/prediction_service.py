@@ -18,6 +18,8 @@ class PredictionResult:
     breed_en: str
     breed_es: str
     confidence: float
+    api_matched: bool = False
+    api_id: str = None
 
 
 class PredictionService:
@@ -44,6 +46,9 @@ class PredictionService:
 
         self.translation_355 = {}
         self.translation_120 = {}
+
+        self.corr_120 = {}
+        self.corr_355 = {}
 
         if not self.use_mock:
             self.load_model()
@@ -89,6 +94,15 @@ class PredictionService:
             with open(os.path.join(self.DATA_DIR, "breed_names_es.json"), 'r', encoding='utf-8') as f:
                 self.translation_120 = json.load(f)
                 self.breed_labels_120 = list(self.translation_120.keys())
+
+            # Breed Correlation
+            with open(os.path.join(self.DATA_DIR, "breed_correlation.json"), 'r', encoding='utf-8') as f:
+                corr_data = json.load(f)
+                for entry in corr_data["breeds"]:
+                    if entry["model"] == "keras_pytorch_120":
+                        self.corr_120[entry["model_label"]] = entry
+                    elif entry["model"] == "mobilenet_355":
+                        self.corr_355[entry["model_label"]] = entry
 
             self.model_loaded = True
             print("Triple AI loaded successfully")
@@ -142,8 +156,6 @@ class PredictionService:
                 class_id = int(box.cls)
                 coords = list(map(int, box.xyxy[0].cpu().numpy()))
 
-                print(f"🔍 YOLO detectó clase={class_id} confianza={confidence:.3f}")
-
                 if class_id == 16 and confidence > 0.40:
                     if best_dog is None or confidence > best_dog[0]:
                         best_dog = (confidence, coords)
@@ -156,13 +168,11 @@ class PredictionService:
             # Si YOLO detectó algún animal con alta confianza (>0.60), es seguro que NO es un perro
             max_other_conf = max((c for _, c, _ in other_animals), default=0)
             if max_other_conf > 0.60:
-                print(f"⚠️ Rechazado: YOLO no detectó perro y tiene animal alternativo con confianza={max_other_conf:.3f}")
                 return None, None, None
             
             # Fallback: YOLO está confuso (solo detecciones de baja confianza)
             # Puede ser un perro de apariencia inusual (ej: Puli, Komondor)
             # Usamos la imagen completa y dejamos que el clasificador de razas decida
-            print(f"🔄 Fallback: YOLO no detectó perro (detecciones alternativas de baja confianza). Probando con imagen completa...")
             crop = img_rgb  # Usar imagen completa como fallback
 
         else:
@@ -172,7 +182,6 @@ class PredictionService:
                 for animal_cls, animal_conf, animal_coords in other_animals:
                     # Si el otro animal tiene al menos 30% de la confianza del perro, es sospechoso
                     if animal_conf >= dog_conf * 0.3:
-                        print(f"⚠️ Falso positivo filtrado: YOLO dijo perro({dog_conf:.3f}) pero también detectó clase={animal_cls}({animal_conf:.3f})")
                         return None, None, None
 
             crop = self.aplicar_padding(img_rgb, best_dog[1])
@@ -227,7 +236,7 @@ class PredictionService:
                 }
 
             # 3. Inferencia en las 3 arquitecturas
-            res_mobile = self._infer_architecture(self.model_mobile, in_mob, self.breed_labels_355)
+            res_mobile = self._infer_architecture(self.model_mobile, in_mob, self.breed_labels_355, is_mobile=True)
             res_keras = self._infer_architecture(self.model_keras_v1, in_v1, self.breed_labels_120)
             res_pytorch = self._infer_architecture(self.model_pytorch, in_pt, self.breed_labels_120)
 
@@ -250,7 +259,7 @@ class PredictionService:
     # INFERENCE
     # ==========================================================
 
-    def _infer_architecture(self, model, preprocessed_image, labels):
+    def _infer_architecture(self, model, preprocessed_image, labels, is_mobile=False):
         if model is None:
             return []
 
@@ -262,16 +271,27 @@ class PredictionService:
             preds = model.predict(preprocessed_image, verbose=0)[0]
         
         translation_dict = self.translation_355 if len(labels) > 200 else self.translation_120
+        corr_dict = self.corr_355 if is_mobile else self.corr_120
 
         results = []
         for i, prob in enumerate(preds):
-            name_en = labels[i] if i < len(labels) else f"Unknown"
+            name_en = labels[i] if i < len(labels) else "Unknown"
             name_es = translation_dict.get(name_en, name_en)
             
+            # Use correlation data for precise API name
+            corr_entry = corr_dict.get(name_en, {})
+            api_matched = corr_entry.get("matched", False)
+            api_name = corr_entry.get("api_name")
+            api_id = corr_entry.get("api_id")
+            
+            final_breed_en = api_name if api_matched and api_name else name_en
+            
             results.append(PredictionResult(
-                breed_en=name_en, 
+                breed_en=final_breed_en, 
                 breed_es=name_es, 
-                confidence=float(prob)
+                confidence=float(prob),
+                api_matched=api_matched,
+                api_id=api_id
             ))
 
         return sorted(results, key=lambda x: x.confidence, reverse=True)
@@ -297,7 +317,7 @@ class PredictionService:
                 }
 
             # Si hay perro, ejecutamos la inferencia en los 3 modelos
-            res_mobile = self._infer_architecture(self.model_mobile, in_mob, self.breed_labels_355)
+            res_mobile = self._infer_architecture(self.model_mobile, in_mob, self.breed_labels_355, is_mobile=True)
             res_keras = self._infer_architecture(self.model_keras_v1, in_v1, self.breed_labels_120)
             res_pytorch = self._infer_architecture(self.model_pytorch, in_pt, self.breed_labels_120)
             
@@ -323,9 +343,11 @@ class PredictionService:
             if math.isnan(conf) or math.isinf(conf): conf = 0.0
 
             top_res.append({
-                "breed_en": pred.breed_en, # ParaA llamadas a The Dog API
+                "breed_en": pred.breed_en, # Para llamadas a The Dog API
                 "breed_es": pred.breed_es, # Para mostrar en la UI
-                "confidence": round(float(conf) * 100, 2)
+                "confidence": round(float(conf) * 100, 2),
+                "matched": pred.api_matched,
+                "api_id": pred.api_id
             })
         return top_res
 
