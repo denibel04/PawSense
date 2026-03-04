@@ -126,32 +126,47 @@ class PredictionService:
         
         img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
         
-        # 1. Detección YOLOv8m
-        results = self.yolo(img_rgb, verbose=False)
+        # 1. Detección YOLOv8m (umbral bajo para capturar todas las detecciones)
+        results = self.yolo(img_rgb, verbose=False, conf=0.15)
         
-        crop = None 
-        dog_found = False  # Nuestra variable de control
+        # Clases COCO de animales que NO son perro
+        NON_DOG_ANIMALS = {14, 15, 17, 18, 19, 20, 21, 22, 23}
+        # 14=bird, 15=cat, 17=horse, 18=sheep, 19=cow, 20=elephant, 21=bear, 22=zebra, 23=giraffe
+
+        best_dog = None       # (confidence, coords)
+        other_animals = []    # [(class_id, confidence, coords)]
 
         for r in results:
             for box in r.boxes:
-                # Obtenemos la confianza del modelo (0.0 a 1.0)
                 confidence = float(box.conf[0].cpu().numpy())
                 class_id = int(box.cls)
+                coords = list(map(int, box.xyxy[0].cpu().numpy()))
 
-                # FILTRO CRÍTICO: Clase 16 Y confianza mayor al 60% (0.6)
-                if class_id == 16 and confidence > 0.1: 
-                    coords = list(map(int, box.xyxy[0].cpu().numpy()))
-                    crop = self.aplicar_padding(img_rgb, coords)
-                    dog_found = True
-                    break 
-            if dog_found: 
-                break
+                print(f"🔍 YOLO detectó clase={class_id} confianza={confidence:.3f}")
 
-        # Si después de revisar todo, no encontramos un perro, abortamos
-        if dog_found is False:
+                if class_id == 16 and confidence > 0.40:
+                    if best_dog is None or confidence > best_dog[0]:
+                        best_dog = (confidence, coords)
+
+                if class_id in NON_DOG_ANIMALS and confidence > 0.15:
+                    other_animals.append((class_id, confidence, coords))
+
+        # Si no hay detección de perro, abortamos
+        if best_dog is None:
             return None, None, None
 
-        # --- A partir de aquí solo llegamos si dog_found es True ---
+        # Si hay un animal no-perro con confianza significativa → posible falso positivo
+        if other_animals:
+            dog_conf = best_dog[0]
+            for animal_cls, animal_conf, animal_coords in other_animals:
+                # Si el otro animal tiene al menos 30% de la confianza del perro, es sospechoso
+                if animal_conf >= dog_conf * 0.3:
+                    print(f"⚠️ Falso positivo filtrado: YOLO dijo perro({dog_conf:.3f}) pero también detectó clase={animal_cls}({animal_conf:.3f})")
+                    return None, None, None
+
+        crop = self.aplicar_padding(img_rgb, best_dog[1])
+
+        # --- A partir de aquí solo llegamos si hay perro confirmado ---
 
         # 2. Preparar inputs para MobileNetV2 (355 razas)
         img_mob = cv2.resize(crop, self.img_size)
