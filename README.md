@@ -31,30 +31,32 @@ https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
 
 ## 🧠 ¿Cómo funciona?
 
-### 📸 Predicción de razas
-1. El usuario sube una imagen, vídeo, GIF o activa la cámara en tiempo real.  
-2. **YOLOv8m** detecta y localiza al perro en la imagen.  
-3. Tres modelos de clasificación analizan los rasgos físicos en paralelo y un algoritmo de consenso genera la predicción final con porcentajes de las razas detectadas.  
-4. Se consulta **TheDogAPI** para mostrar información detallada y una imagen representativa de cada raza identificada.  
+### Análisis y Predicción de Razas
+1. **Entrada de Datos**: Procesamiento de archivos multimedia (imágenes, vídeos, GIFs) o captura de frames mediante la cámara en tiempo real.
+2. **Detección de Objetos**: Localización y segmentación del ejemplar canino utilizando el modelo **YOLOv8m**.
+3. **Clasificación Multimodelo**: Análisis simultáneo de rasgos morfológicos mediante tres modelos de visión por computador en paralelo. Un algoritmo de consenso unifica los resultados para ofrecer una predicción probabilística final.
+4. **Enriquecimiento de Información**: Consulta automática a **TheDogAPI** para recuperar metadatos específicos como temperamento, esperanza de vida y rasgos característicos.
 
-### 💬 Chatbot conversacional
-5. El usuario puede abrir el **chatbot integrado** para hacer preguntas sobre las razas detectadas, su comportamiento, cuidados o cualquier duda canina.  
-6. El chatbot mantiene el **contexto de la conversación** y los datos de la predicción, ofreciendo respuestas personalizadas en tiempo real vía streaming.  
+### Interacción Mediante Chatbot
+5. **Interfaz Conversacional**: Sistema de chat integrado para la resolución de consultas sobre la predicción obtenida o cuidados generales.
+6. **Gestión de Contexto**: El asistente mantiene el historial de la sesión y los datos técnicos de la detección para ofrecer respuestas precisas mediante streaming de texto.
 
-### 📄 Agente IA generador de informes
-7. Desde el chat o de forma directa, el usuario puede solicitar al **agente de IA** que genere un informe en PDF:  
-   - 🩺 **Informe veterinario**: predisposiciones genéticas, recomendaciones de salud y cuidados específicos.  
-   - 🐕 **Informe de adiestramiento**: temperamento, técnicas de entrenamiento y pautas de socialización.  
-8. También es posible generar informes a partir de una **grabación de audio**, donde el agente transcribe, extrae la información relevante y produce el documento automáticamente.
+### Generación Inteligente de Informes
+7. **Exportación a Documento**: El Agente de IA procesa la información técnica y genera archivos PDF especializados:
+    * **Informe Veterinario**: Enfocado en predisposiciones genéticas, salud preventiva y cuidados médicos sugeridos.
+    * **Informe de Adiestramiento**: Centrado en pautas conductuales, técnicas de refuerzo y socialización.
+8. **Procesamiento de Voz**: Capacidad de generar informes a partir de grabaciones de audio, realizando transcripción automática y extracción de entidades relevantes para el documento final.
 
-### 🎬 Previews
+## Previews de la Aplicación
 
-| Preview | Video |
-|---------|-------|
-| 🤖 Chatbot | [Reproducir](https://github.com/user-attachments/assets/fc40cfd2-b669-45ab-ba9c-6ed1a8efa64a) |
-| 🖼 Image Prediction | [Reproducir](https://github.com/user-attachments/assets/50903328-a7ea-42e0-b749-01c82d530881) |
-| 📄 Reports Agent | [Reproducir](https://github.com/user-attachments/assets/500cad2c-506f-4fbe-9bac-e0fb7dc1d528) |
-| 🎬 Video Prediction | [Reproducir](https://github.com/user-attachments/assets/0ede8214-1a7b-46f3-a348-fa5ee8ebc40e) |
+A continuación se presentan demostraciones visuales de las funcionalidades principales del sistema:
+
+| Módulo | Enlace al Vídeo |
+|:--- |:--- |
+| Chatbot Conversacional | [Reproducir Demostración](https://github.com/user-attachments/assets/fc40cfd2-b669-45ab-ba9c-6ed1a8efa64a) |
+| Predicción de Imágenes | [Reproducir Demostración](https://github.com/user-attachments/assets/50903328-a7ea-42e0-b749-01c82d530881) |
+| Agente de Informes | [Reproducir Demostración](https://github.com/user-attachments/assets/500cad2c-506f-4fbe-9bac-e0fb7dc1d528) |
+| Análisis de Vídeo | [Reproducir Demostración](https://github.com/user-attachments/assets/0ede8214-1a7b-46f3-a348-fa5ee8ebc40e) |
 
 <br>
 
