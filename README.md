@@ -129,3 +129,22 @@ Para el desarrollo de PawSense se han empleado los siguientes conjuntos de datos
 - Enrique Moreno Alcántara  (25%)
 - Carlos Cerezo López  (25%)
 - Denisa Ramona Belean  (25%)
+
+<br>
+<br>
+
+---
+
+<br>
+<br>
+
+## ⚖️ Legal Notice
+**Copyright © 2026 PawSense Team.**
+
+This project is **Proprietary and Confidential**. All rights are reserved to:
+* **Víctor Jiménez Guerrero** (@vjimgue)
+* **Enrique Moreno Alcántara** (@enri081)
+* **Denisa Ramona Belean** (@denibel04)
+* **Carlos Cerezo López** (@Carloscl2005)
+
+Unauthorized use, distribution, or reproduction of this Software is strictly prohibited.
