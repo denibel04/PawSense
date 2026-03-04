@@ -127,7 +127,7 @@ export class ReportService {
      */
     private getApiUrl(endpoint: string): string {
         // Usar API_CONFIG.localBaseUrl si está disponible
-        const baseUrl = API_CONFIG.localBaseUrl || 'http://localhost:8000/api/v1';
+        const baseUrl = API_CONFIG.localBaseUrl;
         return baseUrl + endpoint;
     }
 
