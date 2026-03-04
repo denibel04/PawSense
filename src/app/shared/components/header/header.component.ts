@@ -8,7 +8,7 @@ import { RouterLink } from '@angular/router';
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
   standalone: true,
-  imports: [IonHeader, IonToolbar, IonTitle, CommonModule, RouterLink]
+  imports: [CommonModule, RouterLink]
 })
 export class HeaderComponent implements OnInit {
   constructor() { }
