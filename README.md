@@ -41,6 +41,18 @@ https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
 
 <br>
 
+## 🏗️ Pipeline del Sistema
+
+A continuación se detalla el flujo técnico desde la entrada de datos hasta la generación de los informes finales:
+
+
+
+<br>
+
+---
+
+<br>
+
 ## 🎯 Casos de uso
 
 - **Protectoras y refugios**: Identificación aproximada de perros sin documentación.  
