@@ -31,10 +31,22 @@ https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
 
 ## 🧠 ¿Cómo funciona?
 
-1. El usuario sube una imagen, vídeo, GIF o activa la cámara.  
-2. El modelo de visión por computador analiza los rasgos físicos del perro.  
-3. Se genera una predicción con porcentajes de las razas detectadas.  
-4. Si se desea el agente de IA interpreta los resultados y responde preguntas adicionales del usuario.  
+### 📸 Predicción de razas
+1. El usuario sube una imagen, vídeo, GIF o activa la cámara en tiempo real.  
+2. **YOLOv8m** detecta y localiza al perro en la imagen.  
+3. Tres modelos de clasificación analizan los rasgos físicos en paralelo y un algoritmo de consenso genera la predicción final con porcentajes de las razas detectadas.  
+4. Se consulta **TheDogAPI** para mostrar información detallada y una imagen representativa de cada raza identificada.  
+
+### 💬 Chatbot conversacional
+5. El usuario puede abrir el **chatbot integrado** para hacer preguntas sobre las razas detectadas, su comportamiento, cuidados o cualquier duda canina.  
+6. El chatbot mantiene el **contexto de la conversación** y los datos de la predicción, ofreciendo respuestas personalizadas en tiempo real vía streaming.  
+
+### 📄 Agente IA generador de informes
+7. Desde el chat o de forma directa, el usuario puede solicitar al **agente de IA** que genere un informe en PDF:  
+   - 🩺 **Informe veterinario**: predisposiciones genéticas, recomendaciones de salud y cuidados específicos.  
+   - 🐕 **Informe de adiestramiento**: temperamento, técnicas de entrenamiento y pautas de socialización.  
+8. También es posible generar informes a partir de una **grabación de audio**, donde el agente transcribe, extrae la información relevante y produce el documento automáticamente.
+ 
 <br>
 
 ---
@@ -67,12 +79,44 @@ A continuación se detalla el flujo técnico desde la entrada de datos hasta la 
 
 ## 🛠 Tecnologías
 
-- Modelo de visión por computador: Propio  
-- Backend: Python  
-- Frontend: Angular  
-- Base de datos: Pendiente  
+- **Detección**: YOLOv8m (fine-tuned)  
+- **Clasificación**: MobileNetV2 · EfficientNet-B0 · CNN propia (Keras)  
+- **IA Generativa**: Gemini 2.5 Flash / Flash Lite  
+- **Backend**: Python · FastAPI  
+- **Frontend**: Angular 19 · Angular Material  
+- **Generación PDF**: Playwright  
+- **API externa**: TheDogAPI
+ 
 <br>
 
+---
+
+<br>
+
+## 📚 Recursos utilizados
+
+Para el desarrollo de PawSense se han empleado los siguientes conjuntos de datos, APIs y documentación técnica:
+
+### 💻 Desarrollo Frontend
+* **Angular**: [Manual y Documentación Oficial](https://angular.dev/docs) - Framework principal utilizado para el desarrollo de la interfaz SPA.
+
+### 📊 Datasets
+* **Stanford Dogs Dataset**: [Acceder al sitio oficial](https://www.kaggle.com/datasets/jessicali9530/stanford-dogs-dataset) - Conjunto de 20,580 imágenes de 120 razas de perros.
+* **Dog Breed Identification (Kaggle)**: [Ver Dataset](https://www.kaggle.com/c/dog-breed-identification/data) - Dataset utilizado para el entrenamiento de modelos de clasificación.
+
+### 🌐 APIs y Servicios
+* **TheDogAPI**: [Web Oficial](https://thedogapi.com/)
+    * [Manual de integración (Docs)](https://docs.thedogapi.com/) - Utilizada para obtener metadatos sobre temperamento y características de las razas.
+
+### 🤖 Modelos de Inteligencia Artificial
+* **Google Gemini 2.5 Flash / Lite**: [Documentación de Gemini API](https://ai.google.dev/gemini-api/docs)
+    * Motor de procesamiento para el Chatbot, transcripción de audio y generación de informes inteligentes.
+
+### 📄 Herramientas de Generación
+* **Playwright (HTML a PDF)**: [Manual de Playwright Python](https://playwright.dev/python/docs/api/class-page#page-pdf)
+    * Documentación oficial para la generación de PDFs profesionales a partir de plantillas HTML dinámicas.
+
+<br>
 
 ---
 
@@ -94,9 +138,9 @@ A continuación se detalla el flujo técnico desde la entrada de datos hasta la 
 <br>
 
 
-## 👥 Equipo
+## 👥 Equipo y Participación
 
-- Víctor Jiménez Guerrero  
-- Enrique Moreno Alcántara  
-- Carlos Cerezo López  
-- Denisa Ramona Belean  
+- Víctor Jiménez Guerrero  (25%)
+- Enrique Moreno Alcántara  (25%)
+- Carlos Cerezo López  (25%)
+- Denisa Ramona Belean  (25%)
