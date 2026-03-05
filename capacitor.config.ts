@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'io.ionic.starter',
-  appName: 'pawsense-app',
+  appId: 'com.pawsense.app',
+  appName: 'PawSense',
   webDir: 'www'
 };
 
