@@ -4,7 +4,40 @@ PawSense es una aplicación de inteligencia artificial que analiza **imágenes, 
 
 El sistema utiliza modelos de visión por computador para detectar rasgos morfológicos y generar una **predicción probabilística**, mostrando el porcentaje estimado de cada raza identificada.
 
----
+## 📌 Enlaces de interés
+
+| Tipo | Descripción | Enlace |
+| :--- | :--- | :--- |
+| 🌍 **Web** | Aplicación desplegada en producción | [Ir al sitio](https://pawsense-iabd.vercel.app/) |
+| 📽️ **Vídeo** | Vídeo explicativo del proyecto en YouTube | [Ver Video](#) |
+
+<br>
+
+## 🚀 Características
+
+- Análisis de imágenes  
+- Procesamiento de vídeo y GIF  
+- Detección en tiempo real  
+- Predicción probabilística de razas  
+- ChatBot conversacional integrado  
+- Agente de IA generador de informes (Veterinario / Adiestramiento)  
+
+<br>
+
+
+## 🛠 Tecnologías
+
+- **Detección**: YOLOv8m (fine-tuned)  
+- **Clasificación**: MobileNetV2 · EfficientNet-B0 · CNN propia (Keras)  
+- **IA Generativa**: Gemini 2.5 Flash / Flash Lite  
+- **Backend**: Python · FastAPI  
+- **Frontend**: Angular 19 · Angular Material · Ionic
+- **Generación PDF**: Playwright  
+- **API externa**: TheDogAPI
+ 
+
+
+
 
 <br>
 
@@ -12,20 +45,21 @@ El sistema utiliza modelos de visión por computador para detectar rasgos morfol
 https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
 
 <br>
-<br>
 
-## 🚀 Características
-
-- 📸 Análisis de imágenes  
-- 🎥 Procesamiento de vídeo y GIF  
-- 🔴 Detección en tiempo real  
-- 📊 Predicción probabilística de razas  
-- 💬 ChatBot conversacional integrado  
-- 🤖 Agente de IA generador de informes (Veterinario / Adiestramiento)  
-
-<br>
 
 ---
+
+## Previews de la Aplicación
+
+A continuación se presentan demostraciones visuales de las funcionalidades principales del sistema:
+
+| Módulo | Enlace al Vídeo |
+|:--- |:--- |
+| Chatbot Conversacional | [Reproducir Demostración](https://github.com/user-attachments/assets/fc40cfd2-b669-45ab-ba9c-6ed1a8efa64a) |
+| Predicción de Imágenes | [Reproducir Demostración](https://github.com/user-attachments/assets/50903328-a7ea-42e0-b749-01c82d530881) |
+| Agente de Informes | [Reproducir Demostración](https://github.com/user-attachments/assets/500cad2c-506f-4fbe-9bac-e0fb7dc1d528) |
+| Análisis de Vídeo | [Reproducir Demostración](https://github.com/user-attachments/assets/0ede8214-1a7b-46f3-a348-fa5ee8ebc40e) |
+
 
 <br>
 
@@ -47,96 +81,29 @@ https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
     * **Informe de Adiestramiento**: Centrado en pautas conductuales, técnicas de refuerzo y socialización.
 8. **Procesamiento de Voz**: Capacidad de generar informes a partir de grabaciones de audio, realizando transcripción automática y extracción de entidades relevantes para el documento final.
 
-## Previews de la Aplicación
-
-A continuación se presentan demostraciones visuales de las funcionalidades principales del sistema:
-
-| Módulo | Enlace al Vídeo |
-|:--- |:--- |
-| Chatbot Conversacional | [Reproducir Demostración](https://github.com/user-attachments/assets/fc40cfd2-b669-45ab-ba9c-6ed1a8efa64a) |
-| Predicción de Imágenes | [Reproducir Demostración](https://github.com/user-attachments/assets/50903328-a7ea-42e0-b749-01c82d530881) |
-| Agente de Informes | [Reproducir Demostración](https://github.com/user-attachments/assets/500cad2c-506f-4fbe-9bac-e0fb7dc1d528) |
-| Análisis de Vídeo | [Reproducir Demostración](https://github.com/user-attachments/assets/0ede8214-1a7b-46f3-a348-fa5ee8ebc40e) |
 
 <br>
 
----
-
-<br>
 
 ## 🏗️ Pipeline del Sistema
 
 A continuación se detalla el flujo técnico desde la entrada de datos hasta la generación de los informes finales:
 
-![Pipeline de PawSense](src/assets/pipeline.png)
+![Pipeline de PawSense](assets/pipeline.png)
 
 <br>
 
----
-
-<br>
-
-## 🎯 Casos de uso
-
-- **Protectoras y refugios**: Identificación aproximada de perros sin documentación.  
-- **Clínicas veterinarias**: Apoyo informativo sobre posibles predisposiciones.
-- **Adiestradores caninos**: Obtener consejos sobre como mejorar el entrenamiento.  
-- **Usuarios particulares**: Conocer mejor el perfil genético y conductual de su mascota.  
-<br>
-
----
-
-<br>
-
-## 🛠 Tecnologías
-
-- **Detección**: YOLOv8m (fine-tuned)  
-- **Clasificación**: MobileNetV2 · EfficientNet-B0 · CNN propia (Keras)  
-- **IA Generativa**: Gemini 2.5 Flash / Flash Lite  
-- **Backend**: Python · FastAPI  
-- **Frontend**: Angular 19 · Angular Material  
-- **Generación PDF**: Playwright  
-- **API externa**: TheDogAPI
- 
-<br>
-
----
-
-<br>
 
 ## 📚 Recursos utilizados
 
 Para el desarrollo de PawSense se han empleado los siguientes conjuntos de datos, APIs y documentación técnica:
 
 - [Manual y Documentación Oficial Angular](https://angular.dev/docs)
-- [Dataset Standford Dogs](https://www.kaggle.com/datasets/jessicali9530/stanford-dogs-dataset)
-- [Dataset Dog Breed Identification](https://www.kaggle.com/c/dog-breed-identification/data) 
 - [Web Oficial TheDogAPI](https://thedogapi.com/)
 - [Manual de integración TheDogAPI](https://docs.thedogapi.com/)
 - [Documentación de Gemini API](https://ai.google.dev/gemini-api/docs)
 - [Manual de Playwright Python](https://playwright.dev/python/docs/api/class-page#page-pdf)
 
-<br>
-
----
-
-<br>
-
-
-## 👥 Equipo y Participación
-
-- Víctor Jiménez Guerrero  (25%)
-- Enrique Moreno Alcántara  (25%)
-- Carlos Cerezo López  (25%)
-- Denisa Ramona Belean  (25%)
-
-<br>
-<br>
-
----
-
-<br>
-<br>
 
 ## ⚖️ Legal Notice
 **Copyright © 2026 PawSense Team.**
