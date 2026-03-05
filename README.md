@@ -4,12 +4,18 @@ PawSense es una aplicación de inteligencia artificial que analiza **imágenes, 
 
 El sistema utiliza modelos de visión por computador para detectar rasgos morfológicos y generar una **predicción probabilística**, mostrando el porcentaje estimado de cada raza identificada.
 
+<br>
+
 ## 📌 Enlaces de interés
+
+<br>
 
 | Tipo | Descripción | Enlace |
 | :--- | :--- | :--- |
 | 🌍 **Web** | Aplicación desplegada en producción | [Ir al sitio](https://pawsense-iabd.vercel.app/) |
-| 📽️ **Vídeo** | Vídeo explicativo del proyecto en YouTube | [Ver Video](#) |
+| 📽️ **Vídeo** | Vídeo explicativo del proyecto en YouTube | [Ver Video](https://youtu.be/QR5fA2Lu14o) |
+
+<br>
 
 ## 📱 ¡Pruébalo ahora!
 
@@ -58,6 +64,10 @@ https://github.com/user-attachments/assets/72b53ea6-716d-4ac3-a272-696e7ca3c787
 
 
 ---
+
+<br>
+
+
 
 ## Previews de la Aplicación
 
@@ -114,6 +124,8 @@ Para el desarrollo de PawSense se han empleado los siguientes conjuntos de datos
 - [Documentación de Gemini API](https://ai.google.dev/gemini-api/docs)
 - [Manual de Playwright Python](https://playwright.dev/python/docs/api/class-page#page-pdf)
 
+<br>
+<br>
 
 ## ⚖️ Legal Notice
 **Copyright © 2026 PawSense Team.**
