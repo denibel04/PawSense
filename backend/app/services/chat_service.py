@@ -115,17 +115,17 @@ class ChatService:
                 detail="Question cannot be empty."
             )
 
-        # Domain Check
-        if not is_dog_domain(request.question, request.context):
+        # Domain Check (include conversation history for follow-up messages)
+        history_dicts = [{
+            "role": m.role, "content": m.content
+        } for m in request.history] if request.history else []
+        if not is_dog_domain(request.question, request.context, history_dicts):
             logger.info(f"Out of domain question: {request.question[:50]}...")
             yield get_out_of_domain_message()
             return
 
         # Report Intent Check - detect if user wants to generate a report
         if detect_report_intent(request.question):
-            # Include role so type detection and extraction can filter by user messages
-            history_dicts = [{"role": m.role, "content": m.content} for m in request.history] if request.history else []
-            
             report_type = detect_report_type_from_conversation(history_dicts)
             all_questions = REPORT_DOG_QUESTIONS.get(report_type, REPORT_DOG_QUESTIONS["veterinario"])
             

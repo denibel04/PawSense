@@ -5,6 +5,25 @@ Incluye validación de dominio, mensajes amables y construcción de prompts.
 
 import re
 
+
+def _keyword_in_text(keyword: str, text: str) -> bool:
+    """Check if a keyword appears in text as a whole word (not as substring).
+    Multi-word keywords use substring match; single-word use word boundaries."""
+    if ' ' in keyword:
+        return keyword in text
+    return bool(re.search(r'\b' + re.escape(keyword) + r'\b', text))
+
+
+def _count_keyword_matches(keywords: set, text: str) -> int:
+    """Count how many keywords from the set appear in text as whole words."""
+    return sum(1 for kw in keywords if _keyword_in_text(kw, text))
+
+
+def _any_keyword_match(keywords: set, text: str) -> bool:
+    """Check if any keyword from the set appears in text as a whole word."""
+    return any(_keyword_in_text(kw, text) for kw in keywords)
+
+
 DOG_DOMAIN_KEYWORDS = {
     # Español
     "perro", "perros", "cachorro", "cachorros", "raza", "razas",
@@ -27,6 +46,9 @@ DOG_DOMAIN_KEYWORDS = {
     "chihuahua", "bulldog", "doberman", "rottweiler", "pitbull",
     "beagle", "cocker", "springer", "pointer", "boxer", "dálmata",
     "shiba", "akita", "corgi", "bóxer",
+    # Adiestramiento y refuerzo (términos que podrían no estar en TRAINING_KEYWORDS)
+    "adiestrador", "adiestradora", "refuerzo", "refuerzo positivo",
+    "plan de entrenamiento", "plan semanal", "aprendizaje",
     # Inglés
     "dog", "dogs", "puppy", "puppies", "breed", "breeds",
     "food", "kibble", "diet", "nutrition",
@@ -45,27 +67,41 @@ DOG_DOMAIN_KEYWORDS = {
     "origin", "history", "group", "standard",
 }
 
-def is_dog_domain(question: str, context: str = "") -> bool:
+def is_dog_domain(question: str, context: str = "", history: list = None) -> bool:
     """
     Valida si una pregunta está relacionada con perros.
     
-    Heurística simple:
+    Heurística:
     - Si la pregunta contiene al menos una keyword sobre perros, es on-domain.
     - Si no hay keywords pero hay contexto que mencione perro, es on-domain.
+    - Si la pregunta contiene keywords de adiestramiento, médicas o de informes, es on-domain.
+    - Si la conversación previa era sobre perros, los mensajes de seguimiento son on-domain.
     - Si no hay keywords ni contexto relevante, es out-of-domain.
     
     Args:
         question: La pregunta del usuario.
         context: Contexto del perro (opcional, ej: "Tengo un Golden Retriever").
+        history: Historial de la conversación (opcional, lista de dicts con role/content).
     
     Returns:
         True si la pregunta está en el dominio de perros, False en caso contrario.
     """
     search_text = (question + " " + context).lower()
     
-    # Buscar cualquier keyword en el texto
-    for keyword in DOG_DOMAIN_KEYWORDS:
-        if keyword in search_text:
+    # Buscar cualquier keyword en el texto (general, training, medical, report)
+    if (_any_keyword_match(DOG_DOMAIN_KEYWORDS, search_text)
+        or _any_keyword_match(TRAINING_KEYWORDS, search_text)
+        or _any_keyword_match(MEDICAL_KEYWORDS, search_text)
+        or _any_keyword_match(REPORT_KEYWORDS, search_text)):
+        return True
+    
+    # Si hay historial de conversación previo sobre perros, los follow-ups son on-domain
+    if history:
+        history_text = " ".join(
+            (msg.get("content", "") if isinstance(msg, dict) else getattr(msg, 'content', ''))
+            for msg in history
+        ).lower()
+        if _any_keyword_match(DOG_DOMAIN_KEYWORDS, history_text):
             return True
     
     return False
@@ -342,9 +378,9 @@ def detect_intent(question: str, context: str = "") -> str:
     # Context (breed info, etc.) would cause false positives.
     search_text = question.lower()
     
-    # Contar matches con keywords médicas y de adiestramiento
-    medical_matches = sum(1 for kw in MEDICAL_KEYWORDS if kw in search_text)
-    training_matches = sum(1 for kw in TRAINING_KEYWORDS if kw in search_text)
+    # Contar matches con keywords médicas y de adiestramiento (word boundaries)
+    medical_matches = _count_keyword_matches(MEDICAL_KEYWORDS, search_text)
+    training_matches = _count_keyword_matches(TRAINING_KEYWORDS, search_text)
     
     # Retornar la intención con más matches
     if medical_matches > training_matches and medical_matches > 0:
@@ -653,11 +689,12 @@ def extract_known_dog_info(context: str, history: list) -> dict:
     user_lower = user_text.lower()
     
     # Intentar extraer nombre del perro - SOLO patrones explícitos
-    # Debe ser "se llama X" o "su nombre es X", NO "mi perro tiene..." 
     nombre_patterns = [
         r'se llama\s+(\w+)',
         r'su nombre es\s+(\w+)',
         r'(?:tengo un|tengo una)\s+\w+\s+(?:llamad[oa]|que se llama)\s+(\w+)',
+        r'mi perr[oa]\s+(\w+)',
+        r'mi cachorro[a]?\s+(\w+)',
     ]
     # Palabras comunes que NO son nombres de perro
     stop_words = {"el", "la", "un", "una", "mi", "su", "tiene", "es", "muy",
@@ -671,6 +708,24 @@ def extract_known_dog_info(context: str, history: list) -> dict:
                 and nombre.lower() not in DOG_DOMAIN_KEYWORDS 
                 and nombre.lower() not in stop_words):
                 known["nombre"] = nombre
+    
+    # Intentar extraer raza del texto del usuario (si no vino del contexto de predicción)
+    if "raza" not in known:
+        raza_patterns = [
+            r'(?:es\s+un[a]?\s+)((?:[a-záéíóúñ]+\s*){1,4})(?:\.|,|\s+(?:y|que|me|de|tiene|pesa|macho|hembra|$))',
+            r'(?:raza(?:\s+es)?[:\s]+)((?:[a-záéíóúñ]+\s*){1,4})(?:\.|,|$)',
+            r'(?:tengo\s+un[a]?\s+)((?:[a-záéíóúñ]+\s*){1,4})(?:\.|,|$)',
+        ]
+        for pattern in raza_patterns:
+            match = re.search(pattern, user_lower)
+            if match:
+                raza_candidate = match.group(1).strip()
+                # Filtrar stop words y palabras muy genéricas
+                if (raza_candidate and len(raza_candidate) > 2
+                    and raza_candidate not in stop_words
+                    and raza_candidate not in {"perro", "perra", "cachorro", "cachorra", "perrito", "perrita"}):
+                    known["raza"] = raza_candidate.title()
+                    break
     
     # Intentar extraer edad - solo de texto del usuario
     edad_patterns = [
