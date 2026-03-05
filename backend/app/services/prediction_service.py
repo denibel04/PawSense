@@ -129,7 +129,7 @@ class PredictionService:
 
         return img[ny1:ny2, nx1:nx2]
 
-    def _get_processed_inputs(self, image_path: str = None, image_array: np.ndarray = None):
+    def _get_processed_inputs(self, image_path: str = None, image_array: np.ndarray = None, strict_dog_detection: bool = False):
         if image_path:
             img_bgr = cv2.imread(image_path)
         else:
@@ -165,6 +165,9 @@ class PredictionService:
 
         # Si no hay detección de perro → intentar fallback
         if best_dog is None:
+            if strict_dog_detection:
+                return None, None, None
+
             # Si YOLO detectó algún animal con alta confianza (>0.60), es seguro que NO es un perro
             max_other_conf = max((c for _, c, _ in other_animals), default=0)
             if max_other_conf > 0.60:
@@ -224,8 +227,8 @@ class PredictionService:
 
         try:
             # 1. Reutilizamos la lógica de preprocesamiento (Detección YOLO + Crops)
-            # Pasamos el frame directamente como image_array
-            in_mob, in_v1, in_pt = self._get_processed_inputs(image_array=frame)
+            # Pasamos el frame directamente como image_array y exigimos detección estricta (no fallback)
+            in_mob, in_v1, in_pt = self._get_processed_inputs(image_array=frame, strict_dog_detection=True)
 
             # 2. Si YOLO no detecta un perro en el frame
             if in_mob is None:
@@ -307,7 +310,7 @@ class PredictionService:
         """
         try:
             # Intentamos obtener los inputs procesados
-            in_mob, in_v1, in_pt = self._get_processed_inputs(image_path=image_path) 
+            in_mob, in_v1, in_pt = self._get_processed_inputs(image_path=image_path, strict_dog_detection=True) 
             # Si la detección falló (YOLO no vio perro)
             if in_mob is None:
                 return {

@@ -11,7 +11,7 @@ import { addIcons } from 'ionicons';
 import * as allIcons from 'ionicons/icons';
 import { TEMPERAMENT_MAP } from './temperament-map';
 import { Router } from '@angular/router';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser'; 
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-prediction-modal',
@@ -23,7 +23,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 export class PredictionModalComponent implements OnInit {
   @Input() data: any; // Recibe el JSON bruto del backend
   @Input() type: 'image' | 'video' | null = null;
-  @Input() imagePreview: any = null; 
+  @Input() imagePreview: any = null;
 
   winner: any = null;
   runnerUps: any[] = [];   // 2nd and 3rd predictions
@@ -73,6 +73,60 @@ export class PredictionModalComponent implements OnInit {
     const mobile = archResults.find(a => a.name === 'MobileNetV2')!;
     const narrowModels = archResults.filter(a => a.numBreeds === 120);
 
+    // --- NUEVA LÓGICA DE INTERSECCIÓN EN TOP 3 ---
+    const mobileTop3 = mobile.predictions.slice(0, 3);
+    const kerasTop3 = archResults.find(a => a.name === 'Keras')!.predictions.slice(0, 3);
+    const pytorchTop3 = archResults.find(a => a.name === 'PyTorch')!.predictions.slice(0, 3);
+
+    const mobileBreeds = mobileTop3.map((p: any) => p.breed_en?.toLowerCase());
+    const kerasBreeds = kerasTop3.map((p: any) => p.breed_en?.toLowerCase());
+    const pytorchBreeds = pytorchTop3.map((p: any) => p.breed_en?.toLowerCase());
+
+    const commonBreeds = [...new Set(mobileBreeds.filter((breed: any) =>
+      breed && kerasBreeds.includes(breed) && pytorchBreeds.includes(breed)
+    ))];
+
+    if (commonBreeds.length > 0) {
+      let bestIntersectionWinner: any = null;
+      let maxIntersectionConf = -1;
+      let bestIntersectionArch: any = null;
+
+      for (const breed of commonBreeds) {
+        const pMobile = mobileTop3.find((p: any) => p.breed_en?.toLowerCase() === breed);
+        const pKeras = kerasTop3.find((p: any) => p.breed_en?.toLowerCase() === breed);
+        const pPytorch = pytorchTop3.find((p: any) => p.breed_en?.toLowerCase() === breed);
+
+        if (pMobile && pMobile.confidence > maxIntersectionConf) {
+          maxIntersectionConf = pMobile.confidence;
+          bestIntersectionWinner = pMobile;
+          bestIntersectionArch = mobile;
+        }
+        if (pKeras && pKeras.confidence > maxIntersectionConf) {
+          maxIntersectionConf = pKeras.confidence;
+          bestIntersectionWinner = pKeras;
+          bestIntersectionArch = archResults.find(a => a.name === 'Keras')!;
+        }
+        if (pPytorch && pPytorch.confidence > maxIntersectionConf) {
+          maxIntersectionConf = pPytorch.confidence;
+          bestIntersectionWinner = pPytorch;
+          bestIntersectionArch = archResults.find(a => a.name === 'PyTorch')!;
+        }
+      }
+
+      if (bestIntersectionWinner && bestIntersectionArch) {
+        this.winner = { ...bestIntersectionWinner, source: bestIntersectionArch.name };
+        this.runnerUps = bestIntersectionArch.predictions
+          .filter((p: any) => p.breed_en?.toLowerCase() !== bestIntersectionWinner!.breed_en?.toLowerCase())
+          .slice(0, 2)
+          .map((p: any) => ({ ...p, source: bestIntersectionArch!.name }));
+
+        console.log('Intersección en Top 3 encontrada. Winner calculado:', this.winner);
+        console.log('Runner-ups calculados:', this.runnerUps);
+        return;
+      }
+    }
+    // --- FIN NUEVA LÓGICA ---
+
     // Paso 1: encontrar el modelo de 120 razas con mayor confianza en su top-1
     let bestNarrow = narrowModels[0];
     for (const arch of narrowModels) {
@@ -98,9 +152,9 @@ export class PredictionModalComponent implements OnInit {
         // Modelos de 120 y 355 razas NO coinciden
         // El de 120 razas puede estar "forzando" una raza cercana porque no conoce la correcta
         // Priorizamos MobileNetV2 (355 razas) si tiene confianza razonable (>25%)
-        if (mobileTop1.confidence > 0.25) {
+        if (mobileTop1.confidence > 25) {
           bestArch = mobile;
-          console.log(`Desacuerdo entre modelos: MobileNetV2(355) dice "${mobileTop1.breed_es}" (${(mobileTop1.confidence * 100).toFixed(1)}%) vs ${bestNarrow.name}(120) dice "${narrowTop1.breed_es}" (${(narrowTop1.confidence * 100).toFixed(1)}%). Priorizando modelo con más razas.`);
+          console.log(`Desacuerdo entre modelos: MobileNetV2(355) dice "${mobileTop1.breed_es}" (${mobileTop1.confidence.toFixed(1)}%) vs ${bestNarrow.name}(120) dice "${narrowTop1.breed_es}" (${narrowTop1.confidence.toFixed(1)}%). Priorizando modelo con más razas.`);
         } else {
           // MobileNetV2 no está seguro de nada → usar el modelo de 120 más confiado
           bestArch = bestNarrow;

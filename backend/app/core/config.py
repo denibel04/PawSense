@@ -1,12 +1,13 @@
 import os
 from typing import List
 from dotenv import load_dotenv
-
+from pydantic_settings import BaseSettings
+from pydantic import model_validator
 # Cargar variables de entorno desde .env
 load_dotenv()
 
-from pydantic import model_validator
-from pydantic_settings import BaseSettings
+
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "PawSense API"

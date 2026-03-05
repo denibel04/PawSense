@@ -122,6 +122,11 @@ export class Tab2Page implements OnDestroy {
               confidence: item.confidence.toString().includes('%') ? item.confidence : item.confidence + '%'
             }));
           }
+        } else {
+          // Si no hay perro detectado (found: false), limpiamos el resultado en pantalla
+          this.ngZone.run(() => {
+            this.realTimeResult = null;
+          });
         }
       };
 
