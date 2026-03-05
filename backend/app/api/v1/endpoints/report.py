@@ -5,6 +5,7 @@ import logging
 from app.services.audio_service import analyze_audio_with_gemini
 from app.services.report_service import ReportService
 from app.schemas.report import GeneratePdfRequest
+import os
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ async def generate_report_from_audio(
     
     Retorna Server-Sent Events con actualizaciones de progreso.
     """
-    import os
+   
     
     # Validar extensión y tipo de archivo
     file_ext = os.path.splitext(file.filename)[1].lower()
