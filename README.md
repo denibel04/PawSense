@@ -89,7 +89,7 @@ A continuación se presentan demostraciones visuales de las funcionalidades prin
 
 A continuación se detalla el flujo técnico desde la entrada de datos hasta la generación de los informes finales:
 
-![Pipeline de PawSense](assets/pipeline.png)
+![Pipeline de PawSense](src/assets/pipeline.png)
 
 <br>
 
